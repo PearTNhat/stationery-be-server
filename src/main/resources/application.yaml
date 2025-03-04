@@ -1,0 +1,20 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3307/stationary
+    username: root
+    password: root
+    driver-class-name: com.mysql.jdbc.Driver
+  jpa:
+    hibernate:
+#       Hibernate sẽ tự động tạo bảng dựa trên Entity (nếu chưa có) và cập nhật schema nếu thay đổi.
+      ddl-auto: update
+#       Hiển thị câu lệnh SQL trên console.
+    show-sql: true
+jwt:
+  signerKey: "b+E6CwTOGidO5wFvOIj+gIfoy1vGzrgIybiVJp208fwZW2F/x8GvYAPwlJ2XlMDs"
+  valid-duration: 120 #seconds
+  refreshable-duration: 60* 3600 #seconds
