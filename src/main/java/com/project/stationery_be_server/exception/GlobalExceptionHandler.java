@@ -18,13 +18,6 @@ public class GlobalExceptionHandler {
                 .build();
         return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
     }
-//    @ExceptionHandler(value = RuntimeException.class)
-//    ResponseEntity<ApiResponse<Void>> runtimeExceptionHandler(RuntimeException e) {
-//        ApiResponse<Void> apiResponse = new ApiResponse<>();
-//        apiResponse.setMessage(e.getMessage());
-//        apiResponse.setCode(400);
-//        return ResponseEntity.badRequest().body(apiResponse);
-//    }
 //    Báo lỗi k tìm thấy đường dẫn
     @ExceptionHandler(value = NoResourceFoundException.class)
     ResponseEntity<ApiResponse<Void>> noResourceFoundException(NoResourceFoundException e) {

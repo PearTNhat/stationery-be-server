@@ -1,11 +1,11 @@
 package com.project.stationery_be_server.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+
+import java.util.Date;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -16,9 +16,29 @@ import lombok.experimental.FieldDefaults;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    String id;
-    String username;
-    String password;
-    String firstName;
-    String lastName;
+    private String user_id;
+
+    @Column(length = 50)
+    private String first_name;
+
+    @Column(length = 50)
+    private String last_name;
+
+    @Column(length = 100)
+    private String email;
+
+    @Column(length = 15)
+    private String phone;
+
+    @Column(length = 500)
+    private String address;
+
+    @Temporal(TemporalType.DATE)
+    private Date dob;
+
+    @OneToOne(mappedBy = "user")
+    private Account account;
+
+    @OneToMany(mappedBy="user")
+    private List<Address> addresses;
 }
