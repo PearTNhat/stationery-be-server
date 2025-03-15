@@ -16,29 +16,37 @@ import java.util.List;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private String user_id;
+    String user_id;
 
     @Column(length = 50)
-    private String first_name;
+    String first_name;
 
     @Column(length = 50)
-    private String last_name;
+    String last_name;
 
     @Column(length = 100)
-    private String email;
+    String email;
 
     @Column(length = 15)
-    private String phone;
+    String phone;
 
-    @Column(length = 500)
-    private String address;
+    @Column(length = 100)
+    String password;
 
     @Temporal(TemporalType.DATE)
-    private Date dob;
+    Date dob;
 
-    @OneToOne(mappedBy = "user")
-    private Account account;
+    @Column(length = 255)
+    String avatar;
+
+    boolean isBlock;
+
+    Integer otp;
+
+    @ManyToOne
+    @JoinColumn(name = "role_id")
+    Role role;
 
     @OneToMany(mappedBy="user")
-    private List<Address> addresses;
+    List<Address> addresses;
 }

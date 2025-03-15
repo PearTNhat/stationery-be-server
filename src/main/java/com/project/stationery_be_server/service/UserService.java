@@ -17,7 +17,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserService {
-    UserMapper userMapper;
+        UserMapper userMapper;
     UserRepository userRepository;
 
     public List<UserResponse> getAll() {

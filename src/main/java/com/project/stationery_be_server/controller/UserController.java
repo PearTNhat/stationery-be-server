@@ -1,27 +1,38 @@
 package com.project.stationery_be_server.controller;
 
+import com.cloudinary.Api;
 import com.project.stationery_be_server.dto.response.ApiResponse;
 import com.project.stationery_be_server.dto.response.UserResponse;
+import com.project.stationery_be_server.service.UploadImageFile;
 import com.project.stationery_be_server.service.UserService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/users")
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserController {
-    private final UserService userService;
+    UserService userService;
+    UploadImageFile uploadImageFile;
+//    @GetMapping
+//    public ApiResponse<List<UserResponse>> getAllUsers() {
+//        return ApiResponse.<List<UserResponse>>builder()
+//                .result(userService.getAll())
+//                .build();
+//    }
+    @RequestMapping(value = "/upload", method = RequestMethod.POST)
+    public ApiResponse<Map>uploadFile(@RequestParam("file") MultipartFile file) throws IOException {
 
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
-
-    @GetMapping
-    public ApiResponse<List<UserResponse>> getAllUsers() {
-        return ApiResponse.<List<UserResponse>>builder()
-                .result(userService.getAll())
+        return ApiResponse.<Map>builder()
+                .result( uploadImageFile.uploadImageFile(file))
                 .build();
     }
 }
