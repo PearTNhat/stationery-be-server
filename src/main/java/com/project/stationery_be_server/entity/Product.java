@@ -3,6 +3,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -20,13 +21,11 @@ public class Product {
     @Column(length = 500)
     private String description;
 
-    private String thumbnail;
-
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
-    private List<ProductDetail> product_types;
+    private Set<ProductDetail> product_types;
 }
 

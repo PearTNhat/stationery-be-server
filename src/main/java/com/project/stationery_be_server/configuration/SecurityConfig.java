@@ -31,17 +31,17 @@ public class SecurityConfig {
 
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, CustomJwtDecoder customJwtDecoder) throws Exception {
         http.authorizeHttpRequests(request ->
                 request
                         .requestMatchers(HttpMethod.POST, "/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/**").permitAll()
                         .anyRequest()
                         .authenticated());
-//        http.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwtConfigurer -> jwtConfigurer
-//                        .decoder(customJwtDecoder)
-//                        .jwtAuthenticationConverter(jwtAuthenticationConverter()))
-//                .authenticationEntryPoint(new JwtAuthenticationEntryPoint()));
+        http.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwtConfigurer -> jwtConfigurer
+                        .decoder(customJwtDecoder)
+                        .jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                .authenticationEntryPoint(new JwtAuthenticationEntryPoint()));
         http
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable);

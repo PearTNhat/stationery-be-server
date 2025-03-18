@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.Set;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -12,15 +14,19 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-public class Address {
+public class ProductColor {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private String address_id;
-
-    @Column(length = 100)
-    private String addressName;
+    String product_color_id;
 
     @ManyToOne
-    @JoinColumn(name="user_id",referencedColumnName = "user_id")
-    User user;
+    @JoinColumn(name = "product_id")
+    Product product;
+
+    @ManyToOne
+    @JoinColumn(name = "color_id")
+    Color color;
+
+    @OneToMany(mappedBy = "product_color")
+    Set<Image> images;
 }

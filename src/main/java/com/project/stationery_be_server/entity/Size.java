@@ -1,9 +1,10 @@
 package com.project.stationery_be_server.entity;
 
-
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+
+import java.util.Set;
 
 @Getter
 @Setter
@@ -12,15 +13,15 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-public class Address {
+public class Size {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String address_id;
+    @Column(length = 10)
+    String size_id;
 
-    @Column(length = 100)
-    private String addressName;
+    @Column(nullable = false, length = 3,unique = true)
+    String name;
 
-    @ManyToOne
-    @JoinColumn(name="user_id",referencedColumnName = "user_id")
-    User user;
+    @OneToMany(mappedBy = "size",fetch = FetchType.LAZY)
+    Set<ProductDetail> product_detail;
+
 }

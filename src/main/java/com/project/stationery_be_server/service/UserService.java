@@ -12,16 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Slf4j
-@Service
-@RequiredArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class UserService {
-        UserMapper userMapper;
-    UserRepository userRepository;
 
-    public List<UserResponse> getAll() {
-        return userRepository.findAll().stream().map(userMapper::toUserResponse).toList();
-    }
-
+public interface UserService {
+    public List<UserResponse> getAll();
 }

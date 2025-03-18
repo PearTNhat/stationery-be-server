@@ -22,12 +22,12 @@ import java.util.Map;
 public class UserController {
     UserService userService;
     UploadImageFile uploadImageFile;
-//    @GetMapping
-//    public ApiResponse<List<UserResponse>> getAllUsers() {
-//        return ApiResponse.<List<UserResponse>>builder()
-//                .result(userService.getAll())
-//                .build();
-//    }
+    @GetMapping
+    public ApiResponse<List<UserResponse>> getAllUsers() {
+        return ApiResponse.<List<UserResponse>>builder()
+                .result(userService.getAll())
+                .build();
+    }
     @RequestMapping(value = "/upload", method = RequestMethod.POST)
     public ApiResponse<Map>uploadFile(@RequestParam("file") MultipartFile file) throws IOException {
 

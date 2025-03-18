@@ -13,7 +13,22 @@ spring:
       ddl-auto: update
 #       Hiển thị câu lệnh SQL trên console.
     show-sql: true
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${SMTP_USERNAME}
+    password: ${SMTP_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 jwt:
   signerKey: ${SIGNER_KEY}
   valid-duration: 12000 #seconds
   refreshable-duration: 36000 #seconds
+cloudinary:
+  cloudName: ${CLOUDINARY_NAME}
+  apiKey: ${CLOUDINARY_API_KEY}
+  apiSecret: ${CLOUDINARY_API_SECRET}
