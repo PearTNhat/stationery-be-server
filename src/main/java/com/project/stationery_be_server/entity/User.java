@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -48,5 +49,11 @@ public class User {
     Role role;
 
     @OneToMany(mappedBy="user")
-    List<Address> addresses;
+    Set<Address> addresses;
+
+    @OneToMany(mappedBy="user")
+    Set<Cart> carts;
+
+    @OneToMany(mappedBy = "user")
+    Set<PurchaseOrder> orders;
 }

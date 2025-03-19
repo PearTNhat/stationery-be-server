@@ -27,5 +27,8 @@ public class Product {
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     private Set<ProductDetail> product_types;
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    private Set<Review>reviews;
+
 }
 
