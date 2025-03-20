@@ -1,5 +1,6 @@
 package com.project.stationery_be_server.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -35,10 +36,12 @@ public class ProductDetail {
     private Color color;
 
     @ManyToOne
+    @JsonIgnore
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
     @OneToMany(mappedBy = "product_detail", cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    @JsonIgnore
     private Set<PurchaseOrderDetail> purchase_purchased;
 
 }

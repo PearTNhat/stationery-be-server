@@ -1,5 +1,8 @@
 package com.project.stationery_be_server.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -8,7 +11,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -44,16 +48,21 @@ public class User {
 
     Integer otp;
 
-    @ManyToOne
-    @JoinColumn(name = "role_id")
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id", nullable = false)
+    @JsonManagedReference
     Role role;
 
-    @OneToMany(mappedBy="user")
+    @OneToMany(mappedBy="user",fetch = FetchType.LAZY,cascade = CascadeType.ALL)
+    @JsonManagedReference
     Set<Address> addresses;
 
-    @OneToMany(mappedBy="user")
+
+    @OneToMany(mappedBy="user",fetch = FetchType.LAZY,cascade = CascadeType.ALL)
+    @JsonManagedReference
     Set<Cart> carts;
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    @JsonIgnore
     Set<PurchaseOrder> orders;
 }

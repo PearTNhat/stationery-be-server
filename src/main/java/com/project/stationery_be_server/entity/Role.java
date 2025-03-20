@@ -1,10 +1,14 @@
 package com.project.stationery_be_server.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.util.List;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -25,5 +29,6 @@ public class Role {
     private String description;
 
     @OneToMany(mappedBy = "role")
-    private List<User>  user;
+    @JsonBackReference
+    private Set<User> user;
 }

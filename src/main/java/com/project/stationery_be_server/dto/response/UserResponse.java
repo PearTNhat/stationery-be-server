@@ -1,9 +1,14 @@
 package com.project.stationery_be_server.dto.response;
 
+import com.project.stationery_be_server.entity.Address;
+import com.project.stationery_be_server.entity.Cart;
+import com.project.stationery_be_server.entity.Role;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.util.Date;
+import java.util.List;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -16,6 +21,8 @@ public class UserResponse {
      String last_name;
      String email;
      String phone;
-     String address_id; // Foreign key to Address
+     Set<Address> addresses; // Foreign key to Address
+     Role role;
+     Set<Cart> carts;
      Date dob;
 }

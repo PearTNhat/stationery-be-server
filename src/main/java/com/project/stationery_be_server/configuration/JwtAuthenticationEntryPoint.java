@@ -1,8 +1,9 @@
 package com.project.stationery_be_server.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.project.stationery_be_server.Error.AuthErrorCode;
 import com.project.stationery_be_server.dto.response.ApiResponse;
-import com.project.stationery_be_server.exception.ErrorCode;
+import com.project.stationery_be_server.Error.BaseErrorCode;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -18,7 +19,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
     public void commence(
             HttpServletRequest request, HttpServletResponse response, AuthenticationException authException)
             throws IOException, ServletException {
-        ErrorCode errorCode = ErrorCode.MISSING_TOKEN;
+        BaseErrorCode errorCode = AuthErrorCode.MISSING_TOKEN;
         response.setStatus(errorCode.getHttpStatus().value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
