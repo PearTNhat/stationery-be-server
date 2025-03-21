@@ -1,6 +1,7 @@
 package com.project.stationery_be_server.controller;
 
 import com.cloudinary.Api;
+import com.project.stationery_be_server.dto.request.RegisterRequest;
 import com.project.stationery_be_server.dto.response.ApiResponse;
 import com.project.stationery_be_server.dto.response.UserResponse;
 import com.project.stationery_be_server.service.UploadImageFile;
@@ -33,6 +34,14 @@ public class UserController {
 
         return ApiResponse.<Map>builder()
                 .result( uploadImageFile.uploadImageFile(file))
+                .build();
+    }
+    @PostMapping("/register")
+    public ApiResponse<UserResponse> registerUser(@RequestBody RegisterRequest request) {
+        UserResponse userResponse = userService.register(request);
+        return ApiResponse.<UserResponse>builder()
+                .message("User registered successfully")
+                .result(userResponse)
                 .build();
     }
 }
