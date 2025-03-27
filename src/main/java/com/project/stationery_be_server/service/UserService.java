@@ -1,5 +1,6 @@
 package com.project.stationery_be_server.service;
 
+import com.project.stationery_be_server.dto.request.RegisterRequest;
 import com.project.stationery_be_server.dto.response.UserResponse;
 import com.project.stationery_be_server.entity.User;
 import com.project.stationery_be_server.mapper.UserMapper;
@@ -14,6 +15,8 @@ import java.util.List;
 
 
 public interface UserService {
+    //Phương thức đăng ký tài khoản
+    UserResponse register(RegisterRequest request);
     List<UserResponse> getAll();
     UserResponse getUserInfo();
 }
