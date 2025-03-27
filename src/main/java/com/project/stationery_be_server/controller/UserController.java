@@ -29,9 +29,14 @@ public class UserController {
                 .result(userService.getAll())
                 .build();
     }
+    @GetMapping("/info")
+    public ApiResponse<UserResponse> getMyInfo() {
+        return ApiResponse.<UserResponse>builder()
+                .result(userService.getUserInfo())
+                .build();
+    }
     @RequestMapping(value = "/upload", method = RequestMethod.POST)
     public ApiResponse<Map>uploadFile(@RequestParam("file") MultipartFile file) throws IOException {
-
         return ApiResponse.<Map>builder()
                 .result( uploadImageFile.uploadImageFile(file))
                 .build();

@@ -15,8 +15,8 @@ import java.util.List;
 
 
 public interface UserService {
-    public List<UserResponse> getAll();
-
     //Phương thức đăng ký tài khoản
     UserResponse register(RegisterRequest request);
+    List<UserResponse> getAll();
+    UserResponse getUserInfo();
 }
