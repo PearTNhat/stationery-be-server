@@ -17,6 +17,7 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserResponse {
      String user_id;
+     String avatar;
      String first_name;
      String last_name;
      String email;
