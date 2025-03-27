@@ -48,6 +48,9 @@ public class User {
 
     Integer otp;
 
+    @Temporal(TemporalType.TIMESTAMP)
+    Date otpCreatedAt;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id", nullable = false)
     @JsonManagedReference
