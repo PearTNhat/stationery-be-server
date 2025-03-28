@@ -1,63 +1,59 @@
-// Java Program to Illustrate Creation Of
-// Service implementation class
 package com.project.stationery_be_server.service.impl;
-// Importing required classes
 
+import com.project.stationery_be_server.Error.AuthErrorCode;
 import com.project.stationery_be_server.dto.request.EmailRequest;
+import com.project.stationery_be_server.exception.AppException;
 import com.project.stationery_be_server.service.EmailService;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
-// Annotation
 @Service
-// Class
-// Implementing EmailService interface
 public class EmailServiceImpl implements EmailService {
 
     @Autowired
     private JavaMailSender javaMailSender;
 
-
-
     @Value("${spring.mail.username}")
     private String sender;
 
-    // Method 1
-    // To send a simple email
+    @Override
     public String sendSimpleMail(EmailRequest details) {
-
-        // Try block to check for exceptions
         try {
+            // Tạo một đối tượng MimeMessage
+            MimeMessage message = javaMailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            // Creating a simple mail message
-            SimpleMailMessage mailMessage
-                    = new SimpleMailMessage();
+            helper.setFrom(sender);
+            helper.setTo(details.getRecipient());
+            helper.setSubject("[Stationary's P] OTP to verify your account");
 
-            // Setting up necessary details
-            mailMessage.setFrom(sender);
-            mailMessage.setTo(details.getRecipient());
-            String html = "<h1> Verify your account </h1>\n" +
-                    "<p>\n" +
-                    "  <h1> Your OTP </h1>\n" +
-                    "  <strong>" + details.getOtp() + "</strong>\n" +
-                    "</p>\n" +
-                    "<p>The OTP expires in 5 minutes</p>";
+            // Tạo nội dung email dạng HTML
+            String htmlContent = "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: auto; "
+                    + "padding: 20px; border: 1px solid #ddd; border-radius: 10px;'>"
+                    + "<h2 style='color: #333; text-align: center;'>Verify Your Account</h2>"
+                    + "<p style='font-size: 16px; text-align: center;'>Use the OTP below to verify your account. "
+                    + "This OTP is valid for <strong>5 minutes</strong>.</p>"
+                    + "<div style='background: #f4f4f4; padding: 15px; text-align: center; border-radius: 5px; "
+                    + "font-size: 24px; font-weight: bold;'>" + details.getOtp() + "</div>"
+                    + "<p style='text-align: center;'>If you did not request this, please ignore this email.</p>"
+                    + "<hr style='border: 0; height: 1px; background: #ddd;'>"
+                    + "<p style='font-size: 12px; text-align: center; color: #888;'>© 2024 Digital Store. All rights reserved.</p>"
+                    + "</div>";
 
-            mailMessage.setText(html);
-            String subject = "[Digital Store] OTP to verify your account";
-            mailMessage.setSubject(subject);
+            helper.setText(htmlContent, true);
 
-            // Sending the mail
-            javaMailSender.send(mailMessage);
+            // Gửi email
+            javaMailSender.send(message);
             return "Mail Sent Successfully...";
-        }
 
-        // Catch block to handle the exceptions
-        catch (Exception e) {
-            return "Error while Sending Mail";
+        } catch (MessagingException e) {
+            e.printStackTrace();
+            throw new AppException(AuthErrorCode.SEND_MAIL_FAILD);
         }
     }
 }
