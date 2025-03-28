@@ -1,5 +1,6 @@
 package com.project.stationery_be_server.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -15,7 +16,7 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductDetail {
+public class    ProductDetail {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String product_detail_id;
@@ -32,13 +33,8 @@ public class ProductDetail {
     private Size size;
 
     @ManyToOne
-    @JoinColumn(name = "color_id", nullable = false)
-    private Color color;
-
-    @ManyToOne
-    @JsonIgnore
-    @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
+    @JoinColumn(name = "product_color_id", nullable = false)
+    private ProductColor product_color;
 
     @OneToMany(mappedBy = "product_detail", cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     @JsonIgnore

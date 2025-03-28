@@ -1,9 +1,11 @@
 package com.project.stationery_be_server.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -19,5 +21,6 @@ public class Category {
     private String category_name;
 
     @OneToMany(mappedBy = "category")
-    private List<Product> products;
+    @JsonBackReference
+    private Set<Product> products;
 }
