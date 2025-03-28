@@ -31,6 +31,9 @@ public class ProductDetail {
     @JoinColumn(name = "size_id")
     private Size size;
 
+    @ManyToOne
+    @JoinColumn(name = "product_color_id", nullable = false)
+    private ProductColor product_color;
 
     @OneToMany(mappedBy = "product_detail", cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     @JsonIgnore

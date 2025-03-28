@@ -15,14 +15,8 @@ public class Category {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String category_id;
 
-    @Column(length = 30, nullable = false, unique = true)
+    @Column(length = 30, nullable = false,unique = true)
     private String category_name;
-
-    @Column(length = 10, nullable = false)
-    private String icon;
-
-    @Column(length = 20, nullable = false)
-    private String bg_color;
 
     @OneToMany(mappedBy = "category")
     private List<Product> products;

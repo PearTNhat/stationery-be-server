@@ -1,4 +1,5 @@
 package com.project.stationery_be_server.entity;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,12 +23,16 @@ public class Product {
     private String description;
 
     @ManyToOne
+    @JsonManagedReference
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
-    private Set<ProductDetail> product_types;
+    @JsonManagedReference
+    private Set<ProductColor> product_colors;
+
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private Set<Review>reviews;
 
 }
