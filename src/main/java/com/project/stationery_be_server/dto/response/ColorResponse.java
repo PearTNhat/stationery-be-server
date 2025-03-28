@@ -9,5 +9,4 @@ public class ColorResponse {
     String color_id;
     String name;
     String hex;
-
 }

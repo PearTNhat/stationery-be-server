@@ -13,7 +13,9 @@ public enum AuthErrorCode implements BaseErrorCode {
     SEND_MAIL_FAILD(1007,"Error while sending mail", HttpStatus.BAD_REQUEST),
     REGISTER_USER_FAILD(1008,"Failed to register user", HttpStatus.BAD_REQUEST),
     OTP_EXPIRED(1008,"OTP expired", HttpStatus.BAD_REQUEST),
-    DELETE_CATEGORY_FAIL(1008,"Cannot delete category with associated products", HttpStatus.BAD_REQUEST);
+    DELETE_CATEGORY_FAIL(1008,"Cannot delete category with associated products", HttpStatus.BAD_REQUEST),
+    INCORRECT_OLD_PASSWORD(1008,"Incorrect old password", HttpStatus.BAD_REQUEST),
+    PASSWORD_SAME_AS_OLD(1008,"New password cannot be the same as old password", HttpStatus.BAD_REQUEST);
     private final int code;
     private final String message;
     private final HttpStatus httpStatus;
