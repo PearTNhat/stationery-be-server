@@ -40,9 +40,8 @@ public class AuthenticateServiceImpl implements AuthenticateService {
 //         Find user with populated carts
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new AppException(NotExistedErrorCode.USER_NOT_EXISTED));
-        System.out.println("user: " + user.getRole().getRole_id());
         // Check if user is blocked
-        if (user.isBlock()) {
+        if (user.isBlocked()) {
             throw new AppException(AuthErrorCode.BLOCKED);
         }
         // Verify password
@@ -50,7 +49,7 @@ public class AuthenticateServiceImpl implements AuthenticateService {
             throw new AppException(AuthErrorCode.UNAUTHENTICATED);
         }
         // Generate tokens
-        String accessToken = jwtUtils.generateToken(user.getUser_id());
+        String accessToken = jwtUtils.generateToken(user.getUserId());
         return LoginResponse.builder()
                 .accessToken(accessToken)
                 .userData(userMapper.toUserResponse(user))

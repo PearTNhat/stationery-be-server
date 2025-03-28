@@ -1,6 +1,9 @@
 package com.project.stationery_be_server.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -12,15 +15,22 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "categoryId")
 public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private String category_id;
+    @Column(name = "category_id")
+    private String categoryId;
 
-    @Column(length = 30, nullable = false,unique = true)
-    private String category_name;
+    @Column(name = "category_name", length = 30, nullable = false, unique = true)
+    private String categoryName;
 
-    @OneToMany(mappedBy = "category")
-    @JsonBackReference
+    @Column(name = "icon", length = 10, nullable = false)
+    private String icon;
+
+    @Column(name = "bg_color", length = 20, nullable = false)
+    private String bgColor;
+
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
     private Set<Product> products;
 }

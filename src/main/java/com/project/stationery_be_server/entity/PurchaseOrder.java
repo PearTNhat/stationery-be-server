@@ -1,6 +1,5 @@
 package com.project.stationery_be_server.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
@@ -19,16 +18,18 @@ import java.util.Set;
 public class PurchaseOrder {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private String purchase_order_id;
+    @Column(name = "purchase_order_id")
+    private String purchaseOrderId;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-//    @JsonBackReference
     @JsonIgnore
     private User user;
 
-    private Date created_at;
-    @OneToMany(mappedBy = "purchase_order", cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+    @Column(name = "created_at")
+    private Date createdAt;
+
+    @OneToMany(mappedBy = "purchaseOrder", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
-    private Set<PurchaseOrderDetail> purchase_orders;
+    private Set<PurchaseOrderDetail> purchaseOrderDetails;
 }

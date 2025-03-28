@@ -3,6 +3,7 @@ package com.project.stationery_be_server.utils;
 import org.springframework.stereotype.Component;
 
 import java.util.Random;
+import java.time.Instant;
 
 @Component
 public class OtpUtils {
@@ -15,4 +16,5 @@ public class OtpUtils {
     public int generateOTP() {
         return 100000 + random.nextInt(900000); // Tạo OTP 6 chữ số
     }
+
 }

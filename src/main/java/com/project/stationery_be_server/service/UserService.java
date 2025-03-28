@@ -1,7 +1,10 @@
 package com.project.stationery_be_server.service;
 
+import com.project.stationery_be_server.dto.request.EmailRequest;
+import com.project.stationery_be_server.dto.request.ForgotPasswordRequest;
 import com.project.stationery_be_server.dto.request.RegisterRequest;
 import com.project.stationery_be_server.dto.response.UserResponse;
+import com.project.stationery_be_server.dto.request.OtpVerificationRequest;
 import com.project.stationery_be_server.entity.User;
 import com.project.stationery_be_server.mapper.UserMapper;
 import com.project.stationery_be_server.repository.UserRepository;
@@ -9,14 +12,28 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 
 public interface UserService {
-    //Phương thức đăng ký tài khoản
-    UserResponse register(RegisterRequest request);
-    List<UserResponse> getAll();
+    public List<UserResponse> getAll();
+
+    // Phương thức đăng ký tài khoản, Atrả về thông báo gửi OTP
+    String register(RegisterRequest request);
+
+    // Phương thức xác nhận OTP, trả về thông tin user sau khi đăng ký thành công
+    UserResponse verifyOtp(OtpVerificationRequest otpRequest);
+
+    // Gửi lại OTP nếu người dùng chưa hoàn tất đăng ký
+    String resendOtp(String email);
+
+    // New methods for forgot password
+    String forgotPassword(ForgotPasswordRequest request);
+
+    UserResponse resetPassword(OtpVerificationRequest otpRequest, String newPassword);
+
     UserResponse getUserInfo();
 }

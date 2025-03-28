@@ -8,7 +8,6 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.util.Date;
-import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -21,48 +20,55 @@ import java.util.Set;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    String user_id;
+    @Column(name = "user_id") // Giữ nguyên snake_case trong DB
+    String userId;
 
-    @Column(length = 50)
-    String first_name;
+    @Column(name = "first_name", length = 50)
+    String firstName;
 
-    @Column(length = 50)
-    String last_name;
+    @Column(name = "last_name", length = 50)
+    String lastName;
 
-    @Column(length = 100)
+    @Column(name = "email", length = 100)
     String email;
 
-    @Column(length = 15)
+    @Column(name = "phone", length = 15)
     String phone;
 
-    @Column(length = 100)
+    @Column(name = "password", length = 100)
     String password;
 
     @Temporal(TemporalType.DATE)
+    @Column(name = "dob")
     Date dob;
 
-    @Column(length = 255)
+    @Column(name = "avatar", length = 255)
     String avatar;
 
-    boolean isBlock;
+    @Column(name = "is_blocked") // Chuyển isBlock -> isBlocked
+    boolean isBlocked;
 
+    @Column(name = "otp")
     Integer otp;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "otp_created_at")
+    Date otpCreatedAt;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id", nullable = false)
     @JsonManagedReference
     Role role;
 
-    @OneToMany(mappedBy="user",fetch = FetchType.LAZY,cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonManagedReference
     Set<Address> addresses;
 
-
-    @OneToMany(mappedBy="user",fetch = FetchType.LAZY,cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonManagedReference
     Set<Cart> carts;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
     Set<PurchaseOrder> orders;
 }

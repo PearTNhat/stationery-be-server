@@ -1,9 +1,6 @@
 package com.project.stationery_be_server.entity;
 
-
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -18,13 +15,13 @@ import lombok.experimental.FieldDefaults;
 public class Address {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private String address_id;
+    private String addressId;
 
-    @Column(length = 100)
+    @Column(length = 100, name = "address_name")
     private String addressName;
 
     @JsonBackReference
     @ManyToOne
-    @JoinColumn(name="user_id",referencedColumnName = "user_id")
+    @JoinColumn(name = "user_id", referencedColumnName = "user_id", nullable = false)
     User user;
 }

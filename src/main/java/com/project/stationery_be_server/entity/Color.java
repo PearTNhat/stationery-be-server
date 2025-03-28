@@ -15,15 +15,15 @@ import java.util.Set;
 @Entity
 public class Color {
     @Id
-    @Column(length = 10)
-    String color_id;
+    @Column(name = "color_id", length = 10)
+    String colorId;
 
-    @Column(nullable = false, length = 10,unique = true)
+    @Column(name = "name", nullable = false, length = 10, unique = true)
     String name;
 
-    @Column(nullable = false, length = 7)
+    @Column(name = "hex", nullable = false, length = 7)
     String hex;
 
 //    @OneToMany(mappedBy = "color",fetch = FetchType.LAZY)
-//    Set<ProductColor> product_detail;
+//    Set<ProductColor> productDetail;
 }

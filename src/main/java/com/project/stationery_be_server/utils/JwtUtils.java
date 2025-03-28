@@ -57,7 +57,7 @@ public class JwtUtils {
                 .issuer("ltn.com")
                 .issueTime(new Date())
                 .jwtID(UUID.randomUUID().toString())
-                .claim("scope", user.getRole().getRole_name()) // scope sẻ đc tự động nhân trong getAuthorities
+                .claim("scope", user.getRole().getRoleName()) // scope sẻ đc tự động nhân trong getAuthorities
                 .expirationTime(new Date(
                         Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli()))
                 .build();

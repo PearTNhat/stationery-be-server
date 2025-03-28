@@ -1,6 +1,8 @@
 package com.project.stationery_be_server.controller;
 
-import com.cloudinary.Api;
+import com.project.stationery_be_server.dto.request.EmailRequest;
+import com.project.stationery_be_server.dto.request.ForgotPasswordRequest;
+import com.project.stationery_be_server.dto.request.OtpVerificationRequest;
 import com.project.stationery_be_server.dto.request.RegisterRequest;
 import com.project.stationery_be_server.dto.response.ApiResponse;
 import com.project.stationery_be_server.dto.response.UserResponse;
@@ -23,10 +25,18 @@ import java.util.Map;
 public class UserController {
     UserService userService;
     UploadImageFile uploadImageFile;
+
     @GetMapping
     public ApiResponse<List<UserResponse>> getAllUsers() {
         return ApiResponse.<List<UserResponse>>builder()
                 .result(userService.getAll())
+                .build();
+    }
+
+    @PostMapping("/upload") // Sửa @RequestMapping thành @PostMapping cho ngắn gọn
+    public ApiResponse<Map> uploadFile(@RequestParam("file") MultipartFile file) throws IOException {
+        return ApiResponse.<Map>builder()
+                .result(uploadImageFile.uploadImageFile(file))
                 .build();
     }
     @GetMapping("/info")
@@ -35,18 +45,31 @@ public class UserController {
                 .result(userService.getUserInfo())
                 .build();
     }
-    @RequestMapping(value = "/upload", method = RequestMethod.POST)
-    public ApiResponse<Map>uploadFile(@RequestParam("file") MultipartFile file) throws IOException {
-        return ApiResponse.<Map>builder()
-                .result( uploadImageFile.uploadImageFile(file))
+    @PostMapping("/register")
+    public ApiResponse<String> registerUser(@RequestBody RegisterRequest request) {
+        String message = userService.register(request);
+        return ApiResponse.<String>builder()
+                .message("Registration initiated, please check your email for OTP")
+                .result(message)
                 .build();
     }
-    @PostMapping("/register")
-    public ApiResponse<UserResponse> registerUser(@RequestBody RegisterRequest request) {
-        UserResponse userResponse = userService.register(request);
+
+    @PostMapping("/verify-otp")
+    public ApiResponse<UserResponse> verifyOtp(@RequestBody OtpVerificationRequest request) {
+        UserResponse userResponse = userService.verifyOtp(request);
         return ApiResponse.<UserResponse>builder()
                 .message("User registered successfully")
                 .result(userResponse)
                 .build();
     }
+
+    @PostMapping("/resend-otp")
+    public ApiResponse<String> resendOtp(@RequestBody OtpVerificationRequest request) {
+        String message = userService.resendOtp(request.getEmail());
+        return ApiResponse.<String>builder()
+                .message("OTP sent successfully")
+                .result(message)
+                .build();
+    }
+
 }
