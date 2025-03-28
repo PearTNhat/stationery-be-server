@@ -1,5 +1,7 @@
 package com.project.stationery_be_server.service;
 
+import com.project.stationery_be_server.dto.request.UserCreationRequest;
+import com.project.stationery_be_server.dto.request.UserUpdateRequest;
 import com.project.stationery_be_server.dto.response.UserResponse;
 import com.project.stationery_be_server.entity.User;
 import com.project.stationery_be_server.mapper.UserMapper;
@@ -16,4 +18,6 @@ import java.util.List;
 public interface UserService {
     List<UserResponse> getAll();
     UserResponse getUserInfo();
+    UserResponse updateUser(String userId, UserUpdateRequest request);
+
 }
