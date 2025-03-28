@@ -24,6 +24,6 @@ public class Color {
     @Column(nullable = false, length = 7)
     String hex;
 
-    @OneToMany(mappedBy = "color",fetch = FetchType.LAZY)
-    Set<ProductDetail> product_detail;
+//    @OneToMany(mappedBy = "color",fetch = FetchType.LAZY)
+//    Set<ProductColor> product_detail;
 }
