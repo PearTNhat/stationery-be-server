@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Getter
@@ -15,9 +16,9 @@ import java.util.Date;
 @Entity
 public class InvalidatedToken {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", length = 255)
     String id;
 
     @Column(name = "expired_time", nullable = false)
-    Date expiredTime;
+    LocalDateTime expiredTime;
 }

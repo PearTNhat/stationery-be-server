@@ -2,6 +2,7 @@ package com.project.stationery_be_server.controller;
 
 import com.project.stationery_be_server.dto.request.CategoryRequest;
 import com.project.stationery_be_server.dto.response.ApiResponse;
+import com.project.stationery_be_server.dto.response.CategoryResponse;
 import com.project.stationery_be_server.entity.Category;
 import com.project.stationery_be_server.service.CategoryService;
 import lombok.AccessLevel;
@@ -21,8 +22,8 @@ public class CategoryController {
 
     // Get all categories
     @GetMapping
-    public ApiResponse<List<Category>> getAllCategories() {
-        return ApiResponse.<List<Category>>builder()
+    public ApiResponse<List<CategoryResponse>> getAllCategories() {
+        return ApiResponse.<List<CategoryResponse>>builder()
                 .message("Categories retrieved successfully")
                 .result(categoryService.getAllCategories())
                 .build();
