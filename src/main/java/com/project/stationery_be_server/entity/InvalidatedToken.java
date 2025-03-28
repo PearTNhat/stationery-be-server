@@ -1,10 +1,12 @@
 package com.project.stationery_be_server.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Getter
@@ -16,6 +18,9 @@ import java.util.Date;
 @Entity
 public class InvalidatedToken {
     @Id
-    String id;
-    Date expired_time;
+    @Column(name = "id", length = 512)
+    private String id;
+
+    @Column(name = "expired_time")
+    private LocalDateTime expiredTime;
 }

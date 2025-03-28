@@ -3,8 +3,10 @@ package com.project.stationery_be_server.service.impl;
 import com.project.stationery_be_server.Error.AuthErrorCode;
 import com.project.stationery_be_server.Error.NotExistedErrorCode;
 import com.project.stationery_be_server.dto.request.CategoryRequest;
+import com.project.stationery_be_server.dto.response.CategoryResponse;
 import com.project.stationery_be_server.entity.Category;
 import com.project.stationery_be_server.exception.AppException;
+import com.project.stationery_be_server.mapper.CategoryMapper;
 import com.project.stationery_be_server.repository.CategoryRepository;
 import com.project.stationery_be_server.service.CategoryService;
 import lombok.AccessLevel;
@@ -20,11 +22,14 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class CategoryServiceImpl implements CategoryService {
     CategoryRepository categoryRepository;
+    CategoryMapper categoryMapper;
 
     @Override
     @Transactional(readOnly = true)
-    public List<Category> getAllCategories() {
-        return categoryRepository.findAll();
+    public List<CategoryResponse> getAllCategories() {
+        return categoryRepository.findAll().stream()
+                .map(categoryMapper::toCategoryResponse)
+                .toList();
     }
 
     @Override

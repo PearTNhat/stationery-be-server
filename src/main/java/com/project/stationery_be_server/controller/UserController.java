@@ -1,9 +1,6 @@
 package com.project.stationery_be_server.controller;
 
-import com.project.stationery_be_server.dto.request.EmailRequest;
-import com.project.stationery_be_server.dto.request.ForgotPasswordRequest;
-import com.project.stationery_be_server.dto.request.OtpVerificationRequest;
-import com.project.stationery_be_server.dto.request.RegisterRequest;
+import com.project.stationery_be_server.dto.request.*;
 import com.project.stationery_be_server.dto.response.ApiResponse;
 import com.project.stationery_be_server.dto.response.UserResponse;
 import com.project.stationery_be_server.service.UploadImageFile;
@@ -63,6 +60,15 @@ public class UserController {
         String message = userService.resendOtp(request.getEmail());
         return ApiResponse.<String>builder()
                 .message("OTP sent successfully")
+                .result(message)
+                .build();
+    }
+
+    @PostMapping("/change-password")
+    public ApiResponse<String> changePassword(@RequestBody ChangePasswordRequest request) {
+        String message = userService.changePassword(request.getEmail(), request.getOldPassword(), request.getNewPassword());
+        return ApiResponse.<String>builder()
+                .message("Password changed successfully")
                 .result(message)
                 .build();
     }
