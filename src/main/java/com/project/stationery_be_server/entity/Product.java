@@ -3,7 +3,9 @@ package com.project.stationery_be_server.entity;
 import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Entity
@@ -39,4 +41,8 @@ public class Product {
 
     @Column(name = "total_rating")
     private Double totalRating;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    @CreationTimestamp
+    private LocalDateTime createdAt;
 }
