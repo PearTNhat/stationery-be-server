@@ -35,7 +35,6 @@ public class ProductDetail {
     private int discountPrice;
 
     @ManyToOne
-    @JsonBackReference
     @JoinColumn(name = "size_id")
     private Size size;
 
