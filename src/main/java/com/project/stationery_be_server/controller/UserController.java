@@ -72,5 +72,4 @@ public class UserController {
                 .result(message)
                 .build();
     }
-
 }
