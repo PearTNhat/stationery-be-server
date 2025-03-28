@@ -2,13 +2,10 @@ package com.project.stationery_be_server.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
-import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -16,28 +13,35 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class    ProductDetail {
+public class ProductDetail {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private String product_detail_id;
+    @Column(name = "product_detail_id")
+    private String productDetailId;
 
     @Column(length = 100)
     private String slug;
 
-    private int stock_quantity;
-    private int original_price;
-    private int discount_price;
+    @Column(name = "stock_quantity")
+    private int stockQuantity;
+
+    @Column(name = "original_price")
+    private int originalPrice;
+
+    @Column(name = "discount_price")
+    private int discountPrice;
 
     @ManyToOne
+    @JsonBackReference
     @JoinColumn(name = "size_id")
     private Size size;
 
     @ManyToOne
+    @JsonBackReference
     @JoinColumn(name = "product_color_id", nullable = false)
-    private ProductColor product_color;
+    private ProductColor productColor;
 
-    @OneToMany(mappedBy = "product_detail", cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "productDetail", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
-    private Set<PurchaseOrderDetail> purchase_purchased;
-
+    private Set<PurchaseOrderDetail> purchaseOrderDetails;
 }

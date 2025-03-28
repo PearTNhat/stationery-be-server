@@ -1,13 +1,10 @@
 package com.project.stationery_be_server.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.util.List;
 import java.util.Set;
 
 @Data
@@ -20,15 +17,15 @@ public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "role_id")
-    private String role_id;
+    private String roleId; // Đổi thành camelCase
 
     @Column(name = "role_name", length = 50)
-    private String role_name;
+    private String roleName; // Đổi thành camelCase
 
     @Column(name = "description", length = 500)
     private String description;
 
     @OneToMany(mappedBy = "role")
     @JsonBackReference
-    private Set<User> user;
+    private Set<User> users; // Đổi thành số nhiều để đúng nghĩa
 }

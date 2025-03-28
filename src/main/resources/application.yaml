@@ -26,8 +26,8 @@ spring:
             enable: true
 jwt:
   signerKey: ${SIGNER_KEY}
-  valid-duration: 12000 #seconds
-  refreshable-duration: 36000 #seconds
+  valid-duration: 1200000 #seconds
+  refreshable-duration: 3600000 #seconds
 cloudinary:
   cloudName: ${CLOUDINARY_NAME}
   apiKey: ${CLOUDINARY_API_KEY}

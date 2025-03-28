@@ -1,7 +1,7 @@
 package com.project.stationery_be_server.entity;
 
-
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -18,20 +18,24 @@ import java.util.Set;
 public class ProductColor {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    String product_color_id;
+    @Column(name = "product_color_id")
+    private String productColorId;
 
     @ManyToOne
+    @JsonBackReference
     @JoinColumn(name = "color_id")
-    Color color;
+    private Color color;
 
-    @OneToMany(mappedBy = "product_color")
-    Set<ProductDetail> product_details;
+    @OneToMany(mappedBy = "productColor")
+    @JsonManagedReference
+    private Set<ProductDetail> productDetails;
 
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
     @JsonBackReference
     private Product product;
 
-    @OneToMany(mappedBy = "product_color")
-    Set<Image> images;
+    @OneToMany(mappedBy = "productColor")
+    @JsonManagedReference
+    private Set<Image> images;
 }

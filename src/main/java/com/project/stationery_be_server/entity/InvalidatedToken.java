@@ -1,7 +1,6 @@
 package com.project.stationery_be_server.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -16,6 +15,9 @@ import java.util.Date;
 @Entity
 public class InvalidatedToken {
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     String id;
-    Date expired_time;
+
+    @Column(name = "expired_time", nullable = false)
+    Date expiredTime;
 }

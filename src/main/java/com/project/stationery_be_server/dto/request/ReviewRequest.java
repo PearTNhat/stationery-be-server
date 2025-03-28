@@ -9,9 +9,8 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ReviewRequest {
-    String product_id;
-    String user_id;
+    String productId;
     String content;
-    String parent_id;
+    String parentId;
     Integer rating;
 }

@@ -1,9 +1,9 @@
 package com.project.stationery_be_server.entity;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -11,29 +11,32 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "productId")
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private String product_id;
+    @Column(name = "product_id")
+    private String productId;
 
-    @Column(length = 50, nullable = false)
+    @Column(name = "name", length = 50, nullable = false)
     private String name;
 
-    @Column(length = 500)
+    @Column(name = "description", length = 500)
     private String description;
 
     @ManyToOne
-    @JsonManagedReference
     @JoinColumn(name = "category_id", nullable = false)
+    @JsonIgnoreProperties({"icon", "bgColor", "products"})
     private Category category;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     @JsonManagedReference
-    private Set<ProductColor> product_colors;
+    private Set<ProductColor> productColors;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     @JsonManagedReference
-    private Set<Review>reviews;
+    private Set<Review> reviews;
 
+    @Column(name = "total_rating")
+    private Double totalRating;
 }
-

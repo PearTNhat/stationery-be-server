@@ -20,20 +20,20 @@ public class ColorServiceImpl implements ColorService {
 
     public ColorResponse createColor(ColorRequest request){
         Color color = new Color();
-        color.setColor_id(request.getColor_id());
+        color.setColorId(request.getColor_id());
         color.setName(request.getName());
         color.setHex(request.getHex());
 
         Color savedColor = colorRepository.save(color);
 
-        return new ColorResponse(savedColor.getColor_id(), savedColor.getName(), savedColor.getHex());
+        return new ColorResponse(savedColor.getColorId(), savedColor.getName(), savedColor.getHex());
     }
 
     @Override
     public List<ColorResponse> getAllColors() {
         List<Color> colors = colorRepository.findAll();
         return colors.stream()
-                .map(color -> new ColorResponse(color.getColor_id(), color.getName(), color.getHex()))
+                .map(color -> new ColorResponse(color.getColorId(), color.getName(), color.getHex()))
                 .collect(Collectors.toList());
     }
 
@@ -46,7 +46,7 @@ public class ColorServiceImpl implements ColorService {
         color.setHex(request.getHex());
 
         Color updatedColor = colorRepository.save(color);
-        return new ColorResponse(updatedColor.getColor_id(), updatedColor.getName(), updatedColor.getHex());
+        return new ColorResponse(updatedColor.getColorId(), updatedColor.getName(), updatedColor.getHex());
     }
 }
 

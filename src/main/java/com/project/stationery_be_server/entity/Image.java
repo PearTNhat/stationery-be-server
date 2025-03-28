@@ -1,5 +1,6 @@
 package com.project.stationery_be_server.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -14,16 +15,17 @@ import lombok.experimental.FieldDefaults;
 public class Image {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    String image_id;
+    @Column(name = "image_id")
+    String imageId;
 
-
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(name = "url", nullable = false, columnDefinition = "TEXT")
     String url;  // Đường dẫn ảnh
 
-    @Column(nullable = false)
+    @Column(name = "priority", nullable = false)
     int priority;  // Độ ưu tiên hiển thị
 
     @ManyToOne
-    @JoinColumn(name="product_color_id")
-    ProductColor product_color;
+    @JoinColumn(name = "product_color_id", nullable = false)
+    @JsonBackReference
+    ProductColor productColor;
 }
