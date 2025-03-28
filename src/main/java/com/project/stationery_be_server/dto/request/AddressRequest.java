@@ -1,6 +1,6 @@
 package com.project.stationery_be_server.dto.request;
-
-import com.project.stationery_be_server.entity.Role;
+import com.project.stationery_be_server.entity.Address;
+import com.project.stationery_be_server.entity.User;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -9,9 +9,8 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class RoleRequest {
-    String role_id;
-    String role_name;
-    String description;
+public class AddressRequest {
+    String address_id;
+    String address_name;
+    String user_id;
 }
-

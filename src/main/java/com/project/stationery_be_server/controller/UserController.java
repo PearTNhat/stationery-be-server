@@ -1,8 +1,6 @@
 package com.project.stationery_be_server.controller;
 
-import com.cloudinary.Api;
-import com.project.stationery_be_server.dto.request.UserCreationRequest;
-import com.project.stationery_be_server.dto.request.UserUpdateRequest;
+import com.project.stationery_be_server.dto.request.UserRequest;
 import com.project.stationery_be_server.dto.response.ApiResponse;
 import com.project.stationery_be_server.dto.response.UserResponse;
 import com.project.stationery_be_server.service.UploadImageFile;
@@ -46,7 +44,7 @@ public class UserController {
 
 
     @PutMapping("/{userId}")
-    public ApiResponse<UserResponse> updateUser(@PathVariable String userId, @RequestBody UserUpdateRequest request) {
+    public ApiResponse<UserResponse> updateUser(@PathVariable String userId, @RequestBody UserRequest request) {
         return ApiResponse.<UserResponse>builder()
                 .result(userService.updateUser(userId, request))
                 .build();

@@ -1,8 +1,7 @@
 package com.project.stationery_be_server.service.impl;
 
 import com.project.stationery_be_server.Error.NotExistedErrorCode;
-import com.project.stationery_be_server.dto.request.UserCreationRequest;
-import com.project.stationery_be_server.dto.request.UserUpdateRequest;
+import com.project.stationery_be_server.dto.request.UserRequest;
 import com.project.stationery_be_server.dto.response.UserResponse;
 import com.project.stationery_be_server.entity.User;
 import com.project.stationery_be_server.exception.AppException;
@@ -50,7 +49,7 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public UserResponse updateUser(String userId, UserUpdateRequest request) {
+    public UserResponse updateUser(String userId, UserRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(NotExistedErrorCode.USER_NOT_EXISTED));
 
@@ -62,7 +61,7 @@ public class UserServiceImpl implements UserService {
         user.setAvatar(request.getAvatar());
         user.setBlock(request.isBlock());
         user.setOtp(request.getOtp());
-        user.setRole(roleRepository.findById(request.getRoleRequest().getRole_id()).orElseThrow(() -> new RuntimeException("Role not found")));
+        user.setRole(roleRepository.findById(request.getRole_id()).orElseThrow(() -> new RuntimeException("Role not found")));
 
         if (request.getPassword() != null && !request.getPassword().isEmpty()) {
             user.setPassword(passwordEncoder.encode(request.getPassword()));

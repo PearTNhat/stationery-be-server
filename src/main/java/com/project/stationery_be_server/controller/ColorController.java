@@ -18,7 +18,7 @@ public class ColorController {
     private final ColorService colorService;
 
     @PostMapping
-    public ApiResponse<ColorResponse> createUser(@RequestBody ColorRequest colorRequest) {
+    public ApiResponse<ColorResponse> createColor(@RequestBody ColorRequest colorRequest) {
         return ApiResponse.<ColorResponse>builder()
                 .result(colorService.createColor(colorRequest))
                 .build();

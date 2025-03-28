@@ -10,7 +10,7 @@ spring:
   jpa:
     hibernate:
 #       Hibernate sẽ tự động tạo bảng dựa trên Entity (nếu chưa có) và cập nhật schema nếu thay đổi.
-      ddl-auto: update
+      ddl-auto: none
 #       Hiển thị câu lệnh SQL trên console.
     show-sql: true
   mail:
