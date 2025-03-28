@@ -8,9 +8,11 @@ import com.project.stationery_be_server.dto.request.ForgotPasswordRequest;
 import com.project.stationery_be_server.dto.request.OtpVerificationRequest;
 import com.project.stationery_be_server.dto.request.RegisterRequest;
 import com.project.stationery_be_server.dto.response.UserResponse;
+import com.project.stationery_be_server.entity.Role;
 import com.project.stationery_be_server.entity.User;
 import com.project.stationery_be_server.exception.AppException;
 import com.project.stationery_be_server.mapper.UserMapper;
+import com.project.stationery_be_server.repository.RoleRepository;
 import com.project.stationery_be_server.repository.UserRepository;
 import com.project.stationery_be_server.service.EmailService;
 import com.project.stationery_be_server.service.UserService;
@@ -38,6 +40,7 @@ public class UserServiceImpl implements UserService {
     PasswordEncoder passwordEncoder;
     EmailService emailService;
     OtpUtils otpUtils;
+    RoleRepository roleRepository;
 
     // Temporary storage for pending registrations
     private final Map<String, RegisterRequest> pendingRegistrations = new HashMap<>();
@@ -46,7 +49,6 @@ public class UserServiceImpl implements UserService {
     private static class OtpDetails {
         Integer otp;
         Date createdAt;
-
         OtpDetails(Integer otp, Date createdAt) {
             this.otp = otp;
             this.createdAt = createdAt;
@@ -56,7 +58,6 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public List<UserResponse> getAll() {
-        log.info("Fetching all users");
         return userRepository.findAll().stream()
                 .map(userMapper::toUserResponse)
                 .toList();
@@ -66,18 +67,12 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public String register(RegisterRequest request) {
         String email = request.getEmail();
-        log.info("Register request received for email: {}", email);
-
         if (userRepository.existsByEmail(email)) {
-            log.warn("Registration failed - email already exists: {}", email);
             throw new AppException(NotExistedErrorCode.EMAIL_ALREADY_EXISTS);
         }
-
         if (pendingRegistrations.containsKey(email)) {
-            log.warn("Pending registration already exists for email: {}", email);
             throw new AppException(NotExistedErrorCode.PENDING_REGISTRATION_EXISTS);
         }
-
         return sendOtp(request);
     }
 
@@ -85,28 +80,18 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public String forgotPassword(ForgotPasswordRequest request) {
         String email = request.getEmail();
-        System.out.println("Forgot password request received for email: " + email);
-        log.info("Forgot password request received for email: {}", email);
-
         // Check if user exists
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> {
-                    log.warn("User not found for email: {}", email);
                     return new AppException(NotExistedErrorCode.USER_NOT_EXISTED);
                 });
-
         // Generate and store OTP
         Integer otp = otpUtils.generateOTP();
         otpStorage.put(email, new OtpDetails(otp, new Date()));
-
-        log.info("OTP generated for forgot password - email: {}", email);
-
         try {
             emailService.sendSimpleMail(new EmailRequest(email, otp));
-            log.info("Forgot password OTP email sent successfully to: {}", email);
             return "OTP sent to " + email;
         } catch (Exception e) {
-            log.error("Failed to send forgot password OTP email to {}: {}", email, e.getMessage());
             otpStorage.remove(email);
             throw new AppException(AuthErrorCode.SEND_MAIL_FAILD);
         }
@@ -117,48 +102,33 @@ public class UserServiceImpl implements UserService {
     public UserResponse resetPassword(OtpVerificationRequest otpRequest, String newPassword) {
         String email = otpRequest.getEmail();
         Integer userOtp = otpRequest.getOtp();
-
-        log.info("Reset password request for email: {}", email);
-
         // Verify user exists
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> {
-                    log.warn("User not found for email: {}", email);
                     return new AppException(NotExistedErrorCode.USER_NOT_EXISTED);
                 });
-
         // Verify OTP
         OtpDetails otpDetails = otpStorage.get(email);
         if (otpDetails == null) {
-            log.warn("No OTP found for email: {}", email);
             throw new AppException(NotExistedErrorCode.OTP_NOT_FOUND);
         }
-
         // Check OTP expiration (5 minutes)
         if (otpDetails.createdAt == null ||
                 (new Date().getTime() - otpDetails.createdAt.getTime() > 300_000)) {
-            log.info("OTP expired for email: {}", email);
             otpStorage.remove(email);
             throw new AppException(AuthErrorCode.OTP_EXPIRED);
         }
-
         // Verify OTP match
         if (!otpDetails.otp.equals(userOtp)) {
-            log.warn("Invalid OTP for email: {}", email);
             throw new AppException(InvalidErrorCode.INVALID_OTP);
         }
-
         // Update password
         user.setPassword(passwordEncoder.encode(newPassword));
-        user.setOtp(otpDetails.otp);  // Update OTP in DB
+        user.setOtp(otpDetails.otp);
         user.setOtpCreatedAt(otpDetails.createdAt);
-
         User updatedUser = userRepository.save(user);
-
         // Clean up OTP storage
         otpStorage.remove(email);
-
-        log.info("Password reset successfully for email: {}", email);
         return userMapper.toUserResponse(updatedUser);
     }
 
@@ -167,89 +137,87 @@ public class UserServiceImpl implements UserService {
     public UserResponse verifyOtp(OtpVerificationRequest otpRequest) {
         String email = otpRequest.getEmail();
         Integer userOtp = otpRequest.getOtp();
-
-        log.info("Verifying OTP for email: {}", email);
-
         OtpDetails otpDetails = otpStorage.get(email);
         if (otpDetails == null) {
-            log.warn("No OTP found for email: {}", email);
             throw new AppException(NotExistedErrorCode.OTP_NOT_FOUND);
         }
-
-        // Check if OTP is expired (5 minutes = 300,000 milliseconds)
         if (otpDetails.createdAt == null ||
                 (new Date().getTime() - otpDetails.createdAt.getTime() > 300_000)) {
-            log.info("OTP expired for email: {}", email);
             otpStorage.remove(email);
             pendingRegistrations.remove(email);
             throw new AppException(AuthErrorCode.OTP_EXPIRED);
         }
-
-        // Compare OTPs
         if (!otpDetails.otp.equals(userOtp)) {
-            log.warn("Invalid OTP for email: {}", email);
             throw new AppException(InvalidErrorCode.INVALID_OTP);
         }
-
         RegisterRequest request = pendingRegistrations.get(email);
         if (request == null) {
-            log.warn("No pending registration found for email: {}", email);
             throw new AppException(NotExistedErrorCode.PENDING_REGISTRATION_NOT_FOUND);
         }
-
-        // Create user only after successful OTP verification
+        Role role = roleRepository.findById(112)
+                .orElseThrow(() -> new RuntimeException("Role User not found"));
         User user = User.builder()
                 .first_name(request.getFirst_name())
                 .last_name(request.getLast_name())
                 .email(email)
                 .password(passwordEncoder.encode(request.getPassword()))
                 .isBlock(false)
-                .otp(otpDetails.otp)  // Store OTP in DB
+                .otp(otpDetails.otp)
+                .role(role)
                 .otpCreatedAt(otpDetails.createdAt)
                 .build();
-
         User savedUser = userRepository.save(user);
-
-        // Clean up temporary storage
         pendingRegistrations.remove(email);
         otpStorage.remove(email);
-
-        log.info("OTP verified and user created successfully for email: {}", email);
         return userMapper.toUserResponse(savedUser);
     }
+
 
     @Override
     @Transactional
     public String resendOtp(String email) {
-        log.info("Resend OTP requested for email: {}", email);
-
         RegisterRequest request = pendingRegistrations.get(email);
         if (request == null) {
             throw new AppException(NotExistedErrorCode.PENDING_REGISTRATION_NOT_FOUND);
         }
-
         return sendOtp(request);
     }
 
     private String sendOtp(RegisterRequest request) {
         String email = request.getEmail();
         Integer otp = otpUtils.generateOTP();
-
         // Store registration details and OTP in memory
         pendingRegistrations.put(email, request);
         otpStorage.put(email, new OtpDetails(otp, new Date()));
-
-        log.info("OTP generated for {}: {}", email, otp);
-
         try {
             emailService.sendSimpleMail(new EmailRequest(email, otp));
-            log.info("OTP email sent successfully to: {}", email);
             return "OTP sent to " + email;
         } catch (Exception e) {
-            log.error("Failed to send OTP email to {}: {}", email, e.getMessage());
             pendingRegistrations.remove(email);
             otpStorage.remove(email);
             throw new AppException(AuthErrorCode.SEND_MAIL_FAILD);
         }
+    }
+
+    @Override
+    @Transactional
+    public String changePassword(String email, String oldPassword, String newPassword) {
+        //Check user
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> {
+                    return new AppException(NotExistedErrorCode.USER_NOT_EXISTED);
+                });
+        // Check password old
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new AppException(AuthErrorCode.INCORRECT_OLD_PASSWORD);
+        }
+        // Check new password
+        if (passwordEncoder.matches(newPassword, user.getPassword())) {
+            throw new AppException(AuthErrorCode.PASSWORD_SAME_AS_OLD);
+        }
+        // Update new password
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        return "Password changed successfully";
     }
 }

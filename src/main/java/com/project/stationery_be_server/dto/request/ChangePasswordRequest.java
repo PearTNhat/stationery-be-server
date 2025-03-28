@@ -9,9 +9,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class CategoryRequest {
-    private String category_id;
-    private String category_name;
-    private String icon;
-    private String bg_color;
+public class ChangePasswordRequest {
+    String email;
+    String oldPassword;
+    String newPassword;
 }
