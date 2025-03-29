@@ -18,8 +18,7 @@ import java.util.Set;
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "categoryId")
 public class Category {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "category_id")
+    @Column(name = "category_id", length = 30)
     private String categoryId;
 
     @Column(name = "category_name", length = 30, nullable = false, unique = true)

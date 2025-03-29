@@ -10,7 +10,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface ProductService {
-    Page<Product> getAllProducts(Pageable pageable);
+    Page<Product> getAllProducts(Pageable pageable ,String categoryId);
 
     @Transactional
     void handleUpdateTotalProductRating(String productId, String type, Integer rating);

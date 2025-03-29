@@ -25,8 +25,8 @@ public class ProductServiceImpl implements ProductService {
     private final ReviewRepository reviewRepository;
 
     @Override
-    public Page<Product> getAllProducts(Pageable pageable) {
-        return productRepository.findAll(pageable);
+    public Page<Product> getAllProducts(Pageable pageable ,String categoryId) {
+        return productRepository.findAllByCategoryName(categoryId,pageable);
     }
     @Override
     @Transactional

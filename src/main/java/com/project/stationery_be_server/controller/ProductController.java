@@ -29,11 +29,13 @@ public class ProductController {
     public ApiResponse<Page<Product>> getAllProducts(@RequestParam(defaultValue = "0") int page,
                                                      @RequestParam(defaultValue = "10") int limit,
                                                      @RequestParam(defaultValue = "createdAt") String sortBy,
-                                                     @RequestParam(defaultValue = "true") boolean ascending) {
+                                                     @RequestParam(defaultValue = "true") boolean ascending,
+                                                     @RequestParam String categoryId
+    ) {
         Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, limit, sort);
         return ApiResponse.<Page<Product>>builder()
-                .result(productService.getAllProducts(pageable))
+                .result(productService.getAllProducts(pageable,categoryId))
                 .build();
     }
 }
