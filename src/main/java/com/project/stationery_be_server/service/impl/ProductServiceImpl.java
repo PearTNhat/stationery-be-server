@@ -2,17 +2,20 @@ package com.project.stationery_be_server.service.impl;
 
 
 import com.project.stationery_be_server.Error.NotExistedErrorCode;
+import com.project.stationery_be_server.dto.request.ProductFilterRequest;
 import com.project.stationery_be_server.entity.Product;
 import com.project.stationery_be_server.exception.AppException;
 import com.project.stationery_be_server.repository.ProductRepository;
 import com.project.stationery_be_server.repository.ReviewRepository;
 import com.project.stationery_be_server.service.ProductService;
+import com.project.stationery_be_server.specification.ProductSpecification;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -25,8 +28,10 @@ public class ProductServiceImpl implements ProductService {
     private final ReviewRepository reviewRepository;
 
     @Override
-    public Page<Product> getAllProducts(Pageable pageable ,String categoryId) {
-        return productRepository.findAllByCategoryName(categoryId,pageable);
+        public Page<Product> getAllProducts(Pageable pageable , ProductFilterRequest filter) {
+        Specification<Product> spec = ProductSpecification.filterProducts(filter);
+//        System.out.println(spec);
+        return productRepository.findAll(spec,pageable);
     }
     @Override
     @Transactional
@@ -42,6 +47,7 @@ public class ProductServiceImpl implements ProductService {
 
         } else if (type.equalsIgnoreCase("delete")) {
             length -= 1;
+            sumRating -= rating;
         } else {
             throw new IllegalArgumentException("Type must be create, update or delete");
         }
