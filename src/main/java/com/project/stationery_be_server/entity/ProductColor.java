@@ -22,7 +22,6 @@ public class ProductColor {
     private String productColorId;
 
     @ManyToOne
-    @JsonBackReference
     @JoinColumn(name = "color_id")
     private Color color;
 
