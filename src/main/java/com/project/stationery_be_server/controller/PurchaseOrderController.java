@@ -5,13 +5,10 @@ import com.project.stationery_be_server.dto.request.PurchaseOrderRequest;
 import com.project.stationery_be_server.dto.response.PurchaseOrderResponse;
 import com.project.stationery_be_server.service.PurchaseOrderService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/orders")
+@RequestMapping("/purchase-orders")
 public class PurchaseOrderController {
     private final PurchaseOrderService purchaseOrderService;
 
@@ -19,8 +16,8 @@ public class PurchaseOrderController {
         this.purchaseOrderService = purchaseOrderService;
     }
 
-    @PostMapping("/from-cart")
-    public ResponseEntity<PurchaseOrderResponse> createOrderFromCart(@RequestBody PurchaseOrderRequest request) {
-        return ResponseEntity.ok(purchaseOrderService.createOrderFromCart(request));
+    @PostMapping("/{userId}")
+    public ResponseEntity<PurchaseOrderResponse> createOrderFromCart(@RequestBody PurchaseOrderRequest request,@PathVariable String userId) {
+        return ResponseEntity.ok(purchaseOrderService.createOrderFromCart(request,userId));
     }
 }

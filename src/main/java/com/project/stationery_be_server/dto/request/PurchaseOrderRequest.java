@@ -14,7 +14,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class PurchaseOrderRequest {
-    private String userId;
     private String pdfUrl;
     private String productPromotionId;
     private String userPromotionId;

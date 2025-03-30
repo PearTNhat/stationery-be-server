@@ -39,11 +39,11 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
 
     @Transactional
     @Override
-    public PurchaseOrderResponse createOrderFromCart(PurchaseOrderRequest request) {
-        User user = userRepository.findById(request.getUserId())
+    public PurchaseOrderResponse createOrderFromCart(PurchaseOrderRequest request,String userId) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        List<Cart> cartItems = cartRepository.findByUser_UserId(request.getUserId());
+        List<Cart> cartItems = cartRepository.findByUser_UserId(userId);
         if (cartItems.isEmpty()) {
             throw new RuntimeException("Cart is empty");
         }
@@ -94,7 +94,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
 
         purchaseOrder.setAmount(finalAmount);
         purchaseOrder = purchaseOrderRepository.save(purchaseOrder);
-        cartRepository.deleteByUser_UserId(request.getUserId());
+        cartRepository.deleteByUser_UserId(userId);
 
         return new PurchaseOrderResponse(
                 purchaseOrder.getPurchaseOrderId(),
