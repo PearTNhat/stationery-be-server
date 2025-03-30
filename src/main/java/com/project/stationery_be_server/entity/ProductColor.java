@@ -6,7 +6,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.Comparator;
 import java.util.Set;
+import java.util.TreeSet;
 
 @Getter
 @Setter
@@ -36,5 +38,6 @@ public class ProductColor {
 
     @OneToMany(mappedBy = "productColor")
     @JsonManagedReference
+    @OrderBy("priority ASC")
     private Set<Image> images;
 }

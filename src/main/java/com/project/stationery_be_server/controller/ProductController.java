@@ -2,7 +2,7 @@ package com.project.stationery_be_server.controller;
 
 import com.project.stationery_be_server.dto.request.ProductFilterRequest;
 import com.project.stationery_be_server.dto.response.ApiResponse;
-import com.project.stationery_be_server.entity.Product;
+import com.project.stationery_be_server.dto.response.ProductListResponse;
 import com.project.stationery_be_server.service.ProductService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -19,18 +19,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/products")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ProductController {
-    private final ProductService productService;
-    private final PagedResourcesAssembler<Product> pagedResourcesAssembler; // Inject
+    ProductService productService;
+    PagedResourcesAssembler<ProductListResponse> pagedResourcesAssembler; // Inject
 
     @GetMapping
-    public ApiResponse<PagedModel<EntityModel<Product>>> getAllProducts(@RequestParam(defaultValue = "0") int page,
+    public ApiResponse<PagedModel<EntityModel<ProductListResponse>>> getAllProducts(@RequestParam(defaultValue = "0") int page,
                                                                         @RequestParam(defaultValue = "10") int limit,
                                                                         @RequestParam(defaultValue = "createdAt") String sortBy,
                                                                         @RequestParam(defaultValue = "true") boolean ascending,
@@ -49,9 +47,9 @@ public class ProductController {
                 .search(search)
                 .totalRating(totalRating)
                 .build();
-        Page<Product> pageResult = productService.getAllProducts(pageable, filterRequest);
-        PagedModel<EntityModel<Product>> result = pagedResourcesAssembler.toModel(pageResult);
-        return ApiResponse.<PagedModel<EntityModel<Product>>>builder()
+        Page<ProductListResponse> pageResult = productService.getAllProducts(pageable, filterRequest);
+        PagedModel<EntityModel<ProductListResponse>> result = pagedResourcesAssembler.toModel(pageResult);
+        return ApiResponse.<PagedModel<EntityModel<ProductListResponse>>>builder()
                 .result(result)
                 .build();
     }
