@@ -1,6 +1,5 @@
 package com.project.stationery_be_server.dto.response;
 
-
 import com.project.stationery_be_server.entity.PurchaseOrder;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,5 +18,10 @@ import java.util.List;
 public class PurchaseOrderResponse {
     private String purchaseOrderId;
     private Date createdAt;
+    private String pdfUrl;
+    private String productPromotionId;
+    private String userPromotionId;
+    private PurchaseOrder.Status status;
+    private BigDecimal amount;
     private List<PurchaseOrderDetailResponse> orderDetails;
 }
