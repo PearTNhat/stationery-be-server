@@ -3,8 +3,10 @@ package com.project.stationery_be_server.service.impl;
 
 import com.project.stationery_be_server.Error.NotExistedErrorCode;
 import com.project.stationery_be_server.dto.request.ProductFilterRequest;
+import com.project.stationery_be_server.dto.response.ProductListResponse;
 import com.project.stationery_be_server.entity.Product;
 import com.project.stationery_be_server.exception.AppException;
+import com.project.stationery_be_server.mapper.ProductMapper;
 import com.project.stationery_be_server.repository.ProductRepository;
 import com.project.stationery_be_server.repository.ReviewRepository;
 import com.project.stationery_be_server.service.ProductService;
@@ -14,6 +16,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -25,13 +28,17 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ProductServiceImpl implements ProductService {
     ProductRepository productRepository;
-    private final ReviewRepository reviewRepository;
+    ReviewRepository reviewRepository;
+    ProductMapper productMapper;
 
     @Override
-        public Page<Product> getAllProducts(Pageable pageable , ProductFilterRequest filter) {
+        public Page<ProductListResponse> getAllProducts(Pageable pageable , ProductFilterRequest filter) {
         Specification<Product> spec = ProductSpecification.filterProducts(filter);
-//        System.out.println(spec);
-        return productRepository.findAll(spec,pageable);
+        Page<Product> products = productRepository.findAll(spec,pageable);
+        List<ProductListResponse> productListResponses = products.getContent().stream()
+                .map(productMapper::toProductListResponse)
+                .toList();
+        return new PageImpl<>(productListResponses, pageable, products.getTotalElements());
     }
     @Override
     @Transactional
