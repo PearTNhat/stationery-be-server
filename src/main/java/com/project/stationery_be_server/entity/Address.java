@@ -24,4 +24,5 @@ public class Address {
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "user_id", nullable = false)
     User user;
+
 }

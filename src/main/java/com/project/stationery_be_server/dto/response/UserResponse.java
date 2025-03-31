@@ -16,10 +16,10 @@ import java.util.Set;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserResponse {
-     String user_id;
+     String userId;
      String avatar;
-     String first_name;
-     String last_name;
+     String firstName;
+     String lastName;
      String email;
      String phone;
      Set<Address> addresses; // Foreign key to Address
