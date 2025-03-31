@@ -5,18 +5,19 @@ import com.project.stationery_be_server.dto.response.ColorResponse;
 import com.project.stationery_be_server.entity.Color;
 import com.project.stationery_be_server.repository.ColorRepository;
 import com.project.stationery_be_server.service.ColorService;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ColorServiceImpl implements ColorService {
-    private final ColorRepository colorRepository;
-
-    public ColorServiceImpl(ColorRepository colorRepository) {
-        this.colorRepository = colorRepository;
-    }
+    final ColorRepository colorRepository;
 
     public ColorResponse createColor(ColorRequest request){
         Color color = new Color();

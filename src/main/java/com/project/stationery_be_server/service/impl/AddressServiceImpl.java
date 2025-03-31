@@ -9,6 +9,9 @@ import com.project.stationery_be_server.entity.User;
 import com.project.stationery_be_server.repository.AddressRepository;
 import com.project.stationery_be_server.repository.UserRepository;
 import com.project.stationery_be_server.service.AddressService;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -16,15 +19,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AddressServiceImpl implements AddressService {
-    private final AddressRepository addressRepository;
-    private final UserRepository userRepository;
-
-
-    public AddressServiceImpl(AddressRepository addressRepository, UserRepository userRepository) {
-        this.addressRepository = addressRepository;
-        this.userRepository = userRepository;
-    }
+    final AddressRepository addressRepository;
+    final UserRepository userRepository;
 
     @Override
     public AddressResponse createAddress(AddressRequest addressRequest) {
