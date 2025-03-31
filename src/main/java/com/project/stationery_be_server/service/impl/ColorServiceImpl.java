@@ -20,7 +20,7 @@ public class ColorServiceImpl implements ColorService {
 
     public ColorResponse createColor(ColorRequest request){
         Color color = new Color();
-        color.setColorId(request.getColor_id());
+        color.setColorId(request.getColorId());
         color.setName(request.getName());
         color.setHex(request.getHex());
 
