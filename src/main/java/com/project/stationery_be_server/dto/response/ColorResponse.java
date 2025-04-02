@@ -6,7 +6,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class ColorResponse {
-    String color_id;
+    String colorId;
     String name;
     String hex;
 }
