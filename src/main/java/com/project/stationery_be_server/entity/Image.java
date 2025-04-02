@@ -1,6 +1,8 @@
 package com.project.stationery_be_server.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -12,6 +14,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "imageId")
 public class Image {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -26,6 +29,5 @@ public class Image {
 
     @ManyToOne
     @JoinColumn(name = "product_color_id", nullable = false)
-    @JsonBackReference
     ProductColor productColor;
 }

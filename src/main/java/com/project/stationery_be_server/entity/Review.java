@@ -1,8 +1,6 @@
 package com.project.stationery_be_server.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -17,6 +15,7 @@ import java.util.Set;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "reviewId")
 public class Review {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -30,7 +29,6 @@ public class Review {
 
     @ManyToOne
     @JoinColumn(name = "product_id")
-    @JsonBackReference
     private Product product;
 
     private String content;
@@ -40,11 +38,9 @@ public class Review {
     private String reviewImage;
 
     @ManyToOne
-    @JsonBackReference
     @JoinColumn(name = "parent_id", referencedColumnName = "review_id")
     private Review parentReview;
 
-    @JsonManagedReference
     @OneToMany(mappedBy = "parentReview", cascade = CascadeType.ALL)
     private Set<Review> childReviews;
 

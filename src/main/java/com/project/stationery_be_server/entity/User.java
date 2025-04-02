@@ -55,6 +55,10 @@ public class User {
     @Column(name = "otp_created_at")
     Date otpCreatedAt;
 
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonIgnore
+    Set<Review> reviews;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id", nullable = false)
     @JsonManagedReference
