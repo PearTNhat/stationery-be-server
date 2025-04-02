@@ -1,7 +1,6 @@
 package com.project.stationery_be_server.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,6 +15,7 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "productDetailId")
 public class ProductDetail {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -42,7 +42,6 @@ public class ProductDetail {
     private Size size;
 
     @ManyToOne
-    @JsonBackReference
     @JoinColumn(name = "product_color_id", nullable = false)
     private ProductColor productColor;
 

@@ -5,8 +5,10 @@ import com.project.stationery_be_server.Error.NotExistedErrorCode;
 import com.project.stationery_be_server.dto.request.ProductFilterRequest;
 import com.project.stationery_be_server.dto.response.ProductListResponse;
 import com.project.stationery_be_server.entity.Product;
+import com.project.stationery_be_server.entity.ProductDetail;
 import com.project.stationery_be_server.exception.AppException;
 import com.project.stationery_be_server.mapper.ProductMapper;
+import com.project.stationery_be_server.repository.ProductDetailRepository;
 import com.project.stationery_be_server.repository.ProductRepository;
 import com.project.stationery_be_server.repository.ReviewRepository;
 import com.project.stationery_be_server.service.ProductService;
@@ -22,6 +24,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +32,7 @@ import java.util.List;
 public class ProductServiceImpl implements ProductService {
     ProductRepository productRepository;
     ReviewRepository reviewRepository;
+    ProductDetailRepository productDetailRepository;
     ProductMapper productMapper;
 
     @Override
@@ -40,6 +44,20 @@ public class ProductServiceImpl implements ProductService {
                 .toList();
         return new PageImpl<>(productListResponses, pageable, products.getTotalElements());
     }
+
+    @Override
+    public ProductDetail getProductDetail(String slug) {
+        ProductDetail productDetail = productDetailRepository.findBySlug(slug);
+//        if (productDetail != null && productDetail.getProductColor() != null) {
+//            // Lấy danh sách productDetails từ ProductColor
+//            Set<ProductDetail> productDetails = productDetail.getProductColor().getProductDetails();
+//
+//            // Loại bỏ phần tử nào là String
+//            productDetails.removeIf(pd -> pd instanceof String);
+//        }
+        return productDetail;
+    }
+
     @Override
     @Transactional
     public void handleUpdateTotalProductRating(String productId, String type, Integer rating) {

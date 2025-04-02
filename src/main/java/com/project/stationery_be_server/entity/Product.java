@@ -35,11 +35,9 @@ public class Product {
     private Category category;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
-    @JsonManagedReference
     private Set<ProductColor> productColors;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
-    @JsonManagedReference
     private Set<Review> reviews;
 
     @Column(name = "total_rating")
