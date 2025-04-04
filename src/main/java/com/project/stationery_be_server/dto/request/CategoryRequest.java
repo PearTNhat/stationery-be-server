@@ -10,8 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class CategoryRequest {
-    private String category_id;
-    private String category_name;
+    private String categoryId;
+    private String categoryName;
     private String icon;
-    private String bg_color;
+    private String bgColor;
 }

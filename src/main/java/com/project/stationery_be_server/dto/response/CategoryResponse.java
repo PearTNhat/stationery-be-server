@@ -9,8 +9,8 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CategoryResponse {
-    private String category_id;
-    private String category_name;
+    private String categoryId;
+    private String categoryName;
     private String icon;
-    private String bg_color;
+    private String bgColor;
 }
