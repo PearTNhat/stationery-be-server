@@ -1,10 +1,7 @@
 package com.project.stationery_be_server.service;
 
-import com.project.stationery_be_server.dto.request.EmailRequest;
-import com.project.stationery_be_server.dto.request.ForgotPasswordRequest;
-import com.project.stationery_be_server.dto.request.RegisterRequest;
+import com.project.stationery_be_server.dto.request.*;
 import com.project.stationery_be_server.dto.response.UserResponse;
-import com.project.stationery_be_server.dto.request.OtpVerificationRequest;
 import com.project.stationery_be_server.entity.User;
 import com.project.stationery_be_server.mapper.UserMapper;
 import com.project.stationery_be_server.repository.UserRepository;
@@ -37,4 +34,6 @@ public interface UserService {
     UserResponse getUserInfo();
     //Change Password
     String changePassword(String email, String oldPassword, String newPassword);
+
+    UserResponse updateUser(UserRequest request);
 }

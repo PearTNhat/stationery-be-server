@@ -1,6 +1,6 @@
 package com.project.stationery_be_server.dto.request;
-
-import jakarta.persistence.Column;
+import com.project.stationery_be_server.entity.Address;
+import com.project.stationery_be_server.entity.User;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -9,9 +9,7 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ColorRequest {
-    String colorId;
-    String name;
-    String hex;
-
+public class AddressRequest {
+    String addressId;
+    String addressName;
 }

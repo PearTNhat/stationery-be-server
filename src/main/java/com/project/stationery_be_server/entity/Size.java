@@ -22,7 +22,7 @@ public class Size {
 
     @Column(name = "name", nullable = false, length = 3, unique = true)
     String name;
-
+    String priority;
     @OneToMany(mappedBy = "size", fetch = FetchType.LAZY)
     @JsonIgnore
     Set<ProductDetail> productDetails;

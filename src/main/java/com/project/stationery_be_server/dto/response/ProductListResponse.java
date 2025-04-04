@@ -20,6 +20,7 @@ public class ProductListResponse {
     String description;
     CategoryProductResponse category;
     Set<ProductColor> productColors;
+    String slug;
     Double totalRating;
     LocalDateTime createdAt;
 }

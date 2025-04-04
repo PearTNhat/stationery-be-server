@@ -3,10 +3,7 @@ package com.project.stationery_be_server.service.impl;
 import com.project.stationery_be_server.Error.AuthErrorCode;
 import com.project.stationery_be_server.Error.InvalidErrorCode;
 import com.project.stationery_be_server.Error.NotExistedErrorCode;
-import com.project.stationery_be_server.dto.request.EmailRequest;
-import com.project.stationery_be_server.dto.request.ForgotPasswordRequest;
-import com.project.stationery_be_server.dto.request.OtpVerificationRequest;
-import com.project.stationery_be_server.dto.request.RegisterRequest;
+import com.project.stationery_be_server.dto.request.*;
 import com.project.stationery_be_server.dto.response.UserResponse;
 import com.project.stationery_be_server.entity.Role;
 import com.project.stationery_be_server.entity.User;
@@ -164,7 +161,7 @@ public class UserServiceImpl implements UserService {
         if (request == null) {
             throw new AppException(NotExistedErrorCode.PENDING_REGISTRATION_NOT_FOUND);
         }
-        Role role = roleRepository.findById(112)
+        Role role = roleRepository.findById("ROLE002")
                 .orElseThrow(() -> new RuntimeException("Role User not found"));
         User user = User.builder()
                 .firstName(request.getFirst_name())
@@ -174,6 +171,7 @@ public class UserServiceImpl implements UserService {
                 .isBlocked(false)
                 .otp(otpDetails.otp)  // Store OTP in DB
                 .otpCreatedAt(otpDetails.createdAt)
+                .role(role)
                 .build();
         User savedUser = userRepository.save(user);
         pendingRegistrations.remove(email);
@@ -227,5 +225,29 @@ public class UserServiceImpl implements UserService {
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
         return "Password changed successfully";
+    }
+    @Override
+    public UserResponse updateUser(UserRequest request) {
+        var context = SecurityContextHolder.getContext();
+        String userId = context.getAuthentication().getName();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(NotExistedErrorCode.USER_NOT_EXISTED));
+
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+        user.setEmail(request.getEmail());
+        user.setPhone(request.getPhone());
+        user.setDob(request.getDob());
+        user.setAvatar(request.getAvatar());
+        user.setBlocked(request.isBlock());
+        user.setOtp(request.getOtp());
+        user.setRole(roleRepository.findById(request.getRoleId()).orElseThrow(() -> new RuntimeException("Role not found")));
+
+        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
+
+        user = userRepository.save(user);
+        return userMapper.toUserResponse(user);
     }
 }

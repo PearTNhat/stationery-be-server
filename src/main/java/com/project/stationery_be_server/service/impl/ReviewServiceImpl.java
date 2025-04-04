@@ -22,10 +22,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ReviewServiceImpl implements ReviewService {
-
     ReviewRepository reviewRepository;
     ProductService productService;
-
 
     @Override
     @Transactional
