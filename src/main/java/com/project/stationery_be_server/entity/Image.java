@@ -14,7 +14,6 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "imageId")
 public class Image {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -29,5 +28,6 @@ public class Image {
 
     @ManyToOne
     @JoinColumn(name = "product_color_id", nullable = false)
+    @JsonBackReference
     ProductColor productColor;
 }

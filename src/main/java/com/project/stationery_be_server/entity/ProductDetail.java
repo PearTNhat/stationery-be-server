@@ -15,7 +15,6 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "productDetailId")
 public class ProductDetail {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -43,6 +42,7 @@ public class ProductDetail {
 
     @ManyToOne
     @JoinColumn(name = "product_color_id", nullable = false)
+    @JsonBackReference
     private ProductColor productColor;
 
     @OneToMany(mappedBy = "productDetail", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
