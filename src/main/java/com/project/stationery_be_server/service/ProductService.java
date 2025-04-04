@@ -12,10 +12,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedModel;
 
 import java.util.List;
+import java.util.Set;
 
 public interface ProductService {
     Page<ProductListResponse> getAllProducts(Pageable pageable , ProductFilterRequest filter);
-    ProductDetail getProductDetail(String slug);
+    Product getProductDetail(String slug);
     @Transactional
     void handleUpdateTotalProductRating(String productId, String type, Integer rating);
 }

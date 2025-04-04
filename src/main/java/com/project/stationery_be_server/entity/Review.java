@@ -42,7 +42,7 @@ public class Review {
     private Review parentReview;
 
     @OneToMany(mappedBy = "parentReview", cascade = CascadeType.ALL)
-    private Set<Review> childReviews;
+    private Set<Review> replies;
 
     @Column(name = "reply_on_user")
     private String replyOnUser;
