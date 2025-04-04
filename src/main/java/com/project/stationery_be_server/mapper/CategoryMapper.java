@@ -7,5 +7,9 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface CategoryMapper {
+    @Mapping(source = "categoryId", target = "categoryId")
+    @Mapping(source = "categoryName", target = "categoryName")
+    @Mapping(source = "icon", target = "icon")
+    @Mapping(source = "bgColor", target = "bgColor")
     CategoryResponse toCategoryResponse(Category category);
 }

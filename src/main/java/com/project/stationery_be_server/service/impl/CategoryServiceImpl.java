@@ -35,14 +35,14 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional
     public Category createCategory(CategoryRequest request) {
-        if (categoryRepository.existsByCategoryName(request.getCategory_name())) {
+        if (categoryRepository.existsByCategoryName(request.getCategoryName())) {
             throw new AppException(NotExistedErrorCode.CATEGORY_NAME_EXITS);
         }
 
         Category category = new Category();
-        category.setCategoryName(request.getCategory_name());
+        category.setCategoryName(request.getCategoryName());
         category.setIcon(request.getIcon());
-        category.setBgColor(request.getBg_color());
+        category.setBgColor(request.getBgColor());
 
         return categoryRepository.save(category);
     }
@@ -54,14 +54,14 @@ public class CategoryServiceImpl implements CategoryService {
                 .orElseThrow(() -> new AppException(NotExistedErrorCode.CATEGORY_NOT_FOUND));
 
         // Check if new category name is unique (excluding current category)
-        if (!category.getCategoryName().equals(request.getCategory_name()) &&
-                categoryRepository.existsByCategoryName(request.getCategory_name())) {
+        if (!category.getCategoryName().equals(request.getCategoryName()) &&
+                categoryRepository.existsByCategoryName(request.getCategoryName())) {
             throw new AppException(NotExistedErrorCode.CATEGORY_NAME_EXITS);
         }
 
-        category.setCategoryName(request.getCategory_name());
+        category.setCategoryName(request.getCategoryName());
         category.setIcon(request.getIcon());
-        category.setBgColor(request.getBg_color());
+        category.setBgColor(request.getBgColor());
 
         return categoryRepository.save(category);
     }
