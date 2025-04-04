@@ -3,6 +3,8 @@ package com.project.stationery_be_server.controller;
 import com.project.stationery_be_server.dto.request.ProductFilterRequest;
 import com.project.stationery_be_server.dto.response.ApiResponse;
 import com.project.stationery_be_server.dto.response.ProductListResponse;
+import com.project.stationery_be_server.entity.Product;
+import com.project.stationery_be_server.entity.ProductDetail;
 import com.project.stationery_be_server.service.ProductService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -14,10 +16,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Set;
 
 @RestController
 @RequestMapping("/products")
@@ -51,6 +52,12 @@ public class ProductController {
         PagedModel<EntityModel<ProductListResponse>> result = pagedResourcesAssembler.toModel(pageResult);
         return ApiResponse.<PagedModel<EntityModel<ProductListResponse>>>builder()
                 .result(result)
+                .build();
+    }
+    @GetMapping("/{slug}")
+    public ApiResponse<Product> getProductDetailProduct(@PathVariable String slug) {
+        return ApiResponse.<Product>builder()
+                .result(productService.getProductDetail(slug))
                 .build();
     }
 }

@@ -5,8 +5,12 @@ import com.project.stationery_be_server.Error.NotExistedErrorCode;
 import com.project.stationery_be_server.dto.request.ProductFilterRequest;
 import com.project.stationery_be_server.dto.response.ProductListResponse;
 import com.project.stationery_be_server.entity.Product;
+import com.project.stationery_be_server.entity.ProductColor;
+import com.project.stationery_be_server.entity.ProductDetail;
 import com.project.stationery_be_server.exception.AppException;
 import com.project.stationery_be_server.mapper.ProductMapper;
+import com.project.stationery_be_server.repository.ProductColorRepository;
+import com.project.stationery_be_server.repository.ProductDetailRepository;
 import com.project.stationery_be_server.repository.ProductRepository;
 import com.project.stationery_be_server.repository.ReviewRepository;
 import com.project.stationery_be_server.service.ProductService;
@@ -22,6 +26,9 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 
 @Service
 @RequiredArgsConstructor
@@ -29,7 +36,9 @@ import java.util.List;
 public class ProductServiceImpl implements ProductService {
     ProductRepository productRepository;
     ReviewRepository reviewRepository;
+    ProductDetailRepository productDetailRepository;
     ProductMapper productMapper;
+    ProductColorRepository productColorRepository;
 
     @Override
         public Page<ProductListResponse> getAllProducts(Pageable pageable , ProductFilterRequest filter) {
@@ -40,6 +49,18 @@ public class ProductServiceImpl implements ProductService {
                 .toList();
         return new PageImpl<>(productListResponses, pageable, products.getTotalElements());
     }
+
+    @Override
+    public Product getProductDetail(String slug) {
+        Product product =  productRepository.findBySlug(slug);
+        Set<ProductColor> pcs = product.getProductColors().stream()
+                .filter(pc -> !pc.getProductDetails().isEmpty())
+                .collect(Collectors.toSet());
+        product.setProductColors(pcs);
+
+        return product;
+    }
+
     @Override
     @Transactional
     public void handleUpdateTotalProductRating(String productId, String type, Integer rating) {
