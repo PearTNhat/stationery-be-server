@@ -1,7 +1,6 @@
 package com.project.stationery_be_server.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -28,6 +27,9 @@ public class ProductDetail {
     @Column(name = "stock_quantity")
     private int stockQuantity;
 
+    @Column(name = "sold_quantity")
+    private int soldQuantity;
+
     @Column(name = "original_price")
     private int originalPrice;
 
@@ -39,8 +41,8 @@ public class ProductDetail {
     private Size size;
 
     @ManyToOne
-    @JsonBackReference
     @JoinColumn(name = "product_color_id", nullable = false)
+    @JsonBackReference
     private ProductColor productColor;
 
     @OneToMany(mappedBy = "productDetail", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
