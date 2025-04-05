@@ -1,5 +1,6 @@
 package com.project.stationery_be_server.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -24,6 +25,7 @@ public class Color {
     @Column(name = "hex", nullable = false, length = 7)
     String hex;
 
-//    @OneToMany(mappedBy = "color",fetch = FetchType.LAZY)
-//    Set<ProductColor> productDetail;
+    @OneToMany(mappedBy = "color",fetch = FetchType.LAZY)
+    @JsonIgnore
+    Set<ProductColor> productColors;
 }

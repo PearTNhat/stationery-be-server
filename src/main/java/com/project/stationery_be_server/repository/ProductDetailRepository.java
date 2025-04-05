@@ -18,4 +18,5 @@ public interface ProductDetailRepository extends JpaRepository<ProductDetail, St
             @Param("productId") String productId,
             @Param("colorId") String colorId,
             @Param("sizeId") String sizeId);
+    ProductDetail findBySlug(String slug);
 }

@@ -6,7 +6,10 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 @Entity
 @Getter
@@ -26,6 +29,9 @@ public class Product {
     @Column(name = "description", length = 500)
     private String description;
 
+    @Column(name = "slug", length = 100, nullable = false)
+    private String slug;
+
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
     @JsonIgnoreProperties({"icon", "bgColor", "products"})
@@ -36,7 +42,6 @@ public class Product {
     private Set<ProductColor> productColors;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
-    @JsonManagedReference
     private Set<Review> reviews;
 
     @Column(name = "total_rating")

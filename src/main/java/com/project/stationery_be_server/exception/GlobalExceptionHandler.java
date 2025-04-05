@@ -20,25 +20,28 @@ import java.util.Objects;
 @ControllerAdvice
 public class GlobalExceptionHandler {
     private static final String MIN_ATTRIBUTE = "min";
-//    @ExceptionHandler(value = Exception.class)
-//    ResponseEntity<ApiResponse<Void>> exceptionHandler(Exception ex) {
-//        System.out.println(ex.toString());
-//        ApiResponse<Void> apiResponse = ApiResponse.<Void>builder()
-//                .message(ex.getMessage())
-//                .code(400)
-//                .build();
-//        return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
-//    }
+
+    @ExceptionHandler(value = Exception.class)
+    ResponseEntity<ApiResponse<Void>> exceptionHandler(Exception ex) {
+        ex.printStackTrace();
+        ApiResponse<Void> apiResponse = ApiResponse.<Void>builder()
+                .message(ex.getMessage())
+                .code(400)
+                .build();
+        return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(value = ConcurrentModificationException.class)
     ResponseEntity<ApiResponse<Void>> exceptionHandler(ConcurrentModificationException ex) {
-        System.out.println(ex.toString());
+        ex.printStackTrace();
         ApiResponse<Void> apiResponse = ApiResponse.<Void>builder()
                 .message(ex.getMessage())
                 .code(401)
                 .build();
         return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
     }
-//    Báo lỗi k tìm thấy đường dẫn
+
+    //    Báo lỗi k tìm thấy đường dẫn
     @ExceptionHandler(value = NoResourceFoundException.class)
     ResponseEntity<ApiResponse<Void>> noResourceFoundException(NoResourceFoundException e) {
         ApiResponse<Void> apiResponse = new ApiResponse<>();
@@ -46,6 +49,7 @@ public class GlobalExceptionHandler {
         apiResponse.setCode(404);
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(apiResponse);
     }
+
     @ExceptionHandler(value = AppException.class)
     ResponseEntity<ApiResponse<Void>> appExceptionHandler(AppException e) {
         System.out.println(e.getMessage());
@@ -55,6 +59,7 @@ public class GlobalExceptionHandler {
         apiResponse.setCode(errorCode.getCode());
         return ResponseEntity.status(errorCode.getHttpStatus()).body(apiResponse);
     }
+
     //    Lỗi validation
     @ExceptionHandler(value = MethodArgumentNotValidException.class)
     ResponseEntity<ApiResponse<Void>> methodArgumentNotValidException(MethodArgumentNotValidException e) {

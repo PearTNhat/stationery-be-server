@@ -1,12 +1,13 @@
 package com.project.stationery_be_server.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.Comparator;
 import java.util.Set;
+import java.util.TreeSet;
 
 @Getter
 @Setter
@@ -22,7 +23,6 @@ public class ProductColor {
     private String productColorId;
 
     @ManyToOne
-    @JsonBackReference
     @JoinColumn(name = "color_id")
     private Color color;
 
@@ -36,6 +36,7 @@ public class ProductColor {
     private Product product;
 
     @OneToMany(mappedBy = "productColor")
+    @OrderBy("priority ASC")
     @JsonManagedReference
     private Set<Image> images;
 }

@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.web.config.EnableSpringDataWebSupport;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -23,8 +24,9 @@ import org.springframework.web.filter.CorsFilter;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@EnableSpringDataWebSupport(pageSerializationMode = EnableSpringDataWebSupport.PageSerializationMode.VIA_DTO)
 public class SecurityConfig {
-    private final String[] PUBLIC_URLS = {"users", "auth/login", "auth/introspect", "auth/logout", "auth/refresh","colors","colors/{id}"};
+    private final String[] PUBLIC_URLS = {"users", "auth/login", "auth/introspect", "auth/logout", "auth/refresh","colors","colors/{id}","address"};
 
     @Value("${jwt.signerKey}")
     private String singerKey;
