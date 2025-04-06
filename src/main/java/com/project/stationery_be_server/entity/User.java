@@ -59,6 +59,10 @@ public class User {
     @JsonIgnore
     Set<Review> reviews;
 
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonIgnore
+    Set<Review> replyOnUser;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id", nullable = false)
     @JsonManagedReference
