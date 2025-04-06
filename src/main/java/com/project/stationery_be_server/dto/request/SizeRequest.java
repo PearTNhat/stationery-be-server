@@ -13,5 +13,5 @@ import lombok.NoArgsConstructor;
 public class SizeRequest {
     String sizeId;
     String name;
-    String priority;
+    Integer priority;
 }
