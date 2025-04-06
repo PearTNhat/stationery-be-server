@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface ReviewRepository extends JpaRepository<com.project.stationery_be_server.entity.Review, String> {
@@ -20,13 +21,23 @@ public interface ReviewRepository extends JpaRepository<com.project.stationery_b
   @Query("SELECT COALESCE(SUM(r.rating), 0) FROM Review r WHERE r.product.productId = :productId AND r.rating IS NOT NULL")
   int sumRatingByProductId(String productId);
 
-  @Modifying
+  @Modifying // hiểu là truy vấn thay đổi dữ liệu
   @Transactional
-  @Query(value = "INSERT INTO review (review_id, product_id, user_id, content, rating, parent_id, create_at) " +
-          "VALUES (UUID(), :productId, :userId, :content, :rating, :parentId, NOW())", nativeQuery = true)
+  @Query(value = "INSERT INTO review (review_id, product_id, user_id, content, rating, parent_id, reply_on_user, create_at) " +
+          "VALUES (UUID(), :productId, :userId, :content, :rating, :parentId,:replyOnUser, NOW())", nativeQuery = true)
   void createReview(@Param("productId") String productId,
                     @Param("userId") String userId,
                     @Param("content") String content,
                     @Param("rating") Integer rating,
-                    @Param("parentId") String parentId);
+                    @Param("parentId") String parentId,
+                    @Param("replyOnUser") String replyOnUser);
+
+  @Modifying
+  @Transactional
+  @Query("DELETE from Review r where r.reviewId = :parentId")
+  void deleteReviewByParentId(@Param("parentId") String parentId);
+
+  boolean existsByUser_UserIdAndParentReview_ReviewId(String replyOnUser, String parentId);
+
+  List<Review> findByProduct_ProductIdAndParentReviewIsNull(String productId);
 }

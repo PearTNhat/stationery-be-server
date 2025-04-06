@@ -16,7 +16,6 @@ import java.util.TreeSet;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "productId")
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -41,8 +40,9 @@ public class Product {
     @JsonManagedReference
     private Set<ProductColor> productColors;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
-    private Set<Review> reviews;
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    @JsonManagedReference
+    private List<Review> reviews;
 
     @Column(name = "total_rating")
     private Double totalRating;

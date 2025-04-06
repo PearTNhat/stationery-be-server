@@ -13,4 +13,6 @@ public class ReviewRequest {
     String content;
     String parentId;
     Integer rating;
+    String replyOnUser;
+
 }

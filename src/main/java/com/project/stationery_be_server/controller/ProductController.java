@@ -3,6 +3,7 @@ package com.project.stationery_be_server.controller;
 import com.project.stationery_be_server.dto.request.ProductFilterRequest;
 import com.project.stationery_be_server.dto.response.ApiResponse;
 import com.project.stationery_be_server.dto.response.ProductListResponse;
+import com.project.stationery_be_server.dto.response.ProductResponse;
 import com.project.stationery_be_server.entity.Product;
 import com.project.stationery_be_server.entity.ProductDetail;
 import com.project.stationery_be_server.service.ProductService;
@@ -55,8 +56,8 @@ public class ProductController {
                 .build();
     }
     @GetMapping("/{slug}")
-    public ApiResponse<Product> getProductDetailProduct(@PathVariable String slug) {
-        return ApiResponse.<Product>builder()
+    public ApiResponse<ProductResponse> getProductDetailProduct(@PathVariable String slug) {
+        return ApiResponse.<ProductResponse>builder()
                 .result(productService.getProductDetail(slug))
                 .build();
     }
