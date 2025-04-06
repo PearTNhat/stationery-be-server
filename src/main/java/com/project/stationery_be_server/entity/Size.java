@@ -22,9 +22,8 @@ public class Size {
 
     @Column(name = "name", nullable = false, length = 3, unique = true)
     String name;
-  
-    @Column(name = "priority", nullable = false, length = 3, unique = true)
-    String priority;
+
+    Integer priority;
 
     @OneToMany(mappedBy = "size", fetch = FetchType.LAZY)
     @JsonIgnore

@@ -8,5 +8,5 @@ import lombok.Data;
 public class SizeResponse {
     String sizeId;
     String name;
-    String priority;
+    Integer priority;
 }
