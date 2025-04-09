@@ -31,16 +31,17 @@ public class ProductController {
 
     @GetMapping
     public ApiResponse<PagedModel<EntityModel<ProductListResponse>>> getAllProducts(@RequestParam(defaultValue = "0") int page,
-                                                                        @RequestParam(defaultValue = "10") int limit,
-                                                                        @RequestParam(defaultValue = "createdAt") String sortBy,
-                                                                        @RequestParam(defaultValue = "true") boolean ascending,
-                                                                        @RequestParam(required = false) String minPrice,
-                                                                        @RequestParam(required = false) String maxPrice,
-                                                                        @RequestParam(required = false) String search,
-                                                                        @RequestParam(required = false) String categoryId,
-                                                                        @RequestParam(required = false) String totalRating
+                                                                                    @RequestParam(defaultValue = "10") int limit,
+                                                                                    @RequestParam(defaultValue = "createdAt") String sortBy,
+                                                                                    @RequestParam(required = false) String minPrice,
+                                                                                    @RequestParam(required = false) String maxPrice,
+                                                                                    @RequestParam(required = false) String search,
+                                                                                    @RequestParam(required = false) String categoryId,
+                                                                                    @RequestParam(required = false) String totalRating
     ) {
-        Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        String[] parts = sortBy.split("(?<=-)|(?=-)"); // tách dấu tru trong chuoi
+        //-abc
+        Sort sort = sortBy.length() == 1 ? Sort.by(parts[1]).ascending() : Sort.by(parts[0]).descending();
         Pageable pageable = PageRequest.of(page, limit, sort);
         ProductFilterRequest filterRequest = ProductFilterRequest.builder()
                 .categoryId(categoryId)
@@ -55,6 +56,7 @@ public class ProductController {
                 .result(result)
                 .build();
     }
+
     @GetMapping("/{slug}")
     public ApiResponse<ProductResponse> getProductDetailProduct(@PathVariable String slug) {
         return ApiResponse.<ProductResponse>builder()
