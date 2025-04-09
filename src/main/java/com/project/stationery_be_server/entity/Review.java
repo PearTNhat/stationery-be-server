@@ -6,6 +6,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -15,8 +16,7 @@ import java.util.Set;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "reviewId")
-public class Review {
+public class    Review {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "review_id")
@@ -29,6 +29,7 @@ public class Review {
 
     @ManyToOne
     @JoinColumn(name = "product_id")
+    @JsonBackReference
     private Product product;
 
     private String content;
@@ -39,13 +40,17 @@ public class Review {
 
     @ManyToOne
     @JoinColumn(name = "parent_id", referencedColumnName = "review_id")
+    @JsonBackReference
     private Review parentReview;
 
     @OneToMany(mappedBy = "parentReview", cascade = CascadeType.ALL)
-    private Set<Review> replies;
+    @JsonManagedReference
+    private List<Review> replies;
 
-    @Column(name = "reply_on_user")
-    private String replyOnUser;
+    @ManyToOne
+    @JoinColumn(name = "reply_on_user", referencedColumnName = "user_id")
+    @JsonIgnoreProperties({"email", "phone", "password","dob","role","addresses","carts","blocked","otpCreatedAt","otp"})
+    private User replyOnUser;
 
     @Column(name = "create_at")
     private Date createdAt;
