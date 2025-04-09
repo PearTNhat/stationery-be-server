@@ -4,9 +4,11 @@ package com.project.stationery_be_server.service.impl;
 import com.project.stationery_be_server.Error.NotExistedErrorCode;
 import com.project.stationery_be_server.dto.request.ProductFilterRequest;
 import com.project.stationery_be_server.dto.response.ProductListResponse;
+import com.project.stationery_be_server.dto.response.ProductResponse;
 import com.project.stationery_be_server.entity.Product;
 import com.project.stationery_be_server.entity.ProductColor;
 import com.project.stationery_be_server.entity.ProductDetail;
+import com.project.stationery_be_server.entity.Review;
 import com.project.stationery_be_server.exception.AppException;
 import com.project.stationery_be_server.mapper.ProductMapper;
 import com.project.stationery_be_server.repository.ProductColorRepository;
@@ -51,14 +53,16 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Product getProductDetail(String slug) {
+    public ProductResponse getProductDetail(String slug) {  
         Product product =  productRepository.findBySlug(slug);
+
+        List<Review> reviews = reviewRepository.findByProduct_ProductIdAndParentReviewIsNull(product.getProductId());
         Set<ProductColor> pcs = product.getProductColors().stream()
                 .filter(pc -> !pc.getProductDetails().isEmpty())
                 .collect(Collectors.toSet());
         product.setProductColors(pcs);
-
-        return product;
+        product.setReviews(reviews);
+        return productMapper.toProductResponse(product);
     }
 
     @Override
@@ -75,7 +79,6 @@ public class ProductServiceImpl implements ProductService {
 
         } else if (type.equalsIgnoreCase("delete")) {
             length -= 1;
-            sumRating -= rating;
         } else {
             throw new IllegalArgumentException("Type must be create, update or delete");
         }

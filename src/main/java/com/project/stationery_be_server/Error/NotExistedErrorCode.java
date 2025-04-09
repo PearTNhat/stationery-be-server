@@ -20,6 +20,9 @@ public enum NotExistedErrorCode implements BaseErrorCode {
 
     PRODUCT_COLOR_NOT_EXISTED(1011, "Product color not existed", HttpStatus.BAD_REQUEST),
 
+
+    // comment
+    COMMENT_NOT_FOUND (1012, "Comment not found", HttpStatus.BAD_REQUEST),
     ;
     private final int code;
     private final String message;
