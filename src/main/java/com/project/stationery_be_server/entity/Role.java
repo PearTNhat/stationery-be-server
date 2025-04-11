@@ -27,6 +27,6 @@ public class Role {
     private String description;
 
     @OneToMany(mappedBy = "role")
-    @JsonManagedReference
+    @JsonManagedReference("user-role")
     private Set<User> users; // Đổi thành số nhiều để đúng nghĩa
 }

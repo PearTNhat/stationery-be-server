@@ -24,7 +24,6 @@ public class PurchaseOrder {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-    @JsonIgnore
     private User user;
 
     @Column(name = "created_at")

@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -35,5 +36,5 @@ public interface UserService {
     //Change Password
     String changePassword(String email, String oldPassword, String newPassword);
 
-    UserResponse updateUser(UserRequest request);
+    UserResponse updateUser(String documentJson, MultipartFile file);
 }
