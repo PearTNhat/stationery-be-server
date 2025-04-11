@@ -92,28 +92,25 @@ public class CartServiceImpl implements CartService {
     // 2. Cập nhật item trong giỏ hàng (sử dụng AddCartItemRequest)
     @Override
     @Transactional
-    public CartResponse updateItemInCart(String productId, UpdateCartItemRequest request) {
+    public CartResponse updateItemInCart(String productDetailId, UpdateCartItemRequest request) {
         String userId = getCurrentUserId();
 
-        // Tìm cart hiện có với userId và productId
-        List<Cart> existingCarts = cartRepository.findByUserIdAndProductId(userId, productId);
-        if (existingCarts.isEmpty()) {
-            throw new IllegalArgumentException("Item not found in cart");
-        }
+        // Tìm cart hiện có theo userId + productDetailId
+        CartId cartId = new CartId(userId, productDetailId);
+        Cart cart = cartRepository.findByCartId(cartId)
+                .orElseThrow(() -> new IllegalArgumentException("Item not found in cart"));
 
-        // Lấy cart đầu tiên (giả sử mỗi user chỉ có 1 cart item cho mỗi product)
-        Cart cart = existingCarts.get(0);
-
-        // Tìm ProductDetail mới dựa trên request
+        // Tìm ProductDetail mới nếu có thay đổi
         ProductDetail newProductDetail = productDetailRepository
-                .findByProductIdAndColorIdAndSizeId(productId, request.getColorId(), request.getSizeId())
+                .findByProductIdAndColorIdAndSizeId(cart.getProductDetail().getProductColor().getProduct().getProductId(), request.getColorId(), request.getSizeId())
                 .orElseThrow(() -> new IllegalArgumentException("Product variant not found"));
 
-        // Kiểm tra tính nhất quán của productId
+        // Kiểm tra xem có đổi variant không
         if (!cart.getProductDetail().getProductDetailId().equals(newProductDetail.getProductDetailId())) {
-            // Nếu ProductDetail thay đổi, xóa mục giỏ hàng cũ và tạo mục mới
+            // Xóa cart cũ
             cartRepository.delete(cart);
 
+            // Kiểm tra tồn kho mới
             if (newProductDetail.getStockQuantity() < request.getQuantity()) {
                 throw new IllegalArgumentException("Insufficient stock for this variant");
             }
@@ -121,14 +118,14 @@ public class CartServiceImpl implements CartService {
             CartId newCartId = new CartId(userId, newProductDetail.getProductDetailId());
             cart = Cart.builder()
                     .cartId(newCartId)
-                    .user(userRepository.findById(userId).get())
+                    .user(cart.getUser())
                     .productDetail(newProductDetail)
                     .quantity(request.getQuantity())
                     .createdAt(new Date())
                     .build();
         } else {
-            // Nếu ProductDetail không đổi, chỉ cập nhật số lượng
-            if (cart.getProductDetail().getStockQuantity() < request.getQuantity()) {
+            // Không đổi variant, chỉ cập nhật số lượng
+            if (newProductDetail.getStockQuantity() < request.getQuantity()) {
                 throw new IllegalArgumentException("Insufficient stock for this variant");
             }
             cart.setQuantity(request.getQuantity());
@@ -138,19 +135,20 @@ public class CartServiceImpl implements CartService {
         return mapToCartResponse(cart);
     }
 
+
     // 3. Xóa item khỏi giỏ hàng
     @Override
     @Transactional
-    public void removeItemFromCart(String productId) {
+    public void removeItemFromCart(String productDetailId) {
         String userId = getCurrentUserId();
 
-        List<Cart> carts = cartRepository.findByUserIdAndProductId(userId, productId);
-        if (carts.isEmpty()) {
-            throw new IllegalArgumentException("Item not found in cart");
-        }
+        CartId cartId = new CartId(userId, productDetailId);
+        Cart cart = cartRepository.findByCartId(cartId)
+                .orElseThrow(() -> new IllegalArgumentException("Item not found in cart"));
 
-        cartRepository.deleteAll(carts);
+        cartRepository.delete(cart);
     }
+
 
     // 4. Xem giỏ hàng của user
     @Override
@@ -174,13 +172,14 @@ public class CartServiceImpl implements CartService {
     // Hàm ánh xạ Cart sang CartResponse
     private CartResponse mapToCartResponse(Cart cart) {
         ProductDetail productDetail = cart.getProductDetail();
-        Product product = productDetail.getProductColor().getProduct();
-        Color color = productDetail.getProductColor().getColor();
+        Product product = productDetail.getProductColor().getProduct(); // fix chỗ này
+        Color color = productDetail.getProductColor().getColor();       // fix chỗ này
         Size size = productDetail.getSize();
 
         return CartResponse.builder()
                 .userId(cart.getCartId().getUserId())
                 .productId(product.getProductId())
+                .productDetailId(productDetail.getProductDetailId())
                 .productName(product.getName())
                 .colorName(color.getName())
                 .sizeName(size.getName())
@@ -189,5 +188,18 @@ public class CartServiceImpl implements CartService {
                 .discountPrice(productDetail.getDiscountPrice())
                 .createdAt(cart.getCreatedAt())
                 .build();
+    }
+
+    @Override
+    public int calculateCartTotal() {
+        String userId = getCurrentUserId();
+        List<Cart> carts = cartRepository.findByUserId(userId);
+
+        return carts.stream()
+                .mapToInt(cart -> {
+                    ProductDetail productDetail = cart.getProductDetail();
+                    return productDetail.getDiscountPrice() * cart.getQuantity();
+                })
+                .sum();
     }
 }

@@ -12,4 +12,5 @@ public interface CartService {
     void removeItemFromCart(String productId);
     List<CartResponse> viewCart();
     List<CartResponse> viewAllCarts();
+    int calculateCartTotal();
 }
