@@ -14,6 +14,7 @@ import java.util.Date;
 public class CartResponse {
     String userId;
     String productId;
+    String productDetailId;
     String productName;
     String colorName;
     String sizeName;

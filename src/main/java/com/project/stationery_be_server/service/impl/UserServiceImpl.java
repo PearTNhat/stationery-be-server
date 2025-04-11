@@ -172,8 +172,8 @@ public class UserServiceImpl implements UserService {
         Role role = roleRepository.findById("ROLE002")
                 .orElseThrow(() -> new RuntimeException("Role User not found"));
         User user = User.builder()
-                .firstName(request.getFirst_name())
-                .lastName(request.getLast_name())
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
                 .email(email)
                 .password(passwordEncoder.encode(request.getPassword()))
                 .isBlocked(false)
