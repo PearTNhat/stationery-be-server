@@ -21,6 +21,9 @@ public class ProductListResponse {
     CategoryProductResponse category;
     Set<ProductColor> productColors;
     String slug;
+    Integer minPrice;
     Double totalRating;
+    Integer soldQuantity;
+    Integer quantity;
     LocalDateTime createdAt;
 }

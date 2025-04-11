@@ -1,6 +1,7 @@
 package com.project.stationery_be_server.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -26,6 +27,6 @@ public class Role {
     private String description;
 
     @OneToMany(mappedBy = "role")
-    @JsonBackReference
+    @JsonManagedReference
     private Set<User> users; // Đổi thành số nhiều để đúng nghĩa
 }

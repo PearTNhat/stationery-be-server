@@ -1,6 +1,7 @@
 package com.project.stationery_be_server.entity;
 
 import com.fasterxml.jackson.annotation.*;
+import com.project.stationery_be_server.listener.ProductEntityListener;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -16,6 +17,7 @@ import java.util.TreeSet;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@EntityListeners(ProductEntityListener.class)
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -30,7 +32,8 @@ public class Product {
 
     @Column(name = "slug", length = 100, nullable = false)
     private String slug;
-
+    @Column(name="min_price")
+    private Integer minPrice;
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
     @JsonIgnoreProperties({"icon", "bgColor", "products"})
@@ -46,6 +49,12 @@ public class Product {
 
     @Column(name = "total_rating")
     private Double totalRating;
+
+    @Column(name="sold_quantity")
+    private Integer soldQuantity;
+
+    @Column(name="quantity")
+    private Integer quantity;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     @CreationTimestamp
