@@ -22,5 +22,7 @@ public class ProductResponse {
     String slug;
     Double totalRating;
     LocalDateTime createdAt;
+    Integer soldQuantity;
+    Integer quantity;
     List<Review> reviews;
 }

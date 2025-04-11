@@ -50,6 +50,12 @@ public class Product {
     @Column(name = "total_rating")
     private Double totalRating;
 
+    @Column(name="sold_quantity")
+    private Integer soldQuantity;
+
+    @Column(name="quantity")
+    private Integer quantity;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     @CreationTimestamp
     private LocalDateTime createdAt;
