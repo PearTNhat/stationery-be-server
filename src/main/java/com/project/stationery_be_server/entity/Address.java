@@ -20,9 +20,9 @@ public class Address {
     @Column(length = 100, name = "address_name")
     private String addressName;
 
-    @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "user_id", nullable = false)
+    @JsonBackReference("user-addresses")
     User user;
 
 }

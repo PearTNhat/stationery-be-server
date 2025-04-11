@@ -22,7 +22,7 @@ public class Cart {
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("userId")  // Liên kết với userId trong CartId
     @JoinColumn(name = "user_id", nullable = false)
-    @JsonBackReference
+    @JsonBackReference("user-carts")
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)

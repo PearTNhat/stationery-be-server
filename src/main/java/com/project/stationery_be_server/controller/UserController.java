@@ -78,9 +78,9 @@ public class UserController {
                 .build();
     }
     @PutMapping("/update-user")
-    public ApiResponse<UserResponse> updateUser(@RequestBody UserRequest request) {
+    public ApiResponse<UserResponse> updateUser(@RequestPart("document") String documentJson,  @RequestPart(value = "file", required = false) MultipartFile file) {
         return ApiResponse.<UserResponse>builder()
-                .result(userService.updateUser(request))
+                .result(userService.updateUser(documentJson,file))
                 .build();
     }
 }
