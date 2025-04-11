@@ -58,4 +58,21 @@ public class AddressServiceImpl implements AddressService {
         Address updatedAddress = addressRepository.save(address);
         return new AddressResponse(updatedAddress.getAddressId(), updatedAddress.getAddressName(), updatedAddress.getUser());
     }
+    @Override
+    public void deleteAddress(String id) {
+        var context = SecurityContextHolder.getContext();
+        String userId = context.getAuthentication().getName(); // Lấy ID người dùng hiện tại
+
+        Address address = addressRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Address not found with ID: " + id));
+
+        // Kiểm tra xem địa chỉ có thuộc về người dùng hiện tại không
+        if (!address.getUser().getUserId().equals(userId)) {
+            throw new RuntimeException("You are not authorized to delete this address");
+        }
+
+        addressRepository.delete(address);
+    }
+
+
 }

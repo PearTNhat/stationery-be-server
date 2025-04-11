@@ -14,4 +14,6 @@ public interface AddressService {
     AddressResponse createAddress(AddressRequest addressRequest);
     List<AddressResponse> getAllAddresses();
     AddressResponse updateAddress(String id, AddressRequest addressRequest);
+    void deleteAddress(String id);
+
 }
