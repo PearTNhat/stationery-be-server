@@ -18,22 +18,26 @@ public class ProductSpecification {
             // Join Product → ProductColor → ProductDetail
             Join<Object, Object> productColorJoin = root.join("productColors", JoinType.INNER);
             Join<Object, Object> productDetailJoin = productColorJoin.join("productDetails", JoinType.INNER);
-            if (filter.getCategoryId() != null) {
-                // root là Product entity, get("category") là một field trong Product entity, get("categoryId") là một field trong Category entity.
+            if (filter.getCategoryId() != null && !filter.getCategoryId().isBlank()) {
                 predicates.add(criteriaBuilder.equal(root.get("category").get("categoryId"), filter.getCategoryId()));
             }
-            if(filter.getMinPrice() != null) {
+
+            if (filter.getMinPrice() != null && !filter.getMinPrice().isBlank()) {
                 predicates.add(criteriaBuilder.greaterThanOrEqualTo(productDetailJoin.get("discountPrice"), filter.getMinPrice()));
             }
-            if(filter.getMaxPrice() != null) {
+
+            if (filter.getMaxPrice() != null && !filter.getMaxPrice().isBlank()) {
                 predicates.add(criteriaBuilder.lessThanOrEqualTo(productDetailJoin.get("discountPrice"), filter.getMaxPrice()));
             }
-            if(filter.getSearch() != null) {
-                predicates.add(criteriaBuilder.like(root.get("name"), "%" + filter.getSearch() + "%"));
+
+            if (filter.getSearch() != null && !filter.getSearch().isBlank()) {
+                predicates.add(criteriaBuilder.like(root.get("name"), "%" + filter.getSearch().trim() + "%"));
             }
-            if(filter.getTotalRating() != null) {
+
+            if (filter.getTotalRating() != null && !filter.getTotalRating().isBlank()) {
                 predicates.add(criteriaBuilder.equal(root.get("totalRating"), filter.getTotalRating()));
             }
+
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
     }
