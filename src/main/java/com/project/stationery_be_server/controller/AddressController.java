@@ -34,5 +34,18 @@ public class AddressController {
                 .result(addressService.updateAddress(id, addressRequest))
                 .build();
     }
+    @PutMapping("/default/{id}")
+    public ApiResponse<AddressResponse> setDefaultAddress(@PathVariable String id) {
+        return ApiResponse.<AddressResponse>builder()
+                .result(addressService.setDefaultAddress(id))
+                .build();
+    }
+    @DeleteMapping("/{id}")
+    public ApiResponse<String> deleteAddress(@PathVariable String id) {
+        addressService.deleteAddress(id);
+        return ApiResponse.<String>builder()
+                .result("Address deleted successfully")
+                .build();
+    }
 }
 

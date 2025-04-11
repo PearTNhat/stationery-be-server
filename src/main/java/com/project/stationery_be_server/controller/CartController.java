@@ -27,21 +27,20 @@ public class CartController {
     }
 
     // 2. Cập nhật item trong giỏ hàng
-    @PutMapping("/{productId}")
+    @PutMapping("/{productDetailId}")
     public ResponseEntity<CartResponse> updateItemInCart(
-            @PathVariable String productId,
+            @PathVariable String productDetailId,
             @RequestBody UpdateCartItemRequest request) {
-        CartResponse cartResponse = cartService.updateItemInCart(productId, request);
+        CartResponse cartResponse = cartService.updateItemInCart(productDetailId, request);
         return ResponseEntity.ok(cartResponse);
     }
 
     // 3. Xóa item khỏi giỏ hàng
-    @DeleteMapping("/{productId}")
-    public ResponseEntity<Void> removeItemFromCart(@PathVariable String productId) {
-        cartService.removeItemFromCart(productId);
+    @DeleteMapping("/{productDetailId}")
+    public ResponseEntity<Void> removeItemFromCart(@PathVariable String productDetailId) {
+        cartService.removeItemFromCart(productDetailId);
         return ResponseEntity.noContent().build();
     }
-
     // 4. Xem giỏ hàng của user
     @GetMapping
     public ResponseEntity<List<CartResponse>> viewCart() {
