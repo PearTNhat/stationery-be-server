@@ -64,7 +64,18 @@ public class ProductServiceImpl implements ProductService {
         product.setReviews(reviews);
         return productMapper.toProductResponse(product);
     }
+    @Override
+    public void updateMinPrice(Product product) {
+        Integer minPrice = product.getProductColors().stream()
+                .flatMap(pc -> pc.getProductDetails().stream())
+                .filter(pd -> pd.getStockQuantity() > 0)
+                .map(ProductDetail::getDiscountPrice)
+                .min(Integer::compareTo) //min[1,2,3,5]
+                .orElse(0);
 
+        product.setMinPrice(minPrice);
+        productRepository.save(product);
+    }
     @Override
     @Transactional
     public void handleUpdateTotalProductRating(String productId, String type, Integer rating) {

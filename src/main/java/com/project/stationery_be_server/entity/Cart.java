@@ -1,5 +1,7 @@
 package com.project.stationery_be_server.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -20,11 +22,13 @@ public class Cart {
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("userId")  // Liên kết với userId trong CartId
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonBackReference
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("productDetailId")  // Liên kết với productDetailId trong CartId
     @JoinColumn(name = "product_detail_id", nullable = false)
+    @JsonBackReference
     private ProductDetail productDetail;
 
     int quantity;

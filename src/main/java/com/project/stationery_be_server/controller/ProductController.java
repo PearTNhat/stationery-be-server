@@ -41,7 +41,9 @@ public class ProductController {
     ) {
         String[] parts = sortBy.split("(?<=-)|(?=-)"); // tách dấu tru trong chuoi
         //-abc
-        Sort sort = sortBy.length() == 1 ? Sort.by(parts[1]).ascending() : Sort.by(parts[0]).descending();
+//        System.out.println(parts[0] + " " + parts[1]);
+        System.out.println(parts.length);
+        Sort sort = parts.length == 1 ? Sort.by(parts[0]).ascending() : Sort.by(parts[1]).descending();
         Pageable pageable = PageRequest.of(page, limit, sort);
         ProductFilterRequest filterRequest = ProductFilterRequest.builder()
                 .categoryId(categoryId)
