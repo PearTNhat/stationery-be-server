@@ -29,19 +29,44 @@ public class AddressServiceImpl implements AddressService {
     public AddressResponse createAddress(AddressRequest addressRequest) {
         var context = SecurityContextHolder.getContext();
         String userId = context.getAuthentication().getName();
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Nếu là địa chỉ mặc định, cập nhật lại các địa chỉ khác
+        if (Boolean.TRUE.equals(addressRequest.getIsDefault())) {
+            unsetDefaultAddressForUser(user);
+        }
+
         Address address = new Address();
         address.setAddressName(addressRequest.getAddressName());
-        address.setUser(userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found")));
+        address.setPhone(addressRequest.getPhone());
+        address.setDefault(addressRequest.getIsDefault() != null && addressRequest.getIsDefault());
+        address.setUser(user);
+
         Address savedAddress = addressRepository.save(address);
 
-        return new AddressResponse(savedAddress.getAddressId(), savedAddress.getAddressName(), savedAddress.getUser());
+        return AddressResponse.builder()
+                .addressId(savedAddress.getAddressId())
+                .addressName(savedAddress.getAddressName())
+                .user(savedAddress.getUser())
+                .phone(savedAddress.getPhone())
+                .isDefault(savedAddress.isDefault())
+                .build();
     }
 
     @Override
     public List<AddressResponse> getAllAddresses() {
         List<Address> addresses = addressRepository.findAll();
         return addresses.stream()
-                .map(address -> new AddressResponse(address.getAddressId(), address.getAddressName(), address.getUser()))
+                .map(address -> AddressResponse.builder()
+                        .addressId(address.getAddressId())
+                        .addressName(address.getAddressName())
+                        .user(address.getUser())
+                        .phone(address.getPhone())
+                        .isDefault(address.isDefault())
+                        .build()
+                )
                 .collect(Collectors.toList());
     }
 
@@ -49,13 +74,82 @@ public class AddressServiceImpl implements AddressService {
     public AddressResponse updateAddress(String id, AddressRequest addressRequest) {
         var context = SecurityContextHolder.getContext();
         String userId = context.getAuthentication().getName();
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
         Address address = addressRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Address not found with ID: " + id));
 
+        // Nếu request yêu cầu đặt lại mặc định
+        if (Boolean.TRUE.equals(addressRequest.getIsDefault())) {
+            unsetDefaultAddressForUser(user);
+        }
+
         address.setAddressName(addressRequest.getAddressName());
-        address.setUser(userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found")));
+        address.setPhone(addressRequest.getPhone());
+        address.setDefault(addressRequest.getIsDefault() != null && addressRequest.getIsDefault());
+        address.setUser(user);
 
         Address updatedAddress = addressRepository.save(address);
-        return new AddressResponse(updatedAddress.getAddressId(), updatedAddress.getAddressName(), updatedAddress.getUser());
+
+        return AddressResponse.builder()
+                .addressId(updatedAddress.getAddressId())
+                .addressName(updatedAddress.getAddressName())
+                .user(updatedAddress.getUser())
+                .phone(updatedAddress.getPhone())
+                .isDefault(updatedAddress.isDefault())
+                .build();
+    }
+    @Override
+    public void deleteAddress(String id) {
+        var context = SecurityContextHolder.getContext();
+        String userId = context.getAuthentication().getName();
+
+        Address address = addressRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Address not found with ID: " + id));
+
+        // Kiểm tra xem địa chỉ có thuộc về người dùng hiện tại không
+        if (!address.getUser().getUserId().equals(userId)) {
+            throw new RuntimeException("You are not authorized to delete this address");
+        }
+
+        addressRepository.delete(address);
+    }
+
+    private void unsetDefaultAddressForUser(User user) {
+        List<Address> userAddresses = addressRepository.findByUser(user);
+        for (Address addr : userAddresses) {
+            if (Boolean.TRUE.equals(addr.isDefault())) {
+                addr.setDefault(false);
+                addressRepository.save(addr);
+            }
+        }
+    }
+    @Override
+    public AddressResponse setDefaultAddress(String addressId) {
+        var context = SecurityContextHolder.getContext();
+        String userId = context.getAuthentication().getName();
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Address address = addressRepository.findById(addressId)
+                .orElseThrow(() -> new RuntimeException("Address not found with ID: " + addressId));
+
+        // Gỡ bỏ default hiện tại (nếu có)
+        unsetDefaultAddressForUser(user);
+
+        // Đặt địa chỉ này thành default
+        address.setDefault(true);
+        Address saved = addressRepository.save(address);
+
+        return AddressResponse.builder()
+                .addressId(saved.getAddressId())
+                .addressName(saved.getAddressName())
+                .user(saved.getUser())
+                .phone(saved.getPhone())
+                .isDefault(saved.isDefault())
+                .build();
     }
 }

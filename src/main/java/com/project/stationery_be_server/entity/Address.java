@@ -20,6 +20,12 @@ public class Address {
     @Column(length = 100, name = "address_name")
     private String addressName;
 
+    @Column(name = "phone", length = 15)
+    String phone;
+
+    @Column(name = "is_default")
+    boolean isDefault;
+
     @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "user_id", nullable = false)
