@@ -39,12 +39,21 @@ public class ProductController {
                                                                                     @RequestParam(required = false) String categoryId,
                                                                                     @RequestParam(required = false) String totalRating
     ) {
-        String[] parts = sortBy.split("(?<=-)|(?=-)"); // tách dấu tru trong chuoi
-        //-abc
-//        System.out.println(parts[0] + " " + parts[1]);
-        System.out.println(parts.length);
-        Sort sort = parts.length == 1 ? Sort.by(parts[0]).ascending() : Sort.by(parts[1]).descending();
-        Pageable pageable = PageRequest.of(page, limit, sort);
+        Sort sort = null;
+        if (!sortBy.isBlank() && !sortBy.isEmpty()) {
+            String[] parts = sortBy.split("(?<=-)|(?=-)"); // tách dấu tru trong chuoi
+            //-abc
+            System.out.println(parts.length);
+            sort = parts.length == 1 ? Sort.by(parts[0]).ascending() : Sort.by(parts[1]).descending();
+
+        }
+        Pageable pageable;
+        if (sort != null) {
+            pageable = PageRequest.of(page, limit, sort);
+
+        } else {
+            pageable = PageRequest.of(page, limit);
+        }
         ProductFilterRequest filterRequest = ProductFilterRequest.builder()
                 .categoryId(categoryId)
                 .minPrice(minPrice)

@@ -23,5 +23,7 @@ public class ProductListResponse {
     String slug;
     Integer minPrice;
     Double totalRating;
+    Integer soldQuantity;
+    Integer quantity;
     LocalDateTime createdAt;
 }
