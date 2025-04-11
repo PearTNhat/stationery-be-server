@@ -80,6 +80,4 @@ public class User {
     @JsonIgnore
     Set<PurchaseOrder> orders;
 
-
-
 }

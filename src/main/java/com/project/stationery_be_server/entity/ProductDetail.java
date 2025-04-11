@@ -15,6 +15,7 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+//@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "productDetailId")
 public class ProductDetail {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -39,6 +40,10 @@ public class ProductDetail {
     @ManyToOne
     @JoinColumn(name = "size_id")
     private Size size;
+
+    @ManyToOne
+    @JoinColumn(name = "promotion_id")
+    private Promotion promotion;
 
     @ManyToOne
     @JoinColumn(name = "product_color_id", nullable = false)

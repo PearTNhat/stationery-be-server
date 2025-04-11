@@ -12,7 +12,6 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserPromotion {
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "user_promotion_id", length = 255, nullable = false)
