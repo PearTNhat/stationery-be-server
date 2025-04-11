@@ -1,7 +1,6 @@
 package com.project.stationery_be_server.entity;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,13 +10,14 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Set;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "promotionId")
 public class Promotion {
 
     @Id
@@ -45,14 +45,18 @@ public class Promotion {
     private BigDecimal minOrderValue;
 
     @Column(name = "start_date", nullable = false)
-    private LocalDate startDate;
+    private LocalDateTime startDate;
 
     @Column(name = "end_date", nullable = false)
-    private LocalDate endDate;
+    private LocalDateTime endDate;
+
+    @OneToMany(mappedBy = "promotion")
+    @JsonIgnore
+    private Set<ProductDetail> productDetails;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDate createdAt;
+    private LocalDateTime createdAt;
 
     public enum DiscountType {
         PERCENTAGE, VALUE
