@@ -18,5 +18,18 @@ public interface ProductDetailRepository extends JpaRepository<ProductDetail, St
             @Param("productId") String productId,
             @Param("colorId") String colorId,
             @Param("sizeId") String sizeId);
+
+    // ✅ Truy vấn mới hỗ trợ nullable colorId & sizeId
+    @Query("SELECT pd FROM ProductDetail pd " +
+            "WHERE pd.productColor.product.productId = :productId " +
+            "AND (:colorId IS NULL OR pd.productColor.color.colorId = :colorId) " +
+            "AND (:sizeId IS NULL OR pd.size.sizeId = :sizeId)")
+    Optional<ProductDetail> findByProductIdAndOptionalColorIdAndOptionalSizeId(
+            @Param("productId") String productId,
+            @Param("colorId") String colorId,
+            @Param("sizeId") String sizeId);
+
     ProductDetail findBySlug(String slug);
+
+    ProductDetail findByProductDetailId(String productDetailId);
 }
