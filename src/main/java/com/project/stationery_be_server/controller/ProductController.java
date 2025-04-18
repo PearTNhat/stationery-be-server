@@ -19,7 +19,6 @@ import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Set;
 
 @RestController
 @RequestMapping("/products")
@@ -62,6 +61,7 @@ public class ProductController {
                 .totalRating(totalRating)
                 .build();
         Page<ProductListResponse> pageResult = productService.getAllProducts(pageable, filterRequest);
+
         PagedModel<EntityModel<ProductListResponse>> result = pagedResourcesAssembler.toModel(pageResult);
         return ApiResponse.<PagedModel<EntityModel<ProductListResponse>>>builder()
                 .result(result)

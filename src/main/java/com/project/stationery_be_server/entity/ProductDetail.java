@@ -42,13 +42,18 @@ public class ProductDetail {
     private Size size;
 
     @ManyToOne
-    @JoinColumn(name = "promotion_id")
-    private Promotion promotion;
+    @JoinColumn(name = "color_id")
+    private Color color;
 
     @ManyToOne
-    @JoinColumn(name = "product_color_id", nullable = false)
+    @JoinColumn(name = "product_id", nullable = false)
     @JsonBackReference
-    private ProductColor productColor;
+    private Product product;
+
+    @OneToMany
+    @JoinColumn(name = "product_promotion_id")
+    @JsonIgnore
+    private Set<ProductPromotion> productPromotions;
 
     @OneToMany(mappedBy = "productDetail", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore

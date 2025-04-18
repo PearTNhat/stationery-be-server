@@ -15,28 +15,27 @@ import java.util.TreeSet;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Entity
 public class ProductColor {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "product_color_id")
-    private String productColorId;
-
-    @ManyToOne
-    @JoinColumn(name = "color_id")
+//    @Id
+//    @GeneratedValue(strategy = GenerationType.UUID)
+//    @Column(name = "product_color_id")
+//    private String productColorId;
+//
+//    @ManyToOne
+//    @JoinColumn(name = "color_id")
     private Color color;
-
-    @OneToMany(mappedBy = "productColor")
-    @JsonManagedReference
-    private Set<ProductDetail> productDetails;
-
-    @ManyToOne
-    @JoinColumn(name = "product_id", nullable = false)
-    @JsonBackReference
-    private Product product;
-
-    @OneToMany(mappedBy = "productColor")
-    @OrderBy("priority ASC")
-    @JsonManagedReference
-    private Set<Image> images;
+//
+//    @OneToMany(mappedBy = "productColor")
+//    @JsonManagedReference
+//    private Set<ProductDetail> productDetails;
+//
+//    @ManyToOne
+//    @JoinColumn(name = "product_id", nullable = false)
+//    @JsonBackReference
+//    private Product product;
+//
+//    @OneToMany(mappedBy = "productColor")
+//    @OrderBy("priority ASC")
+//    @JsonManagedReference
+//    private Set<Image> images;
 }

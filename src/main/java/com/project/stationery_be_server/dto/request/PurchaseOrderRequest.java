@@ -13,4 +13,5 @@ public class PurchaseOrderRequest {
     private String pdfUrl;
     private String productPromotionId;
     private String userPromotionId;
+    private String orderId;
 }

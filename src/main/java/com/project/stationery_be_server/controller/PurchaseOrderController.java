@@ -3,6 +3,7 @@ package com.project.stationery_be_server.controller;
 
 import com.project.stationery_be_server.dto.request.PurchaseOrderRequest;
 import com.project.stationery_be_server.dto.response.ApiResponse;
+import com.project.stationery_be_server.dto.response.MomoResponse;
 import com.project.stationery_be_server.dto.response.PurchaseOrderResponse;
 import com.project.stationery_be_server.service.PurchaseOrderService;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,16 @@ public class PurchaseOrderController {
                 .message("Order created successfully")
                 .result(purchaseOrderService.createOrderFromCart(request))
                 .build();
+    }
+
+    @PostMapping("/payment")
+    public ApiResponse<MomoResponse> createOrderFromPayment(@RequestBody PurchaseOrderRequest request) {
+        System.out.println("Request: " + request);
+        return ApiResponse.<MomoResponse>builder()
+                .message("Order created successfully")
+                .result(purchaseOrderService.createOrder(request))
+                .build();
+
     }
 
 }
