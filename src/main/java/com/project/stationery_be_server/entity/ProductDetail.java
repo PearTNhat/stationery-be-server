@@ -1,6 +1,7 @@
 package com.project.stationery_be_server.entity;
 
 import com.fasterxml.jackson.annotation.*;
+import com.project.stationery_be_server.dto.response.ColorSlugResponse;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -58,4 +59,10 @@ public class ProductDetail {
     @OneToMany(mappedBy = "productDetail", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
     private Set<PurchaseOrderDetail> purchaseOrderDetails;
+
+    @Transient
+    private List<ColorSlugResponse> fetchColors;
+    @Transient
+    private List<Image> images;
+
 }

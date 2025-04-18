@@ -6,8 +6,10 @@ import com.project.stationery_be_server.dto.request.ProductFilterRequest;
 import com.project.stationery_be_server.dto.response.ProductListResponse;
 import com.project.stationery_be_server.dto.response.ProductResponse;
 import com.project.stationery_be_server.entity.Product;
+import com.project.stationery_be_server.entity.ProductDetail;
 import com.project.stationery_be_server.exception.AppException;
 import com.project.stationery_be_server.mapper.ProductMapper;
+import com.project.stationery_be_server.repository.ImageRepository;
 import com.project.stationery_be_server.repository.ProductDetailRepository;
 import com.project.stationery_be_server.repository.ProductRepository;
 import com.project.stationery_be_server.repository.ReviewRepository;
@@ -32,6 +34,7 @@ import java.util.List;
 public class ProductServiceImpl implements ProductService {
     ProductRepository productRepository;
     ReviewRepository reviewRepository;
+    ImageRepository imageRepository;
     ProductDetailRepository productDetailRepository;
     ProductMapper productMapper;
 
@@ -46,16 +49,12 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ProductResponse getProductDetail(String slug) {  
-        Product product =  productRepository.findBySlug(slug);
-//
-//        List<Review> reviews = reviewRepository.findByProduct_ProductIdAndParentReviewIsNull(product.getProductId());
-//        Set<ProductColor> pcs = product.getProductColors().stream()
-//                .filter(pc -> !pc.getProductDetails().isEmpty())
-//                .collect(Collectors.toSet());
-//        product.setProductColors(pcs);
-//        product.setReviews(reviews);
-        return productMapper.toProductResponse(product);
+    public ProductDetail getProductDetail(String slug) {
+        ProductDetail pd =  productDetailRepository.findBySlug(slug);
+        String productId = pd.getProduct().getProductId();
+        pd.setFetchColors(productDetailRepository.findColorSlugByProductId(productId));
+        pd.setImages(imageRepository.findByProduct_ProductIdAndColor_ColorIdOrderByPriorityAsc(productId,pd.getColor().getColorId()));
+        return pd;
     }
 
     @Override
