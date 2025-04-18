@@ -15,6 +15,8 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +24,11 @@ import org.springframework.stereotype.Service;
 public class ReviewServiceImpl implements ReviewService {
     ReviewRepository reviewRepository;
     ProductService productService;
+
+    @Override
+    public List<Review> getReviewByProductId(String productId) {
+        return reviewRepository.findByProduct_ProductIdAndParentReviewIsNull(productId);
+    }
 
     @Override
     @Transactional

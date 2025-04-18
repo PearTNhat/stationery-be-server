@@ -1,11 +1,13 @@
 package com.project.stationery_be_server.repository;
 
+import com.project.stationery_be_server.dto.response.ColorSlugResponse;
 import com.project.stationery_be_server.entity.ProductDetail;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -32,4 +34,8 @@ public interface ProductDetailRepository extends JpaRepository<ProductDetail, St
     ProductDetail findBySlug(String slug);
 
     ProductDetail findByProductDetailId(String productDetailId);
+
+
+    @Query("select new com.project.stationery_be_server.dto.response.ColorSlugResponse(pd.color.colorId, pd.color.hex, pd.slug) from ProductDetail pd where pd.product.id = :productId and pd.color is not null")
+    List<ColorSlugResponse> findColorSlugByProductId(String productId);
 }

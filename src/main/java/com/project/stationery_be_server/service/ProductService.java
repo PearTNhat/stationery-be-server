@@ -17,7 +17,7 @@ import java.util.Set;
 
 public interface ProductService {
     Page<ProductListResponse> getAllProducts(Pageable pageable , ProductFilterRequest filter);
-    ProductResponse getProductDetail(String slug);
+    ProductDetail getProductDetail(String slug);
     void updateMinPrice(Product product);
     @Transactional
     void handleUpdateTotalProductRating(String productId, String type, Integer rating);

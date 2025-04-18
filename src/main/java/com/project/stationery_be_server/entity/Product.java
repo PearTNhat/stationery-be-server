@@ -56,7 +56,13 @@ public class Product {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
+    private Set<ProductDetail> productDetails;
+
     @OneToMany(mappedBy = "product",fetch = FetchType.LAZY)
     @JsonIgnore
     List<Image> images;
+
+    @Transient
+    ProductDetail productDetail;
 }

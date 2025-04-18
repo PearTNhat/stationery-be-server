@@ -15,9 +15,8 @@
             return (root, query, criteriaBuilder) -> {
                 //predicates là danh sách các điều kiện (WHERE ...).
                 List<Predicate> predicates = new ArrayList<>();
-                // Join Product → ProductColor → ProductDetail
-                Join<Object, Object> productColorJoin = root.join("productColors", JoinType.INNER);
-                Join<Object, Object> productDetailJoin = productColorJoin.join("productDetails", JoinType.INNER);
+                // Join Product →  ProductDetail
+                Join<Object, Object> productDetailJoin = root.join("productDetails", JoinType.INNER);
                 if (filter.getCategoryId() != null && !filter.getCategoryId().isBlank()) {
                     predicates.add(criteriaBuilder.equal(root.get("category").get("categoryId"), filter.getCategoryId()));
                 }

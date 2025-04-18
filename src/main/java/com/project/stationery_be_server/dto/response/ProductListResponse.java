@@ -3,6 +3,7 @@ package com.project.stationery_be_server.dto.response;
 import com.project.stationery_be_server.entity.Category;
 import com.project.stationery_be_server.entity.Product;
 import com.project.stationery_be_server.entity.ProductColor;
+import com.project.stationery_be_server.entity.ProductDetail;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -19,11 +20,12 @@ public class ProductListResponse {
     String name;
     String description;
     CategoryProductResponse category;
-    Set<ProductColor> productColors;
     String slug;
     Integer minPrice;
     Double totalRating;
     Integer soldQuantity;
     Integer quantity;
     LocalDateTime createdAt;
+
+    ProductDetail productDetail;
 }
