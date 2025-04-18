@@ -65,7 +65,6 @@ public class User {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id", nullable = false)
-    @JsonBackReference("user-role") // Đặt tên riêng cho reference này
     Role role;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)

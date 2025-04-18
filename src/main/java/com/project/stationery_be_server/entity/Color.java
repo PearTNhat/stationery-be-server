@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -27,5 +28,5 @@ public class Color {
 
     @OneToMany(mappedBy = "color",fetch = FetchType.LAZY)
     @JsonIgnore
-    Set<ProductColor> productColors;
+    List<Image> images;
 }

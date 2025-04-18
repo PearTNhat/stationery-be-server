@@ -11,8 +11,8 @@ import java.util.Optional;
 @Repository
 public interface ProductDetailRepository extends JpaRepository<ProductDetail, String> {
     @Query("SELECT pd FROM ProductDetail pd " +
-            "WHERE pd.productColor.product.productId = :productId " +
-            "AND pd.productColor.color.colorId = :colorId " +
+            "WHERE pd.product.productId = :productId " +
+            "AND pd.color.colorId = :colorId " +
             "AND pd.size.sizeId = :sizeId")
     Optional<ProductDetail> findByProductIdAndColorIdAndSizeId(
             @Param("productId") String productId,
@@ -21,8 +21,8 @@ public interface ProductDetailRepository extends JpaRepository<ProductDetail, St
 
     // ✅ Truy vấn mới hỗ trợ nullable colorId & sizeId
     @Query("SELECT pd FROM ProductDetail pd " +
-            "WHERE pd.productColor.product.productId = :productId " +
-            "AND (:colorId IS NULL OR pd.productColor.color.colorId = :colorId) " +
+            "WHERE pd.product.productId = :productId " +
+            "AND (:colorId IS NULL OR pd.color.colorId = :colorId) " +
             "AND (:sizeId IS NULL OR pd.size.sizeId = :sizeId)")
     Optional<ProductDetail> findByProductIdAndOptionalColorIdAndOptionalSizeId(
             @Param("productId") String productId,

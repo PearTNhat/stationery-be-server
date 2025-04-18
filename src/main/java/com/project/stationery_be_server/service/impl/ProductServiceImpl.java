@@ -6,12 +6,8 @@ import com.project.stationery_be_server.dto.request.ProductFilterRequest;
 import com.project.stationery_be_server.dto.response.ProductListResponse;
 import com.project.stationery_be_server.dto.response.ProductResponse;
 import com.project.stationery_be_server.entity.Product;
-import com.project.stationery_be_server.entity.ProductColor;
-import com.project.stationery_be_server.entity.ProductDetail;
-import com.project.stationery_be_server.entity.Review;
 import com.project.stationery_be_server.exception.AppException;
 import com.project.stationery_be_server.mapper.ProductMapper;
-import com.project.stationery_be_server.repository.ProductColorRepository;
 import com.project.stationery_be_server.repository.ProductDetailRepository;
 import com.project.stationery_be_server.repository.ProductRepository;
 import com.project.stationery_be_server.repository.ReviewRepository;
@@ -28,8 +24,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 
 @Service
@@ -40,7 +34,6 @@ public class ProductServiceImpl implements ProductService {
     ReviewRepository reviewRepository;
     ProductDetailRepository productDetailRepository;
     ProductMapper productMapper;
-    ProductColorRepository productColorRepository;
 
     @Override
         public Page<ProductListResponse> getAllProducts(Pageable pageable , ProductFilterRequest filter) {
@@ -55,27 +48,33 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductResponse getProductDetail(String slug) {  
         Product product =  productRepository.findBySlug(slug);
-
-        List<Review> reviews = reviewRepository.findByProduct_ProductIdAndParentReviewIsNull(product.getProductId());
-        Set<ProductColor> pcs = product.getProductColors().stream()
-                .filter(pc -> !pc.getProductDetails().isEmpty())
-                .collect(Collectors.toSet());
-        product.setProductColors(pcs);
-        product.setReviews(reviews);
+//
+//        List<Review> reviews = reviewRepository.findByProduct_ProductIdAndParentReviewIsNull(product.getProductId());
+//        Set<ProductColor> pcs = product.getProductColors().stream()
+//                .filter(pc -> !pc.getProductDetails().isEmpty())
+//                .collect(Collectors.toSet());
+//        product.setProductColors(pcs);
+//        product.setReviews(reviews);
         return productMapper.toProductResponse(product);
     }
+
     @Override
     public void updateMinPrice(Product product) {
-        Integer minPrice = product.getProductColors().stream()
-                .flatMap(pc -> pc.getProductDetails().stream())
-                .filter(pd -> pd.getStockQuantity() > 0)
-                .map(ProductDetail::getDiscountPrice)
-                .min(Integer::compareTo) //min[1,2,3,5]
-                .orElse(0);
 
-        product.setMinPrice(minPrice);
-        productRepository.save(product);
     }
+
+    //    @Override
+//    public void updateMinPrice(Product product) {
+//        Integer minPrice = product.getProductColors().stream()
+//                .flatMap(pc -> pc.getProductDetails().stream())
+//                .filter(pd -> pd.getStockQuantity() > 0)
+//                .map(ProductDetail::getDiscountPrice)
+//                .min(Integer::compareTo) //min[1,2,3,5]
+//                .orElse(0);
+//
+//        product.setMinPrice(minPrice);
+//        productRepository.save(product);
+//    }
     @Override
     @Transactional
     public void handleUpdateTotalProductRating(String productId, String type, Integer rating) {

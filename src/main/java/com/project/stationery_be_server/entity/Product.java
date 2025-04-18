@@ -39,10 +39,6 @@ public class Product {
     @JsonIgnoreProperties({"icon", "bgColor", "products"})
     private Category category;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
-    @JsonManagedReference
-    private Set<ProductColor> productColors;
-
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<Review> reviews;
@@ -59,4 +55,8 @@ public class Product {
     @Column(name = "created_at", nullable = false, updatable = false)
     @CreationTimestamp
     private LocalDateTime createdAt;
+
+    @OneToMany(mappedBy = "product",fetch = FetchType.LAZY)
+    @JsonIgnore
+    List<Image> images;
 }

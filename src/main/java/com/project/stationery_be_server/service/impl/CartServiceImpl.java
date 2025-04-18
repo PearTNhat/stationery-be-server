@@ -91,7 +91,7 @@ public class CartServiceImpl implements CartService {
         Cart cart = cartRepository.findByCartId(cartId)
                 .orElseThrow(() -> new IllegalArgumentException("Item not found in cart"));
 
-        Product product = cart.getProductDetail().getProductColor().getProduct();
+        Product product = cart.getProductDetail().getProduct();
 
         // Lấy color và size mới (có thể null)
         Color color = null;
@@ -197,27 +197,30 @@ public class CartServiceImpl implements CartService {
 //                .build();
 //    }
     private CartResponse mapToCartResponse(Cart cart) {
-        ProductDetail productDetail = cart.getProductDetail();
-        ProductColor productColor = productDetail.getProductColor();
+//        ProductDetail productDetail = cart.getProductDetail();
+//        ProductColor productColor = productDetail.getProductColor();
+//
+//        // Lấy ảnh đầu tiên (ưu tiên ảnh có priority thấp nhất nếu đã @OrderBy)
+//        String imageUrl = productColor.getImages().stream()
+//                .findFirst()
+//                .map(image -> image.getUrl()) // hoặc image.getImageUrl() tùy theo tên trường
+//                .orElse(null);
 
-        // Lấy ảnh đầu tiên (ưu tiên ảnh có priority thấp nhất nếu đã @OrderBy)
-        String imageUrl = productColor.getImages().stream()
-                .findFirst()
-                .map(image -> image.getUrl()) // hoặc image.getImageUrl() tùy theo tên trường
-                .orElse(null);
-
-        return CartResponse.builder()
-                .userId(cart.getUser().getUserId())
-                .productId(productColor.getProduct().getProductId())
-                .productDetailId(productDetail.getProductDetailId())
-                .productName(productColor.getProduct().getName())
-                .colorName(productColor.getColor().getName())
-                .sizeName(productDetail.getSize() != null ? productDetail.getSize().getName() : null)
-                .quantity(cart.getQuantity())
-                .originalPrice(productDetail.getOriginalPrice())
-                .discountPrice(productDetail.getDiscountPrice())
-                .createdAt(cart.getCreatedAt())
-                .imageUrl(imageUrl)
+//        return CartResponse.builder()
+//                .userId(cart.getUser().getUserId())
+//                .productId(productColor.getProduct().getProductId())
+//                .productDetailId(productDetail.getProductDetailId())
+//                .productName(productColor.getProduct().getName())
+//                .colorName(productColor.getColor().getName())
+//                .sizeName(productDetail.getSize() != null ? productDetail.getSize().getName() : null)
+//                .quantity(cart.getQuantity())
+//                .originalPrice(productDetail.getOriginalPrice())
+//                .discountPrice(productDetail.getDiscountPrice())
+//                .createdAt(cart.getCreatedAt())
+//                .imageUrl(imageUrl)
+//                .build();
+        return  CartResponse.builder()
+                .sizeName("123")
                 .build();
     }
 

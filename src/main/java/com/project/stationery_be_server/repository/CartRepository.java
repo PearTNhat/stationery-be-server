@@ -19,7 +19,7 @@ public interface CartRepository extends JpaRepository<Cart, CartId> {
     @Query("SELECT c FROM Cart c WHERE c.cartId = :cartId")
     Optional<Cart> findByCartId(@Param("cartId") CartId cartId);
 
-    @Query("SELECT c FROM Cart c WHERE c.productDetail.productColor.product.productId = :productId AND c.user.userId = :userId")
+    @Query("SELECT c FROM Cart c WHERE c.productDetail.product.productId = :productId AND c.user.userId = :userId")
     List<Cart> findByUserIdAndProductId(@Param("userId") String userId, @Param("productId") String productId);
 
     List<Cart> findByUser_UserId(String userId);
