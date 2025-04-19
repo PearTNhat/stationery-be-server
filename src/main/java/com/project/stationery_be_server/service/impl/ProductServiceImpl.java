@@ -49,10 +49,11 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional
     public ProductDetail getProductDetail(String slug) {
         ProductDetail pd =  productDetailRepository.findBySlug(slug);
         String productId = pd.getProduct().getProductId();
-        pd.setFetchColors(productDetailRepository.findColorSlugByProductId(productId));
+        pd.setFetchColorSize(productDetailRepository.findColorSlugByProductId(productId));
         pd.setImages(imageRepository.findByProduct_ProductIdAndColor_ColorIdOrderByPriorityAsc(productId,pd.getColor().getColorId()));
         return pd;
     }

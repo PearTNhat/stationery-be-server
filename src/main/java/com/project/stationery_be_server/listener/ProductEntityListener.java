@@ -36,9 +36,9 @@ public class ProductEntityListener {
                     .orElse(null);
             product.setProductDetail(filtered);
             if (filtered != null && ProductDetailRepositoryHolder.productDetailRepository != null) {
-                filtered.setFetchColors(
+                filtered.setFetchColor(
                         ProductDetailRepositoryHolder.productDetailRepository
-                                .findColorSlugByProductId(product.getProductId())
+                                .findDistinctColorsWithAnySlug(product.getProductId(), product.getProductDetail().getColor().getColorId())
                 );
             }
             ProductDetail detail = product.getProductDetail();
