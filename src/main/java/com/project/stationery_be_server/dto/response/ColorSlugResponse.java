@@ -1,12 +1,8 @@
 package com.project.stationery_be_server.dto.response;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
-@RequiredArgsConstructor
+@Data
 public class ColorSlugResponse {
     private String colorId;
     private String hex;
@@ -17,4 +13,5 @@ public class ColorSlugResponse {
         this.hex = hex;
         this.slug = slug;
     }
+
 }

@@ -1,6 +1,7 @@
 package com.project.stationery_be_server.entity;
 
 import com.fasterxml.jackson.annotation.*;
+import com.project.stationery_be_server.dto.response.ColorSizeSlugResponse;
 import com.project.stationery_be_server.dto.response.ColorSlugResponse;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -61,7 +62,9 @@ public class ProductDetail {
     private Set<PurchaseOrderDetail> purchaseOrderDetails;
 
     @Transient
-    private List<ColorSlugResponse> fetchColors;
+    private List<ColorSlugResponse> fetchColor;
+    @Transient
+    private List<ColorSizeSlugResponse> fetchColorSize;
     @Transient
     private List<Image> images;
 
