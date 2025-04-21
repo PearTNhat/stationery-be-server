@@ -72,6 +72,34 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    public UserResponse createUserFromGoogle(String email, String fullName, String avatar) {
+        Role role = roleRepository.findById("112")
+                .orElseThrow(() -> new RuntimeException("Role User not found"));
+
+        // Handle fullName robustly
+        String firstName = fullName != null && !fullName.isEmpty() ? fullName : "Unknown";
+        String lastName = "";
+
+        if (fullName != null && fullName.contains(" ")) {
+            String[] nameParts = fullName.trim().split("\\s+", 2);
+            firstName = nameParts[0];
+            lastName = nameParts[1];
+        }
+
+        User user = new User();
+        user.setEmail(email);
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
+        user.setRole(role);
+        user.setBlocked(false);
+        user.setAvatar(avatar != null ? avatar : "");
+
+        User savedUser = userRepository.save(user);
+        return userMapper.toUserResponse(savedUser);
+    }
+
+    @Override
+    @Transactional
     public String register(RegisterRequest request) {
         String email = request.getEmail();
         if (userRepository.existsByEmail(email)) {
@@ -169,7 +197,7 @@ public class UserServiceImpl implements UserService {
         if (request == null) {
             throw new AppException(NotExistedErrorCode.PENDING_REGISTRATION_NOT_FOUND);
         }
-        Role role = roleRepository.findById("ROLE002")
+        Role role = roleRepository.findById("112")
                 .orElseThrow(() -> new RuntimeException("Role User not found"));
         User user = User.builder()
                 .firstName(request.getFirstName())
