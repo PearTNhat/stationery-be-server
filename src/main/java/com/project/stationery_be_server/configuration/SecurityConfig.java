@@ -31,9 +31,14 @@ public class SecurityConfig {
     @Value("${jwt.signerKey}")
     private String singerKey;
 
+    private final OAuth2SuccessHandler oAuth2SuccessHandler;
+
+    public SecurityConfig(@Lazy OAuth2SuccessHandler oAuth2SuccessHandler) {
+        this.oAuth2SuccessHandler = oAuth2SuccessHandler;
+    }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, CustomJwtDecoder customJwtDecoder) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, CustomJwtDecoder customJwtDecoder, OAuth2SuccessHandler oAuth2SuccessHandler) throws Exception {
         http.authorizeHttpRequests(request ->
                 request
                         .requestMatchers(HttpMethod.POST, "/**").permitAll()
@@ -41,13 +46,26 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/**").permitAll()
                         .anyRequest()
                         .authenticated());
-        http.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwtConfigurer -> jwtConfigurer
-                        .decoder(customJwtDecoder)
-                        .jwtAuthenticationConverter(jwtAuthenticationConverter()))
-                .authenticationEntryPoint(new JwtAuthenticationEntryPoint()));
+
+                // Hỗ trợ đăng nhập với OAuth 2.0 (Google)
+        http.oauth2Login(oauth2 -> oauth2
+                        .successHandler(oAuth2SuccessHandler) // Sử dụng success handler để xử lý sau khi đăng nhập thành công
+                        .failureUrl("/auth/failure")         // Chuyển hướng khi đăng nhập thất bại
+                )
+
+                // Hỗ trợ xác thực bằng JWT cho các API
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwtConfigurer -> jwtConfigurer
+                                .decoder(customJwtDecoder)
+                                .jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                        .authenticationEntryPoint(new JwtAuthenticationEntryPoint())
+                );
+
+                // Cấu hình CORS và tắt CSRF
         http
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable);
+
         return http.build();
     }
 
@@ -64,10 +82,11 @@ public class SecurityConfig {
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
-        corsConfiguration.setAllowCredentials(true);
-        corsConfiguration.addAllowedOriginPattern("http://localhost:5173");
-        corsConfiguration.addAllowedHeader("*");
-        corsConfiguration.addAllowedMethod("*");
+        corsConfiguration.setAllowCredentials(true); // Allow cookies and credentials
+        corsConfiguration.addAllowedOrigin("http://localhost:5173"); // Exact origin, no patterns
+        corsConfiguration.addAllowedHeader("*"); // Allow all headers
+        corsConfiguration.addAllowedMethod("*"); // Allow all HTTP methods (GET, POST, etc.)
+        corsConfiguration.setMaxAge(3600L); // Cache preflight response for 1 hour
 
         UrlBasedCorsConfigurationSource urlBasedCorsConfigurationSource = new UrlBasedCorsConfigurationSource();
         urlBasedCorsConfigurationSource.registerCorsConfiguration("/**", corsConfiguration);
