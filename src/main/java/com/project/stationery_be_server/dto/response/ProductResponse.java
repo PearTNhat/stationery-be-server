@@ -1,13 +1,13 @@
 package com.project.stationery_be_server.dto.response;
 
-import com.project.stationery_be_server.entity.ProductColor;
-import com.project.stationery_be_server.entity.Review;
+import com.project.stationery_be_server.entity.Image;
+import com.project.stationery_be_server.entity.ProductDetail;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -18,11 +18,14 @@ public class ProductResponse {
     String name;
     String description;
     CategoryProductResponse category;
-    Set<ProductColor> productColors;
     String slug;
+    Integer minPrice;
     Double totalRating;
-    LocalDateTime createdAt;
     Integer soldQuantity;
     Integer quantity;
-    List<Review> reviews;
+    List<ColorSlugResponse> fetchColor;
+    LocalDateTime createdAt;
+    String img;
+
+    ProductDetail productDetail;
 }

@@ -2,7 +2,8 @@ package com.project.stationery_be_server.controller;
 
 import com.project.stationery_be_server.dto.request.ProductFilterRequest;
 import com.project.stationery_be_server.dto.response.ApiResponse;
-import com.project.stationery_be_server.dto.response.ProductListResponse;
+import com.project.stationery_be_server.dto.response.ColorSizeSlugResponse;
+import com.project.stationery_be_server.dto.response.ProductResponse;
 import com.project.stationery_be_server.dto.response.ProductResponse;
 import com.project.stationery_be_server.entity.Product;
 import com.project.stationery_be_server.entity.ProductDetail;
@@ -19,7 +20,8 @@ import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Set;
+import java.util.List;
+
 
 @RestController
 @RequestMapping("/products")
@@ -27,10 +29,10 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ProductController {
     ProductService productService;
-    PagedResourcesAssembler<ProductListResponse> pagedResourcesAssembler; // Inject
+    PagedResourcesAssembler<ProductResponse> pagedResourcesAssembler; // Inject
 
     @GetMapping
-    public ApiResponse<PagedModel<EntityModel<ProductListResponse>>> getAllProducts(@RequestParam(defaultValue = "0") int page,
+    public ApiResponse<PagedModel<EntityModel<ProductResponse>>> getAllProducts(@RequestParam(defaultValue = "0") int page,
                                                                                     @RequestParam(defaultValue = "10") int limit,
                                                                                     @RequestParam(defaultValue = "createdAt") String sortBy,
                                                                                     @RequestParam(required = false) String minPrice,
@@ -43,7 +45,6 @@ public class ProductController {
         if (!sortBy.isBlank() && !sortBy.isEmpty()) {
             String[] parts = sortBy.split("(?<=-)|(?=-)"); // tách dấu tru trong chuoi
             //-abc
-            System.out.println(parts.length);
             sort = parts.length == 1 ? Sort.by(parts[0]).ascending() : Sort.by(parts[1]).descending();
 
         }
@@ -61,9 +62,10 @@ public class ProductController {
                 .search(search)
                 .totalRating(totalRating)
                 .build();
-        Page<ProductListResponse> pageResult = productService.getAllProducts(pageable, filterRequest);
-        PagedModel<EntityModel<ProductListResponse>> result = pagedResourcesAssembler.toModel(pageResult);
-        return ApiResponse.<PagedModel<EntityModel<ProductListResponse>>>builder()
+        Page<ProductResponse> pageResult = productService.getAllProductDetails(pageable, filterRequest);
+
+        PagedModel<EntityModel<ProductResponse>> result = pagedResourcesAssembler.toModel(pageResult);
+        return ApiResponse.<PagedModel<EntityModel<ProductResponse>>>builder()
                 .result(result)
                 .build();
     }
@@ -72,6 +74,12 @@ public class ProductController {
     public ApiResponse<ProductResponse> getProductDetailProduct(@PathVariable String slug) {
         return ApiResponse.<ProductResponse>builder()
                 .result(productService.getProductDetail(slug))
+                .build();
+    }
+    @GetMapping("/color-size/{slug}")
+    public ApiResponse<List<ColorSizeSlugResponse>> getColorSizeSlug(@PathVariable String slug) {
+        return ApiResponse.<List<ColorSizeSlugResponse>>builder()
+                .result(productService.fetchColorSizeSlug(slug))
                 .build();
     }
 }

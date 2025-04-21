@@ -3,15 +3,15 @@ package com.project.stationery_be_server.service.impl;
 
 import com.project.stationery_be_server.Error.NotExistedErrorCode;
 import com.project.stationery_be_server.dto.request.ProductFilterRequest;
-import com.project.stationery_be_server.dto.response.ProductListResponse;
+import com.project.stationery_be_server.dto.response.ColorSizeSlugResponse;
 import com.project.stationery_be_server.dto.response.ProductResponse;
+import com.project.stationery_be_server.dto.response.ProductResponse;
+import com.project.stationery_be_server.entity.Image;
 import com.project.stationery_be_server.entity.Product;
-import com.project.stationery_be_server.entity.ProductColor;
 import com.project.stationery_be_server.entity.ProductDetail;
-import com.project.stationery_be_server.entity.Review;
 import com.project.stationery_be_server.exception.AppException;
 import com.project.stationery_be_server.mapper.ProductMapper;
-import com.project.stationery_be_server.repository.ProductColorRepository;
+import com.project.stationery_be_server.repository.ImageRepository;
 import com.project.stationery_be_server.repository.ProductDetailRepository;
 import com.project.stationery_be_server.repository.ProductRepository;
 import com.project.stationery_be_server.repository.ReviewRepository;
@@ -28,8 +28,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 
 @Service
@@ -38,44 +36,63 @@ import java.util.stream.Collectors;
 public class ProductServiceImpl implements ProductService {
     ProductRepository productRepository;
     ReviewRepository reviewRepository;
+    ImageRepository imageRepository;
     ProductDetailRepository productDetailRepository;
     ProductMapper productMapper;
-    ProductColorRepository productColorRepository;
 
     @Override
-        public Page<ProductListResponse> getAllProducts(Pageable pageable , ProductFilterRequest filter) {
+    public Page<ProductResponse> getAllProductDetails(Pageable pageable, ProductFilterRequest filter) {
         Specification<Product> spec = ProductSpecification.filterProducts(filter);
-        Page<Product> products = productRepository.findAll(spec,pageable);
-        List<ProductListResponse> productListResponses = products.getContent().stream()
-                .map(productMapper::toProductListResponse)
+        Page<Product> pd = productRepository.findAll(spec, pageable);
+        List<ProductResponse> productListResponses = pd.getContent().stream()
+                .map(product -> {
+                    String colorId = product.getProductDetail().getColor().getColorId();
+                    product.setFetchColor(productDetailRepository.findDistinctColorsWithAnySlug(product.getProductId()));
+                    Image img = imageRepository.findFirstByProduct_ProductIdAndColor_ColorIdOrderByPriorityAsc(product.getProductId(), colorId);
+                    product.setImg(img != null ? img.getUrl() : null);
+                    return productMapper.toProductResponse(product);
+                })
                 .toList();
-        return new PageImpl<>(productListResponses, pageable, products.getTotalElements());
+
+
+        return new PageImpl<>(productListResponses, pageable, pd.getTotalElements());
     }
 
     @Override
-    public ProductResponse getProductDetail(String slug) {  
-        Product product =  productRepository.findBySlug(slug);
-
-        List<Review> reviews = reviewRepository.findByProduct_ProductIdAndParentReviewIsNull(product.getProductId());
-        Set<ProductColor> pcs = product.getProductColors().stream()
-                .filter(pc -> !pc.getProductDetails().isEmpty())
-                .collect(Collectors.toSet());
-        product.setProductColors(pcs);
-        product.setReviews(reviews);
-        return productMapper.toProductResponse(product);
+    @Transactional
+    public ProductResponse getProductDetail(String slug) {
+        System.out.println("_____________________slug__________________________");
+        ProductDetail pd = productDetailRepository.findBySlug(slug);
+        String productId = pd.getProduct().getProductId();
+        pd.setImages(imageRepository.findByProduct_ProductIdAndColor_ColorIdOrderByPriorityAsc(productId, pd.getColor().getColorId()));
+        Product p = productRepository.findById(productId).orElseThrow(() -> new AppException(NotExistedErrorCode.PRODUCT_NOT_EXISTED));
+        p.setProductDetail(pd);
+        System.out.println("_____________________pd__________________________");
+        return productMapper.toProductResponse(p);
     }
+
+    @Override
+    public List<ColorSizeSlugResponse> fetchColorSizeSlug(String slug) {
+        return productDetailRepository.fetchColorSizeBySLug(slug);
+    }
+
     @Override
     public void updateMinPrice(Product product) {
-        Integer minPrice = product.getProductColors().stream()
-                .flatMap(pc -> pc.getProductDetails().stream())
-                .filter(pd -> pd.getStockQuantity() > 0)
-                .map(ProductDetail::getDiscountPrice)
-                .min(Integer::compareTo) //min[1,2,3,5]
-                .orElse(0);
 
-        product.setMinPrice(minPrice);
-        productRepository.save(product);
     }
+
+    //    @Override
+//    public void updateMinPrice(Product product) {
+//        Integer minPrice = product.getProductColors().stream()
+//                .flatMap(pc -> pc.getProductDetails().stream())
+//                .filter(pd -> pd.getStockQuantity() > 0)
+//                .map(ProductDetail::getDiscountPrice)
+//                .min(Integer::compareTo) //min[1,2,3,5]
+//                .orElse(0);
+//
+//        product.setMinPrice(minPrice);
+//        productRepository.save(product);
+//    }
     @Override
     @Transactional
     public void handleUpdateTotalProductRating(String productId, String type, Integer rating) {

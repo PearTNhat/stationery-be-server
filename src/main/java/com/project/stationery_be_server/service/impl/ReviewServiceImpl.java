@@ -5,6 +5,7 @@ import com.project.stationery_be_server.dto.request.ReviewRequest;
 import com.project.stationery_be_server.dto.request.UpdateReviewRequest;
 import com.project.stationery_be_server.entity.Review;
 import com.project.stationery_be_server.exception.AppException;
+import com.project.stationery_be_server.repository.ProductDetailRepository;
 import com.project.stationery_be_server.repository.ReviewRepository;
 import com.project.stationery_be_server.service.ProductService;
 import com.project.stationery_be_server.service.ReviewService;
@@ -15,6 +16,8 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +25,14 @@ import org.springframework.stereotype.Service;
 public class ReviewServiceImpl implements ReviewService {
     ReviewRepository reviewRepository;
     ProductService productService;
+    ProductDetailRepository productDetailRepository;
+
+    @Override
+    @Transactional
+    public List<Review> getReviewByProductId(String slug) {
+        String productId = productDetailRepository.findProductIdBySlug(slug);
+        return reviewRepository.findByProduct_ProductIdAndParentReviewIsNull(productId);
+    }
 
     @Override
     @Transactional

@@ -1,5 +1,9 @@
 package com.project.stationery_be_server.service.impl;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.stationery_be_server.Error.AuthErrorCode;
 import com.project.stationery_be_server.Error.InvalidErrorCode;
 import com.project.stationery_be_server.Error.NotExistedErrorCode;
@@ -23,6 +27,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -39,6 +46,7 @@ public class UserServiceImpl implements UserService {
     EmailService emailService;
     OtpUtils otpUtils;
     RoleRepository roleRepository;
+    Cloudinary cloudinary;
 
     // Temporary storage for pending registrations
     private final Map<String, RegisterRequest> pendingRegistrations = new HashMap<>();
@@ -48,6 +56,7 @@ public class UserServiceImpl implements UserService {
     private static class OtpDetails {
         Integer otp;
         Date createdAt;
+
         OtpDetails(Integer otp, Date createdAt) {
             this.otp = otp;
             this.createdAt = createdAt;
@@ -254,26 +263,35 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
         return "Password changed successfully";
     }
+
     @Override
-    public UserResponse updateUser(UserRequest request) {
+    public UserResponse updateUser(String documentJson, MultipartFile file) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        UserRequest request = null;
+        try {
+            request = objectMapper.readValue(documentJson, UserRequest.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
         var context = SecurityContextHolder.getContext();
         String userId = context.getAuthentication().getName();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(NotExistedErrorCode.USER_NOT_EXISTED));
-
-        user.setFirstName(request.getFirstName());
-        user.setLastName(request.getLastName());
-        user.setEmail(request.getEmail());
-        user.setPhone(request.getPhone());
-        user.setDob(request.getDob());
-        user.setAvatar(request.getAvatar());
-        user.setBlocked(request.isBlock());
-        user.setOtp(request.getOtp());
-        user.setRole(roleRepository.findById(request.getRoleId()).orElseThrow(() -> new RuntimeException("Role not found")));
-
-        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
-            user.setPassword(passwordEncoder.encode(request.getPassword()));
+        try {
+            if (file != null && !file.isEmpty()) {
+                Map<?, ?> uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
+                String url = uploadResult.get("secure_url").toString(); // hoặc "url"
+                user.setAvatar(url);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Error uploading file to Cloudinary");
         }
+        user.setFirstName(request.getFirstName() != null ? request.getFirstName() : user.getFirstName());
+        user.setLastName(request.getLastName() != null ? request.getLastName() : user.getLastName());
+        user.setEmail(request.getEmail() != null ? request.getEmail() : user.getEmail());
+        user.setPhone(request.getPhone() != null ? request.getPhone() : user.getPhone());
+        user.setDob(request.getDob() != null ? request.getDob() : user.getDob());
+//        user.setAvatar(request.getAvatar() != null ? request.getAvatar() : user.getAvatar());
 
         user = userRepository.save(user);
         return userMapper.toUserResponse(user);
