@@ -62,7 +62,6 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
                 .build();
 
         // Chuyển hướng về frontend với token
-        // Sửa cú pháp URL: loại bỏ dấu ? thừa
         response.sendRedirect("http://localhost:5173/auth?mode=login&token=" + token);
     }
 }
