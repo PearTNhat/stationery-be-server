@@ -29,33 +29,17 @@ public class ProductEntityListener {
     @PostLoad
     public void filterProductDetail(Product product) {
         log.info("________Call filterProductDetail_______");
-        if (product.getProductDetails() != null && product.getMinPrice() != null) {
-            ProductDetail filtered = product.getProductDetails().stream()
-                    .filter(pd -> pd.getDiscountPrice() == product.getMinPrice())
-                    .findFirst()
-                    .orElse(null);
-            product.setProductDetail(filtered);
-            if (filtered != null && ProductDetailRepositoryHolder.productDetailRepository != null) {
-                filtered.setFetchColor(
-                        ProductDetailRepositoryHolder.productDetailRepository
-                                .findDistinctColorsWithAnySlug(product.getProductId(), product.getProductDetail().getColor().getColorId())
-                );
-            }
-            ProductDetail detail = product.getProductDetail();
-            if (detail != null && detail.getColor() != null && ImageRepositoryHolder.imageRepository != null) {
-                Image image = ImageRepositoryHolder.imageRepository
-                        .findFirstByProduct_ProductIdAndColor_ColorIdOrderByPriorityAsc(
-                                product.getProductId(),
-                                detail.getColor().getColorId()
-                        );
-                if (image != null) {
-                    detail.setImages(List.of(image));
-                } else {
-                    detail.setImages(List.of()); // hoặc null tùy bạn
-                }
-            }
+//        if (product.getProductDetails() != null && product.getMinPrice() != null) {
+//            ProductDetail filtered = product.getProductDetails().stream()
+//                    .filter(pd -> pd.getDiscountPrice() == product.getMinPrice())
+//                    .findFirst()
+//                    .orElse(null);
+//            product.setProductDetail(filtered);
 
-        }
+//
+//
+//        }
+
 
     }
 }

@@ -2,8 +2,10 @@ package com.project.stationery_be_server.repository;
 
 import com.project.stationery_be_server.dto.response.ColorSizeSlugResponse;
 import com.project.stationery_be_server.dto.response.ColorSlugResponse;
+import com.project.stationery_be_server.entity.Product;
 import com.project.stationery_be_server.entity.ProductDetail;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -12,7 +14,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ProductDetailRepository extends JpaRepository<ProductDetail, String> {
+public interface ProductDetailRepository extends JpaRepository<ProductDetail, String>, JpaSpecificationExecutor<ProductDetail> {
     @Query("SELECT pd FROM ProductDetail pd " +
             "WHERE pd.product.productId = :productId " +
             "AND pd.color.colorId = :colorId " +
@@ -31,31 +33,43 @@ public interface ProductDetailRepository extends JpaRepository<ProductDetail, St
             @Param("productId") String productId,
             @Param("colorId") String colorId,
             @Param("sizeId") String sizeId);
-
+    @Query("SELECT p.product.productId FROM ProductDetail p WHERE p.slug = :slug")
+    String findProductIdBySlug(@Param("slug") String slug);
     ProductDetail findBySlug(String slug);
 
     ProductDetail findByProductDetailId(String productDetailId);
 
-
    @Query(value= """
+         SELECT
+             pd_color.color_id AS colorId,
+             pd_color.hex AS hex,
+             JSON_ARRAYAGG(
+                 IF(
+                     pd_color.size_id IS NOT NULL,
+                     JSON_OBJECT('slug', pd_color.slug, 'size', pd_color.size_id),
+                     JSON_OBJECT('slug', pd_color.slug)
+                 )
+             ) AS sizes
+         FROM (
              SELECT
-               c.color_id AS colorId,
-               c.hex AS hex,
-               JSON_ARRAYAGG(
-                   JSON_OBJECT('slug', pd_sized.slug, 'size', pd_sized.size_id)
-               ) AS sizes
-           FROM (
-               SELECT
-                   pd.slug,
-                   pd.size_id,
-                   pd.color_id
-               FROM product_detail pd
-               JOIN size s ON pd.size_id = s.size_id
-           ) AS pd_sized
-           JOIN color c ON pd_sized.color_id = c.color_id
-           GROUP BY c.color_id, c.hex
-           """,nativeQuery = true)
-    List<ColorSizeSlugResponse> findColorSlugByProductId(String productId);
+                 pd.slug,
+                 pd.size_id,
+                 pd.color_id,
+                 c.hex,
+                 pd.product_id
+             FROM product_detail pd
+             JOIN color c ON pd.color_id = c.color_id
+             WHERE pd.product_id = (
+                 SELECT pd2.product_id
+                 FROM product_detail pd2
+                 WHERE pd2.slug = :slug
+                 LIMIT 1
+             )
+         ) AS pd_color
+         left JOIN size s ON pd_color.size_id = s.size_id
+         GROUP BY pd_color.color_id, pd_color.hex
+          """,nativeQuery = true)
+    List<ColorSizeSlugResponse> fetchColorSizeBySLug(String slug);
 
     @Query(value = """
     SELECT
@@ -64,14 +78,12 @@ public interface ProductDetailRepository extends JpaRepository<ProductDetail, St
         MIN(pd.slug) AS slug  -- chọn slug bất kỳ, ở đây là nhỏ nhất theo bảng chữ cái
     FROM
         product_detail pd
-    JOIN 
+    JOIN
         color c ON pd.color_id = c.color_id
-    WHERE 
+    WHERE
         pd.product_id = :productId
-        and
-        pd.color_id != :colorId
-    GROUP BY 
+    GROUP BY
         pd.color_id, c.hex
     """, nativeQuery = true)
-    List<ColorSlugResponse> findDistinctColorsWithAnySlug(String productId, String colorId);
+    List<ColorSlugResponse> findDistinctColorsWithAnySlug(String productId);
 }
