@@ -2,6 +2,7 @@ package com.project.stationery_be_server.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.*;
@@ -26,8 +27,14 @@ public class Image {
     @Column(name = "priority", nullable = false)
     int priority;  // Độ ưu tiên hiển thị
 
-    @ManyToOne
-    @JoinColumn(name = "product_color_id", nullable = false)
-    @JsonBackReference
-    ProductColor productColor;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id", nullable = false)
+    @JsonIgnore
+    Product product;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "color_id", nullable = false)
+    @JsonIgnore
+    Color color;  // Màu sắc của sản phẩm
+
 }

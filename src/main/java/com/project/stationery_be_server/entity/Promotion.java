@@ -50,10 +50,6 @@ public class Promotion {
     @Column(name = "end_date", nullable = false)
     private LocalDateTime endDate;
 
-    @OneToMany(mappedBy = "promotion")
-    @JsonIgnore
-    private Set<ProductDetail> productDetails;
-
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

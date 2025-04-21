@@ -25,5 +25,11 @@ public class PurchaseOrderDetail {
     @JoinColumn(name = "product_detail_id", nullable = false)
     private ProductDetail productDetail;
 
+    private Integer price;
+
+    @ManyToOne
+    @JoinColumn(name = "product_promotion_id")
+    private ProductPromotion productPromotion;
+
     private int quantity;
 }

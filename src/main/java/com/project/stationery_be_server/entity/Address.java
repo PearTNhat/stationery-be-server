@@ -23,12 +23,12 @@ public class Address {
     @Column(name = "phone", length = 15)
     String phone;
 
+    @Builder.Default
     @Column(name = "is_default")
-    boolean isDefault;
+    boolean isDefault=false;
 
     @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "user_id", nullable = false)
     User user;
-
 }

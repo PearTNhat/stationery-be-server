@@ -20,13 +20,14 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
+import org.springframework.web.reactive.function.client.WebClient;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 @EnableSpringDataWebSupport(pageSerializationMode = EnableSpringDataWebSupport.PageSerializationMode.VIA_DTO)
 public class SecurityConfig {
-    private final String[] PUBLIC_URLS = {"users", "auth/login", "auth/introspect", "auth/logout", "auth/refresh","colors","colors/{id}","address"};
+    private final String[] PUBLIC_URLS = {"users", "auth/login", "auth/introspect", "auth/logout", "auth/refresh", "colors", "colors/{id}", "address"};
 
     @Value("${jwt.signerKey}")
     private String singerKey;
@@ -97,5 +98,10 @@ public class SecurityConfig {
     @Bean
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(10);
+    }
+
+    @Bean
+    public WebClient webClient() {
+        return WebClient.builder().build();
     }
 }
