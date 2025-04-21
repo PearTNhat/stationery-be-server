@@ -36,5 +36,6 @@ public interface UserService {
     //Change Password
     String changePassword(String email, String oldPassword, String newPassword);
 
+    UserResponse createUserFromGoogle(String email, String fullName, String avatar);
     UserResponse updateUser(String documentJson, MultipartFile file);
 }
