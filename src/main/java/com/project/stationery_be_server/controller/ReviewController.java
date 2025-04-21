@@ -19,9 +19,9 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ReviewController {
     ReviewService reviewService;
-    @GetMapping("/{productId}")
-    public ApiResponse<List<Review> > getReviewByProductId(@PathVariable String productId) {
-        List<Review> review = reviewService.getReviewByProductId(productId);
+    @GetMapping("/{slug}")
+    public ApiResponse<List<Review> > getReviewByProductId(@PathVariable String slug) {
+        List<Review> review = reviewService.getReviewByProductId(slug);
         return ApiResponse.<List<Review> >builder()
                 .message("Get review successfully")
                 .result(review)
