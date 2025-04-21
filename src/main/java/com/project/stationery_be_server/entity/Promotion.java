@@ -54,6 +54,10 @@ public class Promotion {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @OneToMany(mappedBy ="promotion" )
+    @JsonIgnore
+    private Set<ProductPromotion> productPromotions;
+
     public enum DiscountType {
         PERCENTAGE, VALUE
     }
