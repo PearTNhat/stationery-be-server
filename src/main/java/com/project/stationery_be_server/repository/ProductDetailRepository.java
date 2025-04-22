@@ -13,7 +13,7 @@ import java.util.Optional;
 
 @Repository
 public interface ProductDetailRepository extends JpaRepository<ProductDetail, String> {
-    @Query("SELECT pd FROM ProductDetail pd " +
+/*    @Query("SELECT pd FROM ProductDetail pd " +
             "WHERE pd.product.productId = :productId " +
             "AND pd.color.colorId = :colorId " +
             "AND pd.size.sizeId = :sizeId")
@@ -30,12 +30,11 @@ public interface ProductDetailRepository extends JpaRepository<ProductDetail, St
     Optional<ProductDetail> findByProductIdAndOptionalColorIdAndOptionalSizeId(
             @Param("productId") String productId,
             @Param("colorId") String colorId,
-            @Param("sizeId") String sizeId);
+            @Param("sizeId") String sizeId);*/
 
     ProductDetail findBySlug(String slug);
 
     ProductDetail findByProductDetailId(String productDetailId);
-
 
    @Query(value= """
              SELECT
