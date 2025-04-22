@@ -61,8 +61,8 @@ public class ProductDetail {
     private Product product;
 
     @OneToMany(mappedBy = "productDetail", fetch = FetchType.LAZY)
-    @JsonIgnore
-    private Set<ProductPromotion> productPromotions;
+    @JsonManagedReference
+    private List<ProductPromotion> productPromotions;
 
     @OneToMany(mappedBy = "productDetail", fetch = FetchType.LAZY)
     @JsonIgnore

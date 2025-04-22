@@ -58,6 +58,10 @@ public class Promotion {
     @JsonIgnore
     private Set<ProductPromotion> productPromotions;
 
+    @OneToMany(mappedBy ="promotion" )
+    @JsonIgnore
+    private Set<UserPromotion> userPromotions;
+
     public enum DiscountType {
         PERCENTAGE, VALUE
     }
