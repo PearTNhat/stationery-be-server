@@ -9,12 +9,10 @@ import com.project.stationery_be_server.dto.response.ProductResponse;
 import com.project.stationery_be_server.entity.Image;
 import com.project.stationery_be_server.entity.Product;
 import com.project.stationery_be_server.entity.ProductDetail;
+import com.project.stationery_be_server.entity.ProductPromotion;
 import com.project.stationery_be_server.exception.AppException;
 import com.project.stationery_be_server.mapper.ProductMapper;
-import com.project.stationery_be_server.repository.ImageRepository;
-import com.project.stationery_be_server.repository.ProductDetailRepository;
-import com.project.stationery_be_server.repository.ProductRepository;
-import com.project.stationery_be_server.repository.ReviewRepository;
+import com.project.stationery_be_server.repository.*;
 import com.project.stationery_be_server.service.ProductService;
 import com.project.stationery_be_server.specification.ProductSpecification;
 import jakarta.transaction.Transactional;
@@ -37,11 +35,12 @@ public class ProductServiceImpl implements ProductService {
     ProductRepository productRepository;
     ReviewRepository reviewRepository;
     ImageRepository imageRepository;
+    ProductPromotionRepository productPromotionRepository;
     ProductDetailRepository productDetailRepository;
     ProductMapper productMapper;
 
     @Override
-    public Page<ProductResponse> getAllProductDetails(Pageable pageable, ProductFilterRequest filter) {
+    public Page<ProductResponse> getAllProductWithDefaultPD(Pageable pageable, ProductFilterRequest filter) {
         Specification<Product> spec = ProductSpecification.filterProducts(filter);
         Page<Product> pd = productRepository.findAll(spec, pageable);
         List<ProductResponse> productListResponses = pd.getContent().stream()
@@ -53,21 +52,18 @@ public class ProductServiceImpl implements ProductService {
                     return productMapper.toProductResponse(product);
                 })
                 .toList();
-
-
         return new PageImpl<>(productListResponses, pageable, pd.getTotalElements());
     }
 
     @Override
     @Transactional
     public ProductResponse getProductDetail(String slug) {
-        System.out.println("_____________________slug__________________________");
         ProductDetail pd = productDetailRepository.findBySlug(slug);
         String productId = pd.getProduct().getProductId();
+        pd.setProductPromotions(productPromotionRepository.findValidPromotionForProductDetail(pd.getProductDetailId()));
         pd.setImages(imageRepository.findByProduct_ProductIdAndColor_ColorIdOrderByPriorityAsc(productId, pd.getColor().getColorId()));
         Product p = productRepository.findById(productId).orElseThrow(() -> new AppException(NotExistedErrorCode.PRODUCT_NOT_EXISTED));
         p.setProductDetail(pd);
-        System.out.println("_____________________pd__________________________");
         return productMapper.toProductResponse(p);
     }
 
@@ -80,19 +76,6 @@ public class ProductServiceImpl implements ProductService {
     public void updateMinPrice(Product product) {
 
     }
-
-    //    @Override
-//    public void updateMinPrice(Product product) {
-//        Integer minPrice = product.getProductColors().stream()
-//                .flatMap(pc -> pc.getProductDetails().stream())
-//                .filter(pd -> pd.getStockQuantity() > 0)
-//                .map(ProductDetail::getDiscountPrice)
-//                .min(Integer::compareTo) //min[1,2,3,5]
-//                .orElse(0);
-//
-//        product.setMinPrice(minPrice);
-//        productRepository.save(product);
-//    }
     @Override
     @Transactional
     public void handleUpdateTotalProductRating(String productId, String type, Integer rating) {

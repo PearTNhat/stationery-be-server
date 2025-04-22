@@ -1,9 +1,9 @@
 package com.project.stationery_be_server.service;
 
-import com.project.stationery_be_server.dto.response.PromotionResponse;
+import com.project.stationery_be_server.entity.UserPromotion;
 
 import java.util.List;
 
 public interface UserPromotionService {
-    List<PromotionResponse> getVouchersForUser();
+    List<UserPromotion> getVouchersForUser();
 }

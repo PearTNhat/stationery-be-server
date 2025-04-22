@@ -32,9 +32,9 @@ public class ProductController {
     PagedResourcesAssembler<ProductResponse> pagedResourcesAssembler; // Inject
 
     @GetMapping
-    public ApiResponse<PagedModel<EntityModel<ProductResponse>>> getAllProducts(@RequestParam(defaultValue = "0") int page,
+    public ApiResponse<Page<ProductResponse>> getAllProducts(@RequestParam(defaultValue = "0") int page,
                                                                                     @RequestParam(defaultValue = "10") int limit,
-                                                                                    @RequestParam(defaultValue = "createdAt") String sortBy,
+                                                                                    @RequestParam(required = false) String sortBy,
                                                                                     @RequestParam(required = false) String minPrice,
                                                                                     @RequestParam(required = false) String maxPrice,
                                                                                     @RequestParam(required = false) String search,
@@ -42,7 +42,9 @@ public class ProductController {
                                                                                     @RequestParam(required = false) String totalRating
     ) {
         Sort sort = null;
-        if (!sortBy.isBlank() && !sortBy.isEmpty()) {
+        // sử lý ở FE page 1 là BE page 0, page 2 là page 1, ..
+        page = page <= 1 ? 0 : page-1;
+        if ( sortBy != null) {
             String[] parts = sortBy.split("(?<=-)|(?=-)"); // tách dấu tru trong chuoi
             //-abc
             sort = parts.length == 1 ? Sort.by(parts[0]).ascending() : Sort.by(parts[1]).descending();
@@ -62,11 +64,11 @@ public class ProductController {
                 .search(search)
                 .totalRating(totalRating)
                 .build();
-        Page<ProductResponse> pageResult = productService.getAllProductDetails(pageable, filterRequest);
+        Page<ProductResponse> pageResult = productService.getAllProductWithDefaultPD(pageable, filterRequest);
 
-        PagedModel<EntityModel<ProductResponse>> result = pagedResourcesAssembler.toModel(pageResult);
-        return ApiResponse.<PagedModel<EntityModel<ProductResponse>>>builder()
-                .result(result)
+//        PagedModel<EntityModel<ProductResponse>> result = pagedResourcesAssembler.toModel(pageResult);
+        return ApiResponse.<Page<ProductResponse>>builder()
+                .result(pageResult)
                 .build();
     }
 

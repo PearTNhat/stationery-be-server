@@ -15,9 +15,16 @@
         public static Specification<Product> filterProducts(ProductFilterRequest filter) {
             return (root, query, criteriaBuilder) -> {
                 //predicates là danh sách các điều kiện (WHERE ...).
+                assert query != null;
+                query.distinct(true);
                 List<Predicate> predicates = new ArrayList<>();
                 // Join Product →  ProductDetail
-                Join<Object, Object> productDetailJoin = root.join("productDetails", JoinType.INNER);
+                Join<Object, Object> productDetailJoin = null;
+                if ((filter.getMinPrice() != null && !filter.getMinPrice().isBlank()) ||
+                    (filter.getMaxPrice() != null && !filter.getMaxPrice().isBlank())) {
+                    productDetailJoin = root.join("productDetails", JoinType.INNER);
+                }
+
                 if (filter.getCategoryId() != null && !filter.getCategoryId().isBlank()) {
                     predicates.add(criteriaBuilder.equal(root.get("category").get("categoryId"), filter.getCategoryId()));
                 }
