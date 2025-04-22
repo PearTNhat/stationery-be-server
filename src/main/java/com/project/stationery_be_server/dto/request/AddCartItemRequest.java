@@ -10,8 +10,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class AddCartItemRequest {
-    String productId;
-    String colorId;
-    String sizeId;
+    String productDetailId;
+/*    String colorId;
+    String sizeId;*/
     int quantity;
 }
