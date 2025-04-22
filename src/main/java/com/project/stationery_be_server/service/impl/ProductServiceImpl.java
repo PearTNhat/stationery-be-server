@@ -3,8 +3,10 @@ package com.project.stationery_be_server.service.impl;
 
 import com.project.stationery_be_server.Error.NotExistedErrorCode;
 import com.project.stationery_be_server.dto.request.ProductFilterRequest;
-import com.project.stationery_be_server.dto.response.ProductListResponse;
+import com.project.stationery_be_server.dto.response.ColorSizeSlugResponse;
 import com.project.stationery_be_server.dto.response.ProductResponse;
+import com.project.stationery_be_server.dto.response.ProductResponse;
+import com.project.stationery_be_server.entity.Image;
 import com.project.stationery_be_server.entity.Product;
 import com.project.stationery_be_server.entity.ProductDetail;
 import com.project.stationery_be_server.exception.AppException;
@@ -39,23 +41,39 @@ public class ProductServiceImpl implements ProductService {
     ProductMapper productMapper;
 
     @Override
-        public Page<ProductListResponse> getAllProducts(Pageable pageable , ProductFilterRequest filter) {
+    public Page<ProductResponse> getAllProductDetails(Pageable pageable, ProductFilterRequest filter) {
         Specification<Product> spec = ProductSpecification.filterProducts(filter);
-        Page<Product> products = productRepository.findAll(spec,pageable);
-        List<ProductListResponse> productListResponses = products.getContent().stream()
-                .map(productMapper::toProductListResponse)
+        Page<Product> pd = productRepository.findAll(spec, pageable);
+        List<ProductResponse> productListResponses = pd.getContent().stream()
+                .map(product -> {
+                    String colorId = product.getProductDetail().getColor().getColorId();
+                    product.setFetchColor(productDetailRepository.findDistinctColorsWithAnySlug(product.getProductId()));
+                    Image img = imageRepository.findFirstByProduct_ProductIdAndColor_ColorIdOrderByPriorityAsc(product.getProductId(), colorId);
+                    product.setImg(img != null ? img.getUrl() : null);
+                    return productMapper.toProductResponse(product);
+                })
                 .toList();
-        return new PageImpl<>(productListResponses, pageable, products.getTotalElements());
+
+
+        return new PageImpl<>(productListResponses, pageable, pd.getTotalElements());
     }
 
     @Override
     @Transactional
-    public ProductDetail getProductDetail(String slug) {
-        ProductDetail pd =  productDetailRepository.findBySlug(slug);
+    public ProductResponse getProductDetail(String slug) {
+        System.out.println("_____________________slug__________________________");
+        ProductDetail pd = productDetailRepository.findBySlug(slug);
         String productId = pd.getProduct().getProductId();
-        pd.setFetchColorSize(productDetailRepository.findColorSlugByProductId(productId));
-        pd.setImages(imageRepository.findByProduct_ProductIdAndColor_ColorIdOrderByPriorityAsc(productId,pd.getColor().getColorId()));
-        return pd;
+        pd.setImages(imageRepository.findByProduct_ProductIdAndColor_ColorIdOrderByPriorityAsc(productId, pd.getColor().getColorId()));
+        Product p = productRepository.findById(productId).orElseThrow(() -> new AppException(NotExistedErrorCode.PRODUCT_NOT_EXISTED));
+        p.setProductDetail(pd);
+        System.out.println("_____________________pd__________________________");
+        return productMapper.toProductResponse(p);
+    }
+
+    @Override
+    public List<ColorSizeSlugResponse> fetchColorSizeSlug(String slug) {
+        return productDetailRepository.fetchColorSizeBySLug(slug);
     }
 
     @Override
