@@ -19,7 +19,7 @@ public class ColorSizeSlugResponse {
     @JsonIgnore
     private String sizes;
 
-    public ColorSizeSlugResponse(String colorId, String hex, String sizes) {
+    public ColorSizeSlugResponse(String colorId, String hex , String sizes) {
         this.colorId = colorId;
         this.hex = hex;
         this.sizes = sizes;

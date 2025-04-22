@@ -2,7 +2,7 @@ package com.project.stationery_be_server.service;
 
 import com.project.stationery_be_server.Error.NotExistedErrorCode;
 import com.project.stationery_be_server.dto.request.ProductFilterRequest;
-import com.project.stationery_be_server.dto.response.ProductListResponse;
+import com.project.stationery_be_server.dto.response.ColorSizeSlugResponse;
 import com.project.stationery_be_server.dto.response.ProductResponse;
 import com.project.stationery_be_server.entity.Product;
 import com.project.stationery_be_server.entity.ProductDetail;
@@ -16,8 +16,9 @@ import java.util.List;
 import java.util.Set;
 
 public interface ProductService {
-    Page<ProductListResponse> getAllProducts(Pageable pageable , ProductFilterRequest filter);
-    ProductDetail getProductDetail(String slug);
+    Page<ProductResponse> getAllProductDetails(Pageable pageable , ProductFilterRequest filter);
+    ProductResponse getProductDetail(String slug);
+    List<ColorSizeSlugResponse> fetchColorSizeSlug(String slug);
     void updateMinPrice(Product product);
     @Transactional
     void handleUpdateTotalProductRating(String productId, String type, Integer rating);

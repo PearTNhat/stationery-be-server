@@ -2,6 +2,7 @@
 
     import com.project.stationery_be_server.dto.request.ProductFilterRequest;
     import com.project.stationery_be_server.entity.Product;
+    import com.project.stationery_be_server.entity.ProductDetail;
     import jakarta.persistence.criteria.Join;
     import jakarta.persistence.criteria.JoinType;
     import jakarta.persistence.criteria.Predicate;
