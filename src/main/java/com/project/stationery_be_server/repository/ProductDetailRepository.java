@@ -33,6 +33,7 @@ public interface ProductDetailRepository extends JpaRepository<ProductDetail, St
             @Param("productId") String productId,
             @Param("colorId") String colorId,
             @Param("sizeId") String sizeId);
+
     @Query("SELECT p.product.productId FROM ProductDetail p WHERE p.slug = :slug")
     String findProductIdBySlug(@Param("slug") String slug);
     ProductDetail findBySlug(String slug);
