@@ -1,4 +1,4 @@
-package com.project.stationery_be_server.dto.response;
+package com.project.stationery_be_server.dto.response.momo;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;

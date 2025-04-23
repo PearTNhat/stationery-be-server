@@ -1,7 +1,6 @@
 package com.project.stationery_be_server.configuration;
 
 import com.project.stationery_be_server.dto.response.LoginResponse;
-import com.project.stationery_be_server.dto.response.UserResponse;
 import com.project.stationery_be_server.mapper.UserMapper;
 import com.project.stationery_be_server.repository.UserRepository;
 import com.project.stationery_be_server.service.UserService;

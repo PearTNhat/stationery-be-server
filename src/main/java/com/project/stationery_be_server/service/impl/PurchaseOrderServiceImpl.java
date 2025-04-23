@@ -2,7 +2,7 @@ package com.project.stationery_be_server.service.impl;
 
 import com.project.stationery_be_server.dto.request.MomoRequest;
 import com.project.stationery_be_server.dto.request.PurchaseOrderRequest;
-import com.project.stationery_be_server.dto.response.MomoResponse;
+import com.project.stationery_be_server.dto.response.momo.MomoResponse;
 import com.project.stationery_be_server.dto.response.PurchaseOrderDetailResponse;
 import com.project.stationery_be_server.dto.response.PurchaseOrderResponse;
 import com.project.stationery_be_server.entity.*;
