@@ -4,13 +4,13 @@ package com.project.stationery_be_server.service.impl;
 import com.project.stationery_be_server.Error.NotExistedErrorCode;
 import com.project.stationery_be_server.dto.request.ProductFilterRequest;
 import com.project.stationery_be_server.dto.response.ColorSizeSlugResponse;
-import com.project.stationery_be_server.dto.response.ProductResponse;
-import com.project.stationery_be_server.dto.response.ProductResponse;
+import com.project.stationery_be_server.dto.response.product.ProductDetailResponse;
+import com.project.stationery_be_server.dto.response.product.ProductResponse;
 import com.project.stationery_be_server.entity.Image;
 import com.project.stationery_be_server.entity.Product;
 import com.project.stationery_be_server.entity.ProductDetail;
-import com.project.stationery_be_server.entity.ProductPromotion;
 import com.project.stationery_be_server.exception.AppException;
+import com.project.stationery_be_server.mapper.ProductDetailMapper;
 import com.project.stationery_be_server.mapper.ProductMapper;
 import com.project.stationery_be_server.repository.*;
 import com.project.stationery_be_server.service.ProductService;
@@ -38,6 +38,7 @@ public class ProductServiceImpl implements ProductService {
     ProductPromotionRepository productPromotionRepository;
     ProductDetailRepository productDetailRepository;
     ProductMapper productMapper;
+    ProductDetailMapper productDetailMapper;
 
     @Override
     public Page<ProductResponse> getAllProductWithDefaultPD(Pageable pageable, ProductFilterRequest filter) {
@@ -73,9 +74,36 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public void updateMinPrice(Product product) {
-
+    public Page<ProductResponse> getAllProducts(Pageable pageable, ProductFilterRequest filter) {
+        Specification<Product> spec = ProductSpecification.filterProducts(filter);
+        Page<Product> p = productRepository.findAll(spec, pageable);
+        List<ProductResponse> productListResponses = p.getContent().stream()
+                .map(product -> {
+                    String colorId = product.getProductDetail().getColor().getColorId();
+                    product.setProductDetail(null);
+                    Image img = imageRepository.findFirstByProduct_ProductIdAndColor_ColorIdOrderByPriorityAsc(product.getProductId(), colorId);
+                    product.setImg(img != null ? img.getUrl() : null);
+                    return productMapper.toProductResponse(product);
+                })
+                .toList();
+        return new PageImpl<>(productListResponses, pageable, p.getTotalElements());
     }
+
+    @Override
+    public List<ProductDetailResponse> getProductDetailByProduct(String productId) {
+        List<ProductDetail> pd = productDetailRepository.findByProduct_ProductId(productId);
+
+        List<ProductDetailResponse> pdsResponse = pd.stream()
+                .map(productDetail -> {
+                    productDetail.setImages(imageRepository.findByProduct_ProductIdAndColor_ColorIdOrderByPriorityAsc(productId, productDetail.getColor().getColorId()));
+                    return productDetailMapper.toProductDetailResponse(productDetail);
+                })
+                .toList();
+
+        return pdsResponse;
+    }
+
+
     @Override
     @Transactional
     public void handleUpdateTotalProductRating(String productId, String type, Integer rating) {

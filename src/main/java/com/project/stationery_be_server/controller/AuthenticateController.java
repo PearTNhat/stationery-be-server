@@ -3,7 +3,6 @@ package com.project.stationery_be_server.controller;
 import com.project.stationery_be_server.dto.request.ForgotPasswordRequest;
 import com.project.stationery_be_server.dto.request.LoginRequest;
 import com.project.stationery_be_server.dto.request.OtpVerificationRequest;
-import com.project.stationery_be_server.dto.request.RegisterRequest;
 import com.project.stationery_be_server.dto.response.ApiResponse;
 import com.project.stationery_be_server.dto.response.LoginResponse;
 import com.project.stationery_be_server.dto.response.UserResponse;
@@ -21,7 +20,6 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @RestController
 @RequestMapping("/auth")

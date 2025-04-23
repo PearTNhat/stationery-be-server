@@ -44,13 +44,9 @@ public class ProductDetail {
 
     @Column(name = "discount_price")
     private int discountPrice;
-
-
-
     @ManyToOne
     @JoinColumn(name = "size_id")
     private Size size;
-
     @ManyToOne
     @JoinColumn(name = "color_id")
     private Color color;

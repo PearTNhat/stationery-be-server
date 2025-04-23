@@ -1,6 +1,7 @@
-package com.project.stationery_be_server.dto.response;
+package com.project.stationery_be_server.dto.response.product;
 
-import com.project.stationery_be_server.entity.Image;
+import com.project.stationery_be_server.dto.response.CategoryProductResponse;
+import com.project.stationery_be_server.dto.response.ColorSlugResponse;
 import com.project.stationery_be_server.entity.ProductDetail;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
