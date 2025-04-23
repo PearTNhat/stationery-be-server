@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Set;
 
 public interface ProductService {
-    Page<ProductResponse> getAllProductDetails(Pageable pageable , ProductFilterRequest filter);
+    Page<ProductResponse> getAllProductWithDefaultPD(Pageable pageable , ProductFilterRequest filter);
     ProductResponse getProductDetail(String slug);
     List<ColorSizeSlugResponse> fetchColorSizeSlug(String slug);
     void updateMinPrice(Product product);

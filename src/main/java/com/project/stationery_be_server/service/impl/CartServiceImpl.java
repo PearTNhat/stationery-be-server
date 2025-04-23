@@ -6,10 +6,12 @@ import com.project.stationery_be_server.dto.response.CartResponse;
 import com.project.stationery_be_server.entity.*;
 import com.project.stationery_be_server.repository.*;
 import com.project.stationery_be_server.service.CartService;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -25,10 +27,8 @@ public class CartServiceImpl implements CartService {
 
     CartRepository cartRepository;
     UserRepository userRepository;
-    ProductRepository productRepository;
     ProductDetailRepository productDetailRepository;
-    ColorRepository colorRepository;
-    SizeRepository sizeRepository;
+    ImageRepository imageRepository;
 
     // Lấy userId từ SecurityContext
     private String getCurrentUserId() {
@@ -50,8 +50,8 @@ public class CartServiceImpl implements CartService {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        System.out.println("request.getProductId() = " + request.getProductId());
-        ProductDetail productDetail =  productDetailRepository.findByProductDetailId(request.getProductId());
+        System.out.println("request.getProductDetailId() = " + request.getProductDetailId());
+        ProductDetail productDetail =  productDetailRepository.findByProductDetailId(request.getProductDetailId());
         if(productDetail == null) {
             throw new IllegalArgumentException("Product variant not found");
         }
@@ -81,66 +81,40 @@ public class CartServiceImpl implements CartService {
         return mapToCartResponse(cart);
     }
 
+    @Autowired
+    private EntityManager entityManager;
+
     // 2. Cập nhật item trong giỏ hàng (sử dụng AddCartItemRequest)
     @Override
     @Transactional
     public CartResponse updateItemInCart(String productDetailId, UpdateCartItemRequest request) {
         String userId = getCurrentUserId();
 
+        // Tìm product detail
+        ProductDetail productDetail = productDetailRepository.findByProductDetailId(productDetailId);
+        if (productDetail == null) {
+            throw new IllegalArgumentException("Product variant not found");
+        }
+
+        // Kiểm tra stock
+        if (productDetail.getStockQuantity() < request.getQuantity()) {
+            throw new IllegalArgumentException("Insufficient stock for this variant");
+        }
+
+        // Tìm cart
         CartId cartId = new CartId(userId, productDetailId);
         Cart cart = cartRepository.findByCartId(cartId)
-                .orElseThrow(() -> new IllegalArgumentException("Item not found in cart"));
+                .orElseThrow(() -> new IllegalArgumentException("Cart item not found"));
 
-        Product product = cart.getProductDetail().getProduct();
+        // Cập nhật quantity
+        cart.setQuantity(request.getQuantity());
 
-        // Lấy color và size mới (có thể null)
-        Color color = null;
-        if (request.getColorId() != null) {
-            color = colorRepository.findById(request.getColorId())
-                    .orElseThrow(() -> new IllegalArgumentException("Color not found"));
-        }
-
-        Size size = null;
-        if (request.getSizeId() != null) {
-            size = sizeRepository.findById(request.getSizeId())
-                    .orElseThrow(() -> new IllegalArgumentException("Size not found"));
-        }
-
-        // Tìm ProductDetail mới theo variant có thể có hoặc không có color/size
-        ProductDetail newProductDetail = productDetailRepository
-                .findByProductIdAndOptionalColorIdAndOptionalSizeId(
-                        product.getProductId(),
-                        request.getColorId(),
-                        request.getSizeId())
-                .orElseThrow(() -> new IllegalArgumentException("Product variant not found"));
-
-        if (!cart.getProductDetail().getProductDetailId().equals(newProductDetail.getProductDetailId())) {
-            cartRepository.delete(cart);
-
-            if (newProductDetail.getStockQuantity() < request.getQuantity()) {
-                throw new IllegalArgumentException("Insufficient stock for this variant");
-            }
-
-            CartId newCartId = new CartId(userId, newProductDetail.getProductDetailId());
-            cart = Cart.builder()
-                    .cartId(newCartId)
-                    .user(cart.getUser())
-                    .productDetail(newProductDetail)
-                    .quantity(request.getQuantity())
-                    .createdAt(new Date())
-                    .build();
-        } else {
-            if (newProductDetail.getStockQuantity() < request.getQuantity()) {
-                throw new IllegalArgumentException("Insufficient stock for this variant");
-            }
-            cart.setQuantity(request.getQuantity());
-        }
-
+        // Lưu cart
         cart = cartRepository.save(cart);
+
+        // Trả về response
         return mapToCartResponse(cart);
     }
-
-
 
     // 3. Xóa item khỏi giỏ hàng
     @Override
@@ -176,54 +150,36 @@ public class CartServiceImpl implements CartService {
                 .collect(Collectors.toList());
     }
 
-    // Hàm ánh xạ Cart sang CartResponse
-//    private CartResponse mapToCartResponse(Cart cart) {
-//        ProductDetail productDetail = cart.getProductDetail();
-//        Product product = productDetail.getProductColor().getProduct(); // fix chỗ này
-//        Color color = productDetail.getProductColor().getColor();       // fix chỗ này
-//        Size size = productDetail.getSize();
-//
-//        return CartResponse.builder()
-//                .userId(cart.getCartId().getUserId())
-//                .productId(product.getProductId())
-//                .productDetailId(productDetail.getProductDetailId())
-//                .productName(product.getName())
-//                .colorName(color.getName())
-//                .sizeName(size != null ? size.getName() : null)
-//                .quantity(cart.getQuantity())
-//                .originalPrice(productDetail.getOriginalPrice())
-//                .discountPrice(productDetail.getDiscountPrice())
-//                .createdAt(cart.getCreatedAt())
-//                .build();
-//    }
     private CartResponse mapToCartResponse(Cart cart) {
-//        ProductDetail productDetail = cart.getProductDetail();
-//        ProductColor productColor = productDetail.getProductColor();
-//
-//        // Lấy ảnh đầu tiên (ưu tiên ảnh có priority thấp nhất nếu đã @OrderBy)
-//        String imageUrl = productColor.getImages().stream()
-//                .findFirst()
-//                .map(image -> image.getUrl()) // hoặc image.getImageUrl() tùy theo tên trường
-//                .orElse(null);
+        ProductDetail productDetail = cart.getProductDetail();
+        // Lấy ảnh đầu tiên (ưu tiên ảnh có priority thấp nhất nếu đã @OrderBy)
+        String imageUrl = null;
 
-//        return CartResponse.builder()
-//                .userId(cart.getUser().getUserId())
-//                .productId(productColor.getProduct().getProductId())
-//                .productDetailId(productDetail.getProductDetailId())
-//                .productName(productColor.getProduct().getName())
-//                .colorName(productColor.getColor().getName())
-//                .sizeName(productDetail.getSize() != null ? productDetail.getSize().getName() : null)
-//                .quantity(cart.getQuantity())
-//                .originalPrice(productDetail.getOriginalPrice())
-//                .discountPrice(productDetail.getDiscountPrice())
-//                .createdAt(cart.getCreatedAt())
-//                .imageUrl(imageUrl)
-//                .build();
+        if (productDetail.getProduct() != null && productDetail.getColor() != null) {
+            List<Image> images = imageRepository.findByProduct_ProductIdAndColor_ColorIdOrderByPriorityAsc(
+                    productDetail.getProduct().getProductId(),
+                    productDetail.getColor().getColorId()
+            );
+
+            if (!images.isEmpty()) {
+                imageUrl = images.get(0).getUrl(); // lấy ảnh đầu tiên theo độ ưu tiên
+            }
+        }
+
         return  CartResponse.builder()
-                .sizeName("123")
+                .userId(cart.getUser().getUserId())
+                .productId(productDetail.getProduct().getProductId())
+                .productDetailId(productDetail.getProductDetailId())
+                .productName(productDetail.getProduct().getName())
+                .colorName(productDetail.getColor() != null ? productDetail.getColor().getName() : null)
+                .sizeName(productDetail.getSize() != null ? productDetail.getSize().getName() : null)
+                .quantity(cart.getQuantity())
+                .originalPrice(productDetail.getOriginalPrice())
+                .discountPrice(productDetail.getDiscountPrice())
+                .createdAt(cart.getCreatedAt())
+                .imageUrl(imageUrl)
                 .build();
     }
-
 
     @Override
     public int calculateCartTotal() {

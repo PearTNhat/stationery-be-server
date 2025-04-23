@@ -60,12 +60,11 @@ public class ProductDetail {
     @JsonBackReference
     private Product product;
 
-    @OneToMany
-    @JoinColumn(name = "product_promotion_id")
-    @JsonIgnore
-    private Set<ProductPromotion> productPromotions;
+    @OneToMany(mappedBy = "productDetail", fetch = FetchType.LAZY)
+    @JsonManagedReference
+    private List<ProductPromotion> productPromotions;
 
-    @OneToMany(mappedBy = "productDetail", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "productDetail", fetch = FetchType.LAZY)
     @JsonIgnore
     private Set<PurchaseOrderDetail> purchaseOrderDetails;
 
