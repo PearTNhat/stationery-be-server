@@ -1,15 +1,15 @@
 package com.project.stationery_be_server.service.impl;
 
+import com.project.stationery_be_server.Error.NotExistedErrorCode;
 import com.project.stationery_be_server.dto.request.MomoRequest;
-import com.project.stationery_be_server.dto.request.PurchaseOrderRequest;
+import com.project.stationery_be_server.dto.request.order.PurchaseOrderProductRequest;
+import com.project.stationery_be_server.dto.request.order.PurchaseOrderRequest;
 import com.project.stationery_be_server.dto.response.momo.MomoResponse;
 import com.project.stationery_be_server.dto.response.PurchaseOrderDetailResponse;
 import com.project.stationery_be_server.dto.response.PurchaseOrderResponse;
 import com.project.stationery_be_server.entity.*;
-import com.project.stationery_be_server.repository.CartRepository;
-import com.project.stationery_be_server.repository.PurchaseOrderRepository;
-import com.project.stationery_be_server.repository.UserPromotionRepository;
-import com.project.stationery_be_server.repository.UserRepository;
+import com.project.stationery_be_server.exception.AppException;
+import com.project.stationery_be_server.repository.*;
 import com.project.stationery_be_server.service.PurchaseOrderService;
 import lombok.AccessLevel;
 import org.springframework.http.MediaType;
@@ -26,10 +26,8 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.UUID;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.project.stationery_be_server.entity.PurchaseOrder.Status.PENDING;
@@ -39,10 +37,13 @@ import static com.project.stationery_be_server.entity.PurchaseOrder.Status.PENDI
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     WebClient webClient;
-    PurchaseOrderRepository purchaseOrderRepository;
+    ProductDetailRepository productDetailRepository;
     CartRepository cartRepository;
+    PurchaseOrderRepository purchaseOrderRepository;
     UserRepository userRepository;
     UserPromotionRepository userPromotionRepository;
+    ProductPromotionRepository productPromotionRepository;
+    AddressRepository addressRepository;
     @Value(value = "${momo.partnerCode}")
     @NonFinal
     String partnerCode;
@@ -73,96 +74,99 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     @Value(value = "${momo.urlCheckTransaction}")
     @NonFinal
     String urlCheckTransaction;
+
     @Transactional
-    @Override
-    public PurchaseOrderResponse createOrderFromCart(PurchaseOrderRequest request) {
+    public void handleRequestPurchaseOrder(PurchaseOrderRequest request, String orderId) {
+        List<PurchaseOrderDetail> listOderDetail = new ArrayList<>();
+        List<PurchaseOrderProductRequest> pdRequest = request.getProductDetails();
+        String userPromotionId = request.getUserPromotionId();
+
         var context = SecurityContextHolder.getContext();
         String userId = context.getAuthentication().getName();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        List<Cart> cartItems = cartRepository.findByUser_UserId(userId);
-        if (cartItems.isEmpty()) {
-            throw new RuntimeException("Cart is empty");
-        }
 
-
-        BigDecimal totalAmountBeforeUsePromotion = BigDecimal.ZERO;
-        PurchaseOrder purchaseOrder = PurchaseOrder.builder()
-                .createdAt(new Date())
-                .user(user)
-                .amount(totalAmountBeforeUsePromotion)
-                .pdfUrl(request.getPdfUrl())
-                .productPromotionId(null)
-                .status(PENDING)
-                .userPromotionId(request.getUserPromotionId())
-                .purchaseOrderDetails(new HashSet<>())
-                .build();
-
-        for (Cart cart : cartItems) {
-            PurchaseOrderDetailId detailId = new PurchaseOrderDetailId(purchaseOrder.getPurchaseOrderId(), cart.getProductDetail().getProductDetailId());
-            PurchaseOrderDetail orderDetail = PurchaseOrderDetail.builder()
-                    .purchaseOrderDetailId(detailId)
-                    .quantity(cart.getQuantity())
-                    .productDetail(cart.getProductDetail())
-                    .purchaseOrder(purchaseOrder)
-                    .build();
-
-            ProductDetail productDetail = cart.getProductDetail();
-            int quantity = cart.getQuantity();
-            BigDecimal discountPrice = new BigDecimal(productDetail.getDiscountPrice());
-            BigDecimal totalPriceWithQuantity = discountPrice.multiply(BigDecimal.valueOf(quantity));
-            totalAmountBeforeUsePromotion = totalAmountBeforeUsePromotion.add(totalPriceWithQuantity);
-
-            purchaseOrder.getPurchaseOrderDetails().add(orderDetail);
-        }
-
-
-        BigDecimal discountValue = BigDecimal.ZERO;
-        if (request.getUserPromotionId() != null) {
-            UserPromotion userPromotion = userPromotionRepository.findById(request.getUserPromotionId())
-                    .orElseThrow(() -> new RuntimeException("User promotion not found"));
-            if (userPromotion != null && userPromotion.getPromotion() != null
-                    && totalAmountBeforeUsePromotion.compareTo(userPromotion.getPromotion().getMinOrderValue()) >= 0) {
-                discountValue = calculateDiscount(totalAmountBeforeUsePromotion, userPromotion.getPromotion());
+        Long totalAmount = 0L;
+        for (PurchaseOrderProductRequest productDetail : pdRequest) {
+            ProductDetail pd = productDetailRepository.findByProductDetailId(productDetail.getProductDetailId());
+            if (pd == null) {
+                throw new RuntimeException("Product detail not found");
+            }
+            int disCountPrice = pd.getDiscountPrice();
+            cartRepository.deleteByUser_UserIdAndProductDetail_ProductDetailId(user.getUserId(), productDetail.getProductDetailId());
+            ProductPromotion promotion = null;
+            if (productDetail.getProductPromotionId() != null) {
+                promotion = productPromotionRepository.getValidPromotionForProductDetail(productDetail.getProductPromotionId(), pd.getDiscountPrice()).orElseThrow(() -> new AppException(NotExistedErrorCode.PRODUCT_PROMOTION_NOT_EXISTED));
+                if (promotion.getPromotion().getDiscountType() == Promotion.DiscountType.PERCENTAGE) {
+                    // giam %
+                    int valueDisCount = (pd.getDiscountPrice() * promotion.getPromotion().getDiscountValue()) / 100;
+                    if (valueDisCount > promotion.getPromotion().getMaxValue()) { // neu so tien  vuot qua max value
+                        disCountPrice -= promotion.getPromotion().getMaxValue();
+                    } else {
+                        disCountPrice -= valueDisCount;
+                    }
+                } else {
+                    // giam theo gia tri
+                    disCountPrice -= promotion.getPromotion().getDiscountValue();
+                }
             }
 
+            pd.setAvailableQuantity(pd.getAvailableQuantity() - productDetail.getQuantity());
+            if(pd.getAvailableQuantity() < 0){
+                throw new AppException(NotExistedErrorCode.PRODUCT_NOT_ENOUGH);
+            }
+            productDetailRepository.save(pd);
+            totalAmount += disCountPrice;
+            PurchaseOrderDetail purchaseOrder = PurchaseOrderDetail.builder()
+                    .quantity(productDetail.getQuantity())
+                    .productPromotion(promotion)
+                    .originalPrice(pd.getDiscountPrice())
+                    .discountPrice(disCountPrice)
+                    .build();
+            totalAmount += pd.getDiscountPrice();
+            listOderDetail.add(purchaseOrder);
+
         }
-        System.out.println("totalAmountBeforeUsePromotion: "+totalAmountBeforeUsePromotion);
-        System.out.println("discountValue: "+discountValue);
-        BigDecimal finalAmount = totalAmountBeforeUsePromotion.subtract(discountValue);
-        if (finalAmount.compareTo(BigDecimal.ZERO) < 0) {
-            finalAmount = BigDecimal.ZERO;
+        UserPromotion userPromotion = null;
+        if (userPromotionId != null) {
+            userPromotion = userPromotionRepository.getValidPromotionForUser(userPromotionId, totalAmount).orElseThrow(() -> new AppException(NotExistedErrorCode.PRODUCT_PROMOTION_NOT_EXISTED));
+            if (userPromotion.getPromotion().getDiscountType() == Promotion.DiscountType.PERCENTAGE) {
+                // giam %
+                Long valueDisCount = (totalAmount * userPromotion.getPromotion().getDiscountValue()) / 100;
+                if (valueDisCount > userPromotion.getPromotion().getMaxValue()) { // neu so tien  vuot qua max value
+                    totalAmount -= userPromotion.getPromotion().getMaxValue();
+                } else {
+                    totalAmount -= valueDisCount;
+                }
+            } else {
+                // giam theo gia tri
+                totalAmount -= userPromotion.getPromotion().getDiscountValue();
+            }
         }
+        PurchaseOrder purchaseOrder = PurchaseOrder.builder()
+                .user(user)
+                .status(PENDING)
+                .purchaseOrderDetails(listOderDetail)
+                .userPromotion(userPromotion)
+                .address(addressRepository.findByAddressId(request.getAddressId()).orElseThrow(() -> new AppException(NotExistedErrorCode.ADDRESS_NOT_FOUND)))
+                .amount(totalAmount)
+                .expiredTime(LocalDateTime.now().plusMinutes(9))
+                .build();
 
-        purchaseOrder.setAmount(finalAmount);
-        purchaseOrder = purchaseOrderRepository.save(purchaseOrder);
-        cartRepository.deleteByUser_UserId(userId);
-
-        return new PurchaseOrderResponse(
-                purchaseOrder.getPurchaseOrderId(),
-                purchaseOrder.getCreatedAt(),
-                purchaseOrder.getPdfUrl(),
-                purchaseOrder.getProductPromotionId(),
-                purchaseOrder.getUserPromotionId(),
-                purchaseOrder.getStatus(),
-                purchaseOrder.getAmount(),
-                purchaseOrder.getPurchaseOrderDetails().stream().map(orderDetail ->
-                        new PurchaseOrderDetailResponse(orderDetail.getProductDetail().getProductDetailId(), orderDetail.getQuantity())
-                ).collect(Collectors.toList())
-        );
-
+        purchaseOrderRepository.save(purchaseOrder);
     }
 
     @Override
+    @Transactional
     public MomoResponse createOrder(PurchaseOrderRequest request) {
         long total = 10000;
-        String orderBy = SecurityContextHolder.getContext().getAuthentication().getName();
-        String orderId = UUID.randomUUID().toString();
+        String orderId = generateOrderId();
         String orderInfo = "Order information " + orderId;
         String requestId = UUID.randomUUID().toString();
         String extraData = "hello ae";
         String rawSignature = "accessKey=" + accessKey + "&amount=" + total + "&extraData=" + extraData + "&ipnUrl=" + ipnUrl + "&orderId=" + orderId + "&orderInfo=" + orderInfo + "&partnerCode=" + partnerCode + "&redirectUrl=" + redirectUrl + "&requestId=" + requestId + "&requestType=" + requestType;
+        handleRequestPurchaseOrder(request,orderId);
         String prettySignature = "";
 
         try {
@@ -197,14 +201,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                 .block();
     }
 
-    private BigDecimal calculateDiscount(BigDecimal totalAmount, Promotion promotion) {
-        if (promotion.getDiscountType() == Promotion.DiscountType.PERCENTAGE) {
-            BigDecimal discount = totalAmount.multiply(promotion.getDiscountValue().divide(BigDecimal.valueOf(100)));
-            return promotion.getMaxValue() != null ? discount.min(promotion.getMaxValue()) : discount;
-        } else {
-            return promotion.getDiscountValue();
-        }
-    }
+
     public String generateHmacSHA256(String data, String key) throws Exception {
 
         Mac sha256_HMAC = Mac.getInstance("HmacSHA256");
@@ -212,6 +209,10 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         sha256_HMAC.init(secret_key);
 
         return Hex.encodeHexString(sha256_HMAC.doFinal(data.getBytes("UTF-8")));
+    }
+
+    public String generateOrderId() {
+        return UUID.randomUUID().toString().replace("-", "").toUpperCase();
     }
 
 }

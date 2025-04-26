@@ -1,9 +1,12 @@
 package com.project.stationery_be_server.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+
+import java.util.Set;
 
 @Getter
 @Setter
@@ -31,4 +34,8 @@ public class Address {
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "user_id", nullable = false)
     User user;
+
+    @OneToMany(mappedBy = "address")
+    @JsonIgnore
+    private Set<PurchaseOrder> purchaseOrders;
 }

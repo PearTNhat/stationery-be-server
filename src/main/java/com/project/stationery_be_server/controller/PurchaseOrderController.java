@@ -1,7 +1,7 @@
 package com.project.stationery_be_server.controller;
 
 
-import com.project.stationery_be_server.dto.request.PurchaseOrderRequest;
+import com.project.stationery_be_server.dto.request.order.PurchaseOrderRequest;
 import com.project.stationery_be_server.dto.response.ApiResponse;
 import com.project.stationery_be_server.dto.response.momo.MomoResponse;
 import com.project.stationery_be_server.dto.response.PurchaseOrderResponse;
@@ -15,13 +15,6 @@ import org.springframework.web.bind.annotation.*;
 public class PurchaseOrderController {
     private final PurchaseOrderService purchaseOrderService;
 
-    @PostMapping()
-    public ApiResponse<PurchaseOrderResponse> createOrderFromCart(@RequestBody PurchaseOrderRequest request) {
-        return ApiResponse.<PurchaseOrderResponse>builder()
-                .message("Order created successfully")
-                .result(purchaseOrderService.createOrderFromCart(request))
-                .build();
-    }
 
     @PostMapping("/payment")
     public ApiResponse<MomoResponse> createOrderFromPayment(@RequestBody PurchaseOrderRequest request) {

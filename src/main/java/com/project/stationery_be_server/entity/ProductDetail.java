@@ -39,6 +39,9 @@ public class ProductDetail {
     @Column(name = "sold_quantity")
     private int soldQuantity;
 
+    @Column(name = "available_quantity")
+    private int availableQuantity;
+
     @Column(name = "original_price")
     private int originalPrice;
 
