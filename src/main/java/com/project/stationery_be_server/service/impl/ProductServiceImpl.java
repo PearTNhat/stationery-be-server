@@ -57,7 +57,6 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    @Transactional
     public ProductResponse getProductDetail(String slug) {
         ProductDetail pd = productDetailRepository.findBySlug(slug);
         String productId = pd.getProduct().getProductId();

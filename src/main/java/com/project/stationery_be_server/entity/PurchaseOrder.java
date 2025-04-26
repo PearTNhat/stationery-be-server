@@ -1,12 +1,16 @@
 package com.project.stationery_be_server.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -26,12 +30,10 @@ public class PurchaseOrder {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(name = "created_at")
-    private Date createdAt;
 
     @OneToMany(mappedBy = "purchaseOrder", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
-    private Set<PurchaseOrderDetail> purchaseOrderDetails;
+    private List<PurchaseOrderDetail> purchaseOrderDetails;
 
     @Column(name = "pdf_url", length = 500)
     private String pdfUrl;
@@ -40,14 +42,24 @@ public class PurchaseOrder {
     @Column(name = "status", length = 20, nullable = false)
     private Status status;
 
-    @Column(name = "product_promotion_id", length = 255)
-    private String productPromotionId;
-
-    @Column(name = "user_promotion_id", length = 255)
-    private String userPromotionId;
+    @ManyToOne
+    @JoinColumn(name = "user_promotion_id")
+    @JsonBackReference
+    private UserPromotion userPromotion;
 
     @Column(name = "amount", precision = 19, scale = 4)
-    private BigDecimal amount;
+    private Long amount;
+
+    @ManyToOne
+    @JoinColumn(name = "address_id")
+    private Address address;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
+    @Column(name = "expired_time", nullable = false, updatable = false)
+    private LocalDateTime expiredTime;
 
     public enum Status {
         PENDING,        // Chờ xác nhận

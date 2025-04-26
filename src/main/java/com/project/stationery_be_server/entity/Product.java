@@ -39,7 +39,7 @@ public class Product {
 
     private String name;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "product",fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<Review> reviews;
 
