@@ -12,7 +12,6 @@ import lombok.experimental.FieldDefaults;
 public class AddressResponse {
     String addressId;
     String addressName;
-    User user;
     String phone;
     Boolean isDefault;
 

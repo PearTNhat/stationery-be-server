@@ -12,7 +12,7 @@ import java.util.List;
 
 public interface AddressService {
     AddressResponse createAddress(AddressRequest addressRequest);
-    List<AddressResponse> getAllAddresses();
+    List<AddressResponse> getAllMyAddresses();
     AddressResponse updateAddress(String id, AddressRequest addressRequest);
     AddressResponse setDefaultAddress(String addressId);
     void deleteAddress(String id);

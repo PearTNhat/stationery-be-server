@@ -78,7 +78,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     @Transactional
     public void handleRequestPurchaseOrder(PurchaseOrderRequest request, String orderId) {
         List<PurchaseOrderDetail> listOderDetail = new ArrayList<>();
-        List<PurchaseOrderProductRequest> pdRequest = request.getProductDetails();
+        List<PurchaseOrderProductRequest> pdRequest = request.getOrderDetails();
         String userPromotionId = request.getUserPromotionId();
 
         var context = SecurityContextHolder.getContext();
@@ -86,18 +86,25 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        PurchaseOrder purchaseOrder = new PurchaseOrder();
+        purchaseOrder.setUser(user);
+        purchaseOrder.setPurchaseOrderId(orderId);
+        purchaseOrder.setStatus(PENDING);
+        purchaseOrder.setAddress(addressRepository.findByAddressId(request.getAddressId()).orElseThrow(() -> new AppException(NotExistedErrorCode.ADDRESS_NOT_FOUND)));
+        purchaseOrder.setExpiredTime(LocalDateTime.now().plusMinutes(9));
 
+        purchaseOrderRepository.save(purchaseOrder);
         Long totalAmount = 0L;
-        for (PurchaseOrderProductRequest productDetail : pdRequest) {
-            ProductDetail pd = productDetailRepository.findByProductDetailId(productDetail.getProductDetailId());
+        for (PurchaseOrderProductRequest orderDetail : pdRequest) {
+            ProductDetail pd = productDetailRepository.findByProductDetailId(orderDetail.getProductDetailId());
             if (pd == null) {
                 throw new RuntimeException("Product detail not found");
             }
             int disCountPrice = pd.getDiscountPrice();
-            cartRepository.deleteByUser_UserIdAndProductDetail_ProductDetailId(user.getUserId(), productDetail.getProductDetailId());
+            cartRepository.deleteByUser_UserIdAndProductDetail_ProductDetailId(user.getUserId(), orderDetail.getProductDetailId());
             ProductPromotion promotion = null;
-            if (productDetail.getProductPromotionId() != null) {
-                promotion = productPromotionRepository.getValidPromotionForProductDetail(productDetail.getProductPromotionId(), pd.getDiscountPrice()).orElseThrow(() -> new AppException(NotExistedErrorCode.PRODUCT_PROMOTION_NOT_EXISTED));
+            if (orderDetail.getProductPromotionId() != null) {
+                promotion = productPromotionRepository.getValidPromotionForProductDetail(orderDetail.getProductPromotionId(), pd.getDiscountPrice()).orElseThrow(() -> new AppException(NotExistedErrorCode.PRODUCT_PROMOTION_NOT_EXISTED));
                 if (promotion.getPromotion().getDiscountType() == Promotion.DiscountType.PERCENTAGE) {
                     // giam %
                     int valueDisCount = (pd.getDiscountPrice() * promotion.getPromotion().getDiscountValue()) / 100;
@@ -112,20 +119,26 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                 }
             }
 
-            pd.setAvailableQuantity(pd.getAvailableQuantity() - productDetail.getQuantity());
+            pd.setAvailableQuantity(pd.getAvailableQuantity() - orderDetail.getQuantity());
             if(pd.getAvailableQuantity() < 0){
                 throw new AppException(NotExistedErrorCode.PRODUCT_NOT_ENOUGH);
             }
             productDetailRepository.save(pd);
             totalAmount += disCountPrice;
-            PurchaseOrderDetail purchaseOrder = PurchaseOrderDetail.builder()
-                    .quantity(productDetail.getQuantity())
+            PurchaseOrderDetailId id = new PurchaseOrderDetailId();
+            id.setPurchaseOrderId(orderId);  // Chính là orderId được truyền vào
+            id.setProductDetailId(pd.getProductDetailId());  // Lấy từ productDetail
+            PurchaseOrderDetail purchaseOrderDetail = PurchaseOrderDetail.builder()
+                    .purchaseOrderDetailId(id)
+                    .quantity(orderDetail.getQuantity())
                     .productPromotion(promotion)
+                    .productDetail(pd)
                     .originalPrice(pd.getDiscountPrice())
                     .discountPrice(disCountPrice)
+                    .purchaseOrder(purchaseOrder)
                     .build();
             totalAmount += pd.getDiscountPrice();
-            listOderDetail.add(purchaseOrder);
+            listOderDetail.add(purchaseOrderDetail);
 
         }
         UserPromotion userPromotion = null;
@@ -144,22 +157,16 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                 totalAmount -= userPromotion.getPromotion().getDiscountValue();
             }
         }
-        PurchaseOrder purchaseOrder = PurchaseOrder.builder()
-                .user(user)
-                .status(PENDING)
-                .purchaseOrderDetails(listOderDetail)
-                .userPromotion(userPromotion)
-                .address(addressRepository.findByAddressId(request.getAddressId()).orElseThrow(() -> new AppException(NotExistedErrorCode.ADDRESS_NOT_FOUND)))
-                .amount(totalAmount)
-                .expiredTime(LocalDateTime.now().plusMinutes(9))
-                .build();
+        purchaseOrder.setPurchaseOrderDetails(listOderDetail);
+        purchaseOrder.setUserPromotion(userPromotion);
+        purchaseOrder.setAmount(totalAmount);
 
         purchaseOrderRepository.save(purchaseOrder);
     }
 
     @Override
     @Transactional
-    public MomoResponse createOrder(PurchaseOrderRequest request) {
+    public MomoResponse createOrderWithMomo(PurchaseOrderRequest request) {
         long total = 10000;
         String orderId = generateOrderId();
         String orderInfo = "Order information " + orderId;

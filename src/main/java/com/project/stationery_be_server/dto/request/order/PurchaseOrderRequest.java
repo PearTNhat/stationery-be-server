@@ -12,7 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class PurchaseOrderRequest {
-    private List<PurchaseOrderProductRequest> productDetails;
+    private List<PurchaseOrderProductRequest> orderDetails;
     private String userPromotionId;
     private String addressId;
 }

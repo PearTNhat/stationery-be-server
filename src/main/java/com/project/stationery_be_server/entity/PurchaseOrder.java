@@ -22,7 +22,6 @@ import java.util.Set;
 @Entity
 public class PurchaseOrder {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "purchase_order_id")
     private String purchaseOrderId;
 
@@ -31,7 +30,7 @@ public class PurchaseOrder {
     private User user;
 
 
-    @OneToMany(mappedBy = "purchaseOrder", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "purchaseOrder", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @JsonIgnore
     private List<PurchaseOrderDetail> purchaseOrderDetails;
 
@@ -49,6 +48,12 @@ public class PurchaseOrder {
 
     @Column(name = "amount", precision = 19, scale = 4)
     private Long amount;
+
+    @Column(name="recipient_info", length = 255)
+    private String recipient;
+
+    @Column(name="note", length = 100)
+    private String note;
 
     @ManyToOne
     @JoinColumn(name = "address_id")
