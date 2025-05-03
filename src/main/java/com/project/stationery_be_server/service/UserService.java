@@ -18,7 +18,7 @@ import java.util.List;
 public interface UserService {
     public List<UserResponse> getAll();
 
-    // Phương thức đăng ký tài khoản, Atrả về thông báo gửi OTP
+    // Phương thức đăng ký tài khoản, trả về thông báo gửi OTP
     String register(RegisterRequest request);
 
     // Phương thức xác nhận OTP, trả về thông tin user sau khi đăng ký thành công

@@ -7,7 +7,9 @@ import com.project.stationery_be_server.dto.response.ProductResponse;
 import com.project.stationery_be_server.dto.response.ProductResponse;
 import com.project.stationery_be_server.entity.Product;
 import com.project.stationery_be_server.entity.ProductDetail;
+import com.project.stationery_be_server.repository.UserRepository;
 import com.project.stationery_be_server.service.ProductService;
+import com.project.stationery_be_server.service.SearchHistoryService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -18,6 +20,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,7 +33,8 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ProductController {
     ProductService productService;
-    PagedResourcesAssembler<ProductResponse> pagedResourcesAssembler; // Inject
+//    PagedResourcesAssembler<ProductResponse> pagedResourcesAssembler; // Inject
+    SearchHistoryService searchHistoryService;
 
     @GetMapping
     public ApiResponse<Page<ProductResponse>> getAllProducts(@RequestParam(defaultValue = "0") int page,
@@ -64,8 +69,17 @@ public class ProductController {
                 .search(search)
                 .totalRating(totalRating)
                 .build();
-        Page<ProductResponse> pageResult = productService.getAllProductWithDefaultPD(pageable, filterRequest);
+        String userId = null;
+        var context = SecurityContextHolder.getContext();
+        var authentication = context.getAuthentication();
+        if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getName())) {
+            userId = authentication.getName();
+        }
 
+        if (search != null && !search.isEmpty()) {
+            searchHistoryService.logKeyword(search, userId);
+        }
+        Page<ProductResponse> pageResult = productService.getAllProductWithDefaultPD(pageable, filterRequest);
 //        PagedModel<EntityModel<ProductResponse>> result = pagedResourcesAssembler.toModel(pageResult);
         return ApiResponse.<Page<ProductResponse>>builder()
                 .result(pageResult)

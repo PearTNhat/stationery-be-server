@@ -14,17 +14,10 @@ import java.util.List;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserRequest {
-//    String userId;
     String firstName;
     String lastName;
     String email;
     String phone;
-//    String password;
     Date dob;
     String avatar;
-//    boolean isBlock;
-//    Integer otp;
-//    String roleId;
-
-//    List<Address> addresses;
 }
