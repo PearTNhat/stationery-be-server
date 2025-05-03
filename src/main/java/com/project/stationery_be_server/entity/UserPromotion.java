@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.Set;
+
 @Entity
 @Getter
 @Setter
@@ -26,4 +28,7 @@ public class UserPromotion {
     @JoinColumn(name = "user_id", nullable = false)
     @JsonBackReference
     private User user;
+
+    @OneToMany(mappedBy = "userPromotion")
+    private Set<PurchaseOrder> purchaseOrders;
 }

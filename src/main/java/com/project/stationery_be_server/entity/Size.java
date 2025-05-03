@@ -20,7 +20,7 @@ public class Size {
     @Column(name = "size_id", length = 10) //
     String sizeId;
 
-    @Column(name = "name", nullable = false, length = 10, unique = true)
+    @Column(name = "name", nullable = false, length = 50, unique = true)
     String name;
 
     Integer priority;

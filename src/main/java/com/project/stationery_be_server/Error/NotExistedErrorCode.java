@@ -16,13 +16,16 @@ public enum NotExistedErrorCode implements BaseErrorCode {
     CATEGORY_NAME_EXITS(1009, "Category name already exists", HttpStatus.BAD_REQUEST),
     CATEGORY_NOT_FOUND(1009, "Category not found", HttpStatus.BAD_REQUEST),
 
-    PRODUCT_NOT_EXISTED(1010, "Product not existed", HttpStatus.BAD_REQUEST),
-
+    PRODUCT_NOT_EXISTED(1010, "Product does not existed", HttpStatus.BAD_REQUEST),
+    PRODUCT_PROMOTION_NOT_EXISTED(1010, "Product promotion does not existed", HttpStatus.BAD_REQUEST),
     PRODUCT_COLOR_NOT_EXISTED(1011, "Product color not existed", HttpStatus.BAD_REQUEST),
-
+    PRODUCT_NOT_ENOUGH(1012, "Product quantity not enough", HttpStatus.BAD_REQUEST),
 
     // comment
-    COMMENT_NOT_FOUND (1012, "Comment not found", HttpStatus.BAD_REQUEST),
+    COMMENT_NOT_FOUND (1022, "Comment not found", HttpStatus.BAD_REQUEST),
+
+    // address
+    ADDRESS_NOT_FOUND(1030, "Address not found", HttpStatus.BAD_REQUEST),
     ;
     private final int code;
     private final String message;

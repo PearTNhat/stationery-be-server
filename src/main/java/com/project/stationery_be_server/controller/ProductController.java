@@ -3,11 +3,8 @@ package com.project.stationery_be_server.controller;
 import com.project.stationery_be_server.dto.request.ProductFilterRequest;
 import com.project.stationery_be_server.dto.response.ApiResponse;
 import com.project.stationery_be_server.dto.response.ColorSizeSlugResponse;
-import com.project.stationery_be_server.dto.response.ProductResponse;
-import com.project.stationery_be_server.dto.response.ProductResponse;
-import com.project.stationery_be_server.entity.Product;
-import com.project.stationery_be_server.entity.ProductDetail;
-import com.project.stationery_be_server.repository.UserRepository;
+import com.project.stationery_be_server.dto.response.product.ProductDetailResponse;
+import com.project.stationery_be_server.dto.response.product.ProductResponse;
 import com.project.stationery_be_server.service.ProductService;
 import com.project.stationery_be_server.service.SearchHistoryService;
 import lombok.AccessLevel;
@@ -17,10 +14,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PagedResourcesAssembler;
-import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.PagedModel;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,11 +26,10 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ProductController {
     ProductService productService;
-//    PagedResourcesAssembler<ProductResponse> pagedResourcesAssembler; // Inject
     SearchHistoryService searchHistoryService;
 
     @GetMapping
-    public ApiResponse<Page<ProductResponse>> getAllProducts(@RequestParam(defaultValue = "0") int page,
+    public ApiResponse<Page<ProductResponse>> getAllProductsWithDefaultPD(@RequestParam(defaultValue = "0") int page,
                                                                                     @RequestParam(defaultValue = "10") int limit,
                                                                                     @RequestParam(required = false) String sortBy,
                                                                                     @RequestParam(required = false) String minPrice,
@@ -53,7 +45,6 @@ public class ProductController {
             String[] parts = sortBy.split("(?<=-)|(?=-)"); // tách dấu tru trong chuoi
             //-abc
             sort = parts.length == 1 ? Sort.by(parts[0]).ascending() : Sort.by(parts[1]).descending();
-
         }
         Pageable pageable;
         if (sort != null) {
@@ -75,17 +66,17 @@ public class ProductController {
         if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getName())) {
             userId = authentication.getName();
         }
-
-        if (search != null && !search.isEmpty()) {
-            searchHistoryService.logKeyword(search, userId);
-        }
         Page<ProductResponse> pageResult = productService.getAllProductWithDefaultPD(pageable, filterRequest);
-//        PagedModel<EntityModel<ProductResponse>> result = pagedResourcesAssembler.toModel(pageResult);
         return ApiResponse.<Page<ProductResponse>>builder()
                 .result(pageResult)
                 .build();
     }
-
+    @GetMapping("/product-detail/{productId}")
+    public ApiResponse<List<ProductDetailResponse>> getProductDetailByProduct(@PathVariable String productId) {
+        return ApiResponse.<List<ProductDetailResponse>>builder()
+                .result(productService.getProductDetailByProduct(productId))
+                .build();
+    }
     @GetMapping("/{slug}")
     public ApiResponse<ProductResponse> getProductDetailProduct(@PathVariable String slug) {
         return ApiResponse.<ProductResponse>builder()

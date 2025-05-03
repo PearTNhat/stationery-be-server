@@ -3,16 +3,16 @@ package com.project.stationery_be_server.service.impl;
 import com.project.stationery_be_server.Error.NotExistedErrorCode;
 import com.project.stationery_be_server.dto.request.ProductFilterRequest;
 import com.project.stationery_be_server.dto.response.ColorSizeSlugResponse;
-import com.project.stationery_be_server.dto.response.ProductResponse;
 import com.project.stationery_be_server.entity.Image;
 import com.project.stationery_be_server.entity.Product;
 import com.project.stationery_be_server.entity.ProductDetail;
-import com.project.stationery_be_server.entity.User;
+import com.project.stationery_be_server.dto.response.product.ProductDetailResponse;
+import com.project.stationery_be_server.dto.response.product.ProductResponse;
 import com.project.stationery_be_server.exception.AppException;
+import com.project.stationery_be_server.mapper.ProductDetailMapper;
 import com.project.stationery_be_server.mapper.ProductMapper;
 import com.project.stationery_be_server.repository.*;
 import com.project.stationery_be_server.service.ProductService;
-import com.project.stationery_be_server.service.SearchHistoryService;
 import com.project.stationery_be_server.specification.ProductSpecification;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -22,7 +22,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -37,24 +36,8 @@ public class ProductServiceImpl implements ProductService {
     ImageRepository imageRepository;
     ProductDetailRepository productDetailRepository;
     ProductMapper productMapper;
+    ProductDetailMapper productDetailMapper;
 
-    /*    @Override
-        public Page<ProductResponse> getAllProductDetails(Pageable pageable, ProductFilterRequest filter) {
-            Specification<Product> spec = ProductSpecification.filterProducts(filter);
-            Page<Product> pd = productRepository.findAll(spec, pageable);
-            List<ProductResponse> productListResponses = pd.getContent().stream()
-                    .map(product -> {
-                        String colorId = product.getProductDetail().getColor().getColorId();
-                        product.setFetchColor(productDetailRepository.findDistinctColorsWithAnySlug(product.getProductId()));
-                        Image img = imageRepository.findFirstByProduct_ProductIdAndColor_ColorIdOrderByPriorityAsc(product.getProductId(), colorId);
-                        product.setImg(img != null ? img.getUrl() : null);
-                        return productMapper.toProductResponse(product);
-                    })
-                    .toList();
-
-
-            return new PageImpl<>(productListResponses, pageable, pd.getTotalElements());
-        }*/
     @Override
     public Page<ProductResponse> getAllProductWithDefaultPD(Pageable pageable, ProductFilterRequest filter) {
         Specification<Product> spec = ProductSpecification.filterProducts(filter);
@@ -82,21 +65,8 @@ public class ProductServiceImpl implements ProductService {
         return new PageImpl<>(productListResponses, pageable, productsPage.getTotalElements());
     }
 
-/*    @Override
-    @Transactional
-    public ProductResponse getProductDetail(String slug) {
-        System.out.println("_____________________slug__________________________");
-        ProductDetail pd = productDetailRepository.findBySlug(slug);
-        String productId = pd.getProduct().getProductId();
-        pd.setImages(imageRepository.findByProduct_ProductIdAndColor_ColorIdOrderByPriorityAsc(productId, pd.getColor().getColorId()));
-        Product p = productRepository.findById(productId).orElseThrow(() -> new AppException(NotExistedErrorCode.PRODUCT_NOT_EXISTED));
-        p.setProductDetail(pd);
-        System.out.println("_____________________pd__________________________");
-        return productMapper.toProductResponse(p);
-    }*/
 
     @Override
-    @Transactional
     public ProductResponse getProductDetail(String slug) {
         System.out.println("_____________________slug__________________________");
         ProductDetail pd = productDetailRepository.findBySlug(slug);
@@ -119,22 +89,36 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public void updateMinPrice(Product product) {
-
+    public Page<ProductResponse> getAllProducts(Pageable pageable, ProductFilterRequest filter) {
+        Specification<Product> spec = ProductSpecification.filterProducts(filter);
+        Page<Product> p = productRepository.findAll(spec, pageable);
+        List<ProductResponse> productListResponses = p.getContent().stream()
+                .filter(product -> product.getProductDetail().getColor() != null)
+                .map(product -> {
+                    String colorId = product.getProductDetail().getColor().getColorId();
+                    product.setProductDetail(null);
+                    Image img = imageRepository.findFirstByProduct_ProductIdAndColor_ColorIdOrderByPriorityAsc(product.getProductId(), colorId);
+                    product.setImg(img != null ? img.getUrl() : null);
+                    return productMapper.toProductResponse(product);
+                })
+                .toList();
+        return new PageImpl<>(productListResponses, pageable, p.getTotalElements());
     }
 
-    //    @Override
-//    public void updateMinPrice(Product product) {
-//        Integer minPrice = product.getProductColors().stream()
-//                .flatMap(pc -> pc.getProductDetails().stream())
-//                .filter(pd -> pd.getStockQuantity() > 0)
-//                .map(ProductDetail::getDiscountPrice)
-//                .min(Integer::compareTo) //min[1,2,3,5]
-//                .orElse(0);
-//
-//        product.setMinPrice(minPrice);
-//        productRepository.save(product);
-//    }
+    @Override
+    public List<ProductDetailResponse> getProductDetailByProduct(String productId) {
+        List<ProductDetail> pd = productDetailRepository.findByProduct_ProductId(productId);
+
+        List<ProductDetailResponse> pdsResponse = pd.stream()
+                .map(productDetail -> {
+                    productDetail.setImages(imageRepository.findByProduct_ProductIdAndColor_ColorIdOrderByPriorityAsc(productId, productDetail.getColor().getColorId()));
+                    return productDetailMapper.toProductDetailResponse(productDetail);
+                })
+                .toList();
+
+        return pdsResponse;
+    }
+
     @Override
     @Transactional
     public void handleUpdateTotalProductRating(String productId, String type, Integer rating) {
