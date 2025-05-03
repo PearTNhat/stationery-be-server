@@ -16,12 +16,12 @@ public class PurchaseOrderController {
     private final PurchaseOrderService purchaseOrderService;
 
 
-    @PostMapping("/payment")
-    public ApiResponse<MomoResponse> createOrderFromPayment(@RequestBody PurchaseOrderRequest request) {
+    @PostMapping("/payment-momo")
+    public ApiResponse<MomoResponse> createOrderWithMomo(@RequestBody PurchaseOrderRequest request) {
         System.out.println("Request: " + request);
         return ApiResponse.<MomoResponse>builder()
                 .message("Order created successfully")
-                .result(purchaseOrderService.createOrder(request))
+                .result(purchaseOrderService.createOrderWithMomo(request))
                 .build();
 
     }

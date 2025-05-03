@@ -45,6 +45,7 @@ public class ProductServiceImpl implements ProductService {
         Specification<Product> spec = ProductSpecification.filterProducts(filter);
         Page<Product> pd = productRepository.findAll(spec, pageable);
         List<ProductResponse> productListResponses = pd.getContent().stream()
+                .filter(product -> product.getProductDetail().getColor() != null)
                 .map(product -> {
                     String colorId = product.getProductDetail().getColor().getColorId();
                     product.setFetchColor(productDetailRepository.findDistinctColorsWithAnySlug(product.getProductId()));
@@ -77,6 +78,7 @@ public class ProductServiceImpl implements ProductService {
         Specification<Product> spec = ProductSpecification.filterProducts(filter);
         Page<Product> p = productRepository.findAll(spec, pageable);
         List<ProductResponse> productListResponses = p.getContent().stream()
+                .filter(product -> product.getProductDetail().getColor() != null)
                 .map(product -> {
                     String colorId = product.getProductDetail().getColor().getColorId();
                     product.setProductDetail(null);

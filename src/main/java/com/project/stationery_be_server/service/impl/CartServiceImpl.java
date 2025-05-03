@@ -28,6 +28,7 @@ public class CartServiceImpl implements CartService {
     CartRepository cartRepository;
     UserRepository userRepository;
     ProductDetailRepository productDetailRepository;
+    ProductPromotionRepository productPromotionRepository;
     ImageRepository imageRepository;
 
     // Lấy userId từ SecurityContext
@@ -165,12 +166,13 @@ public class CartServiceImpl implements CartService {
                 imageUrl = images.get(0).getUrl(); // lấy ảnh đầu tiên theo độ ưu tiên
             }
         }
-
+        List<ProductPromotion> pm = productPromotionRepository.findValidPromotionForProductDetail(productDetail.getProductDetailId());
         return  CartResponse.builder()
                 .userId(cart.getUser().getUserId())
                 .productId(productDetail.getProduct().getProductId())
                 .productDetailId(productDetail.getProductDetailId())
                 .productName(productDetail.getProduct().getName())
+                .productPromotion(pm)
                 .colorName(productDetail.getColor() != null ? productDetail.getColor().getName() : null)
                 .sizeName(productDetail.getSize() != null ? productDetail.getSize().getName() : null)
                 .quantity(cart.getQuantity())

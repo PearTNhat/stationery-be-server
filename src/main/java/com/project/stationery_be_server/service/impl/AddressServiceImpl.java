@@ -22,8 +22,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AddressServiceImpl implements AddressService {
-    final AddressRepository addressRepository;
-    final UserRepository userRepository;
+     AddressRepository addressRepository;
+     UserRepository userRepository;
 
     @Override
     public AddressResponse createAddress(AddressRequest addressRequest) {
@@ -49,20 +49,22 @@ public class AddressServiceImpl implements AddressService {
         return AddressResponse.builder()
                 .addressId(savedAddress.getAddressId())
                 .addressName(savedAddress.getAddressName())
-                .user(savedAddress.getUser())
                 .phone(savedAddress.getPhone())
                 .isDefault(savedAddress.isDefault())
                 .build();
     }
 
     @Override
-    public List<AddressResponse> getAllAddresses() {
-        List<Address> addresses = addressRepository.findAll();
+    public List<AddressResponse> getAllMyAddresses() {
+        var context = SecurityContextHolder.getContext();
+        String userId = context.getAuthentication().getName();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        List<Address> addresses = addressRepository.findByUser(user);
         return addresses.stream()
                 .map(address -> AddressResponse.builder()
                         .addressId(address.getAddressId())
                         .addressName(address.getAddressName())
-                        .user(address.getUser())
                         .phone(address.getPhone())
                         .isDefault(address.isDefault())
                         .build()
@@ -96,7 +98,6 @@ public class AddressServiceImpl implements AddressService {
         return AddressResponse.builder()
                 .addressId(updatedAddress.getAddressId())
                 .addressName(updatedAddress.getAddressName())
-                .user(updatedAddress.getUser())
                 .phone(updatedAddress.getPhone())
                 .isDefault(updatedAddress.isDefault())
                 .build();
@@ -147,7 +148,6 @@ public class AddressServiceImpl implements AddressService {
         return AddressResponse.builder()
                 .addressId(saved.getAddressId())
                 .addressName(saved.getAddressName())
-                .user(saved.getUser())
                 .phone(saved.getPhone())
                 .isDefault(saved.isDefault())
                 .build();

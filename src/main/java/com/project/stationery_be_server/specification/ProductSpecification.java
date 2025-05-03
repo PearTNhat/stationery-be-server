@@ -17,6 +17,7 @@
                 //predicates là danh sách các điều kiện (WHERE ...).
                 assert query != null;
                 query.distinct(true);
+
                 List<Predicate> predicates = new ArrayList<>();
                 // Join Product →  ProductDetail
                 Join<Object, Object> productDetailJoin = null;
