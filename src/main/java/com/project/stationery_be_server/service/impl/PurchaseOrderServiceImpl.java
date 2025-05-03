@@ -92,6 +92,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         purchaseOrder.setStatus(PENDING);
         purchaseOrder.setAddress(addressRepository.findByAddressId(request.getAddressId()).orElseThrow(() -> new AppException(NotExistedErrorCode.ADDRESS_NOT_FOUND)));
         purchaseOrder.setExpiredTime(LocalDateTime.now().plusMinutes(9));
+        purchaseOrder.setRecipient(request.getRecipient());
 
         purchaseOrderRepository.save(purchaseOrder);
         Long totalAmount = 0L;
@@ -137,7 +138,6 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                     .discountPrice(disCountPrice)
                     .purchaseOrder(purchaseOrder)
                     .build();
-            totalAmount += pd.getDiscountPrice();
             listOderDetail.add(purchaseOrderDetail);
 
         }
