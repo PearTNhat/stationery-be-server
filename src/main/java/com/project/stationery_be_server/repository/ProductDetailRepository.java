@@ -79,4 +79,5 @@ public interface ProductDetailRepository extends JpaRepository<ProductDetail, St
                 pd.color_id, c.hex
             """, nativeQuery = true)
     List<ColorSlugResponse> findDistinctColorsWithAnySlug(String productId);
+    long countByProduct_ProductId(String productId);
 }

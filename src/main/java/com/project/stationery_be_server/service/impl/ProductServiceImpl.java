@@ -2,6 +2,7 @@ package com.project.stationery_be_server.service.impl;
 
 
 import com.project.stationery_be_server.Error.NotExistedErrorCode;
+import com.project.stationery_be_server.dto.request.DeleteProductRequest;
 import com.project.stationery_be_server.dto.request.ProductFilterRequest;
 import com.project.stationery_be_server.dto.response.ColorSizeSlugResponse;
 import com.project.stationery_be_server.dto.response.product.ProductDetailResponse;
@@ -9,6 +10,7 @@ import com.project.stationery_be_server.dto.response.product.ProductResponse;
 import com.project.stationery_be_server.entity.Image;
 import com.project.stationery_be_server.entity.Product;
 import com.project.stationery_be_server.entity.ProductDetail;
+import com.project.stationery_be_server.entity.User;
 import com.project.stationery_be_server.exception.AppException;
 import com.project.stationery_be_server.mapper.ProductDetailMapper;
 import com.project.stationery_be_server.mapper.ProductMapper;
@@ -23,6 +25,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -39,6 +42,7 @@ public class ProductServiceImpl implements ProductService {
     ProductDetailRepository productDetailRepository;
     ProductMapper productMapper;
     ProductDetailMapper productDetailMapper;
+    UserRepository userRepository;
 
     @Override
     public Page<ProductResponse> getAllProductWithDefaultPD(Pageable pageable, ProductFilterRequest filter) {
@@ -129,4 +133,47 @@ public class ProductServiceImpl implements ProductService {
         }
         productRepository.save(product);
     }
+
+    @Override
+    public void deleteProduct(DeleteProductRequest request) {
+        var context = SecurityContextHolder.getContext();
+        String userIdLogin = context.getAuthentication().getName();
+        User user = userRepository.findById(userIdLogin)
+                .orElseThrow(() -> new AppException(NotExistedErrorCode.USER_NOT_EXISTED));
+        // admin moi dc xoa
+        if (!user.getRole().getRoleName().equals("admin")){
+            throw new RuntimeException("You do not have permission to delete products");
+        }
+        //ktra san pham ton tai
+        String productId = request.getProductId();
+        Product product = productRepository.findById(productId)
+                .orElseThrow(()-> new RuntimeException("Cannot find the product"));
+
+        //kiem tra co data lien quan khong
+        long reviews   = reviewRepository.countByProduct_ProductId(productId);
+        long images    = imageRepository.countByProduct_ProductId(productId);
+        long details   = productDetailRepository.countByProduct_ProductId(productId);
+
+        if (reviews > 0 ) {
+            throw new IllegalStateException(
+                    String.format("Cannot delete product %s: has %d reviews",
+                            productId, reviews)
+            );
+        }
+        if (images > 0) {
+            throw new IllegalStateException(
+                    String.format("Cannot delete product %s: has %d images",
+                            productId, images)
+            );
+        }
+        if (details > 0) {
+            throw new IllegalStateException(
+                    String.format("Cannot delete product %s: has %d details",
+                            productId, details)
+            );
+        }
+        //xoa
+        productRepository.deleteById(productId);
+    }
+
 }

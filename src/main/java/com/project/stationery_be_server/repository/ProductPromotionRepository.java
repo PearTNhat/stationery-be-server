@@ -33,4 +33,5 @@ public interface ProductPromotionRepository extends JpaRepository<ProductPromoti
             @Param("productPromotionId") String productPromotionId,
             @Param("price") Integer price
     );
+    long countByProductDetail_ProductDetailId(String productDetailId);
 }

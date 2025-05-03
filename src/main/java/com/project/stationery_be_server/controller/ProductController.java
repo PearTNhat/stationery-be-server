@@ -1,5 +1,6 @@
 package com.project.stationery_be_server.controller;
 
+import com.project.stationery_be_server.dto.request.DeleteProductRequest;
 import com.project.stationery_be_server.dto.request.ProductFilterRequest;
 import com.project.stationery_be_server.dto.response.ApiResponse;
 import com.project.stationery_be_server.dto.response.ColorSizeSlugResponse;
@@ -118,6 +119,13 @@ public class ProductController {
     public ApiResponse<List<ColorSizeSlugResponse>> getColorSizeSlug(@PathVariable String slug) {
         return ApiResponse.<List<ColorSizeSlugResponse>>builder()
                 .result(productService.fetchColorSizeSlug(slug))
+                .build();
+    }
+    @DeleteMapping("/delete")
+    public ApiResponse<String> deleteProduct(@RequestBody DeleteProductRequest request){
+        productService.deleteProduct(request);
+        return ApiResponse.<String>builder()
+                .result("Product deleted successfully")
                 .build();
     }
 }
