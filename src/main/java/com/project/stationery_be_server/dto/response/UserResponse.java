@@ -3,6 +3,7 @@ package com.project.stationery_be_server.dto.response;
 import com.project.stationery_be_server.entity.Address;
 import com.project.stationery_be_server.entity.Cart;
 import com.project.stationery_be_server.entity.Role;
+import com.project.stationery_be_server.entity.SearchHistory;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -26,4 +27,5 @@ public class UserResponse {
      Role role;
      Set<Cart> carts;
      Date dob;
+     Set<SearchHistory> searchHistory;
 }

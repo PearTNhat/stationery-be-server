@@ -27,7 +27,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 @EnableMethodSecurity
 @EnableSpringDataWebSupport(pageSerializationMode = EnableSpringDataWebSupport.PageSerializationMode.VIA_DTO)
 public class SecurityConfig {
-    private final String[] PUBLIC_URLS = {"users", "auth/login", "auth/introspect", "auth/logout", "auth/refresh", "colors", "colors/{id}", "address"};
+    private final String[] PUBLIC_URLS = {"users", "auth/login", "auth/introspect", "auth/logout", "auth/refresh", "colors", "colors/{id}", "address", "search"};
 
     @Value("${jwt.signerKey}")
     private String singerKey;

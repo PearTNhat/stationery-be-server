@@ -38,8 +38,23 @@
                 }
 
                 if (filter.getSearch() != null && !filter.getSearch().isBlank()) {
-                    System.out.println("search");
-                    predicates.add(criteriaBuilder.like(root.get("name"), "%" + filter.getSearch().trim() + "%"));
+                    String searchKeyword = filter.getSearch().trim().toLowerCase();
+                    List<Predicate> searchPredicates = new ArrayList<>();
+
+                    searchPredicates.add(criteriaBuilder.like(
+                            criteriaBuilder.lower(root.get("name")),
+                            "%" + searchKeyword + "%"
+                    ));
+
+                    if (searchKeyword.endsWith("s")) {
+                        String singular = searchKeyword.substring(0, searchKeyword.length() - 1);
+                        searchPredicates.add(criteriaBuilder.like(
+                                criteriaBuilder.lower(root.get("name")),
+                                "%" + singular + "%"
+                        ));
+                    }
+
+                    predicates.add(criteriaBuilder.or(searchPredicates.toArray(new Predicate[0])));
                 }
 
                 if (filter.getTotalRating() != null && !filter.getTotalRating().isBlank()) {

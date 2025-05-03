@@ -87,4 +87,7 @@ public interface ProductDetailRepository extends JpaRepository<ProductDetail, St
         pd.color_id, c.hex
     """, nativeQuery = true)
     List<ColorSlugResponse> findDistinctColorsWithAnySlug(String productId);
+
+    @Query("SELECT pd FROM ProductDetail pd WHERE pd.name LIKE %:keyword% OR pd.slug LIKE %:keyword%")
+    List<ProductDetail> findByKeyword(String keyword);
 }
