@@ -14,5 +14,6 @@ import java.util.List;
 public class PurchaseOrderRequest {
     private List<PurchaseOrderProductRequest> orderDetails;
     private String userPromotionId;
+    private String recipient;
     private String addressId;
 }
