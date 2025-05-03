@@ -11,4 +11,6 @@ public interface ImageRepository  extends JpaRepository<Image, String> {
 
     List<Image> findByProduct_ProductIdOrderByPriorityAsc(String productId);
     Image findFirstByProduct_ProductIdAndColorIsNullOrderByPriorityAsc(String productId);
+
+    long countByProduct_ProductId(String productId);
 }

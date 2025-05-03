@@ -30,4 +30,5 @@ public interface CartRepository extends JpaRepository<Cart, CartId> {
     void deleteByUser_UserIdAndProductDetail_ProductDetailId(String userId, String productDetail);
 
     List<Cart> user(User user);
+    long countByProductDetail_ProductDetailId(String productDetailId);
 }

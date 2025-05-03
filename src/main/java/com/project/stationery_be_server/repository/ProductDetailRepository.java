@@ -82,4 +82,5 @@ public interface ProductDetailRepository extends JpaRepository<ProductDetail, St
 
     @Query("SELECT pd FROM ProductDetail pd WHERE pd.name LIKE %:keyword% OR pd.slug LIKE %:keyword%")
     List<ProductDetail> findByKeyword(String keyword);
+    long countByProduct_ProductId(String productId);
 }
