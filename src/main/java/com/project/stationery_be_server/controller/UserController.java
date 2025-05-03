@@ -83,4 +83,11 @@ public class UserController {
                 .result(userService.updateUser(documentJson,file))
                 .build();
     }
+    @DeleteMapping("/delete-user")
+    public ApiResponse<String> deleteUser(@RequestBody DeleteUserRequest request){
+        userService.deleteUser(request);
+        return ApiResponse.<String>builder()
+                .result("User deleted successfully")
+                .build();
+    }
 }
