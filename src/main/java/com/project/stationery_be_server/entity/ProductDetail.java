@@ -39,18 +39,17 @@ public class ProductDetail {
     @Column(name = "sold_quantity")
     private int soldQuantity;
 
+    @Column(name = "available_quantity")
+    private int availableQuantity;
+
     @Column(name = "original_price")
     private int originalPrice;
 
     @Column(name = "discount_price")
     private int discountPrice;
-
-
-
     @ManyToOne
     @JoinColumn(name = "size_id")
     private Size size;
-
     @ManyToOne
     @JoinColumn(name = "color_id")
     private Color color;

@@ -22,9 +22,9 @@ public class AddressController {
                 .build();
     }
     @GetMapping
-    public ApiResponse<List<AddressResponse>> getAllAddresses() {
+    public ApiResponse<List<AddressResponse>> getAllMyAddresses() {
         return ApiResponse.<List<AddressResponse>>builder()
-                .result(addressService.getAllAddresses())
+                .result(addressService.getAllMyAddresses())
                 .build();
     }
 
