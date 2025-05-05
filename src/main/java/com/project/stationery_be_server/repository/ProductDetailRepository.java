@@ -87,4 +87,8 @@ public interface ProductDetailRepository extends JpaRepository<ProductDetail, St
            "SET pd.stockQuantity = pd.stockQuantity - :amount , pd.soldQuantity = pd.soldQuantity + :amount   " +
            "WHERE pd.productDetailId = :productDetailId AND pd.stockQuantity >= :amount")
     int reduceQuantity(@Param("productDetailId") String productDetailId, @Param("amount") int amount);
+
+    @Query("SELECT pd FROM ProductDetail pd WHERE pd.name LIKE %:keyword% OR pd.slug LIKE %:keyword%")
+    List<ProductDetail> findByKeyword(String keyword);
+    long countByProduct_ProductId(String productId);
 }
