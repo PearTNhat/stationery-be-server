@@ -63,9 +63,11 @@ public class PurchaseOrder {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
-    @Column(name = "expired_time", nullable = false, updatable = false)
+    @Column(name = "expired_time")
     private LocalDateTime expiredTime;
 
+    @OneToOne(mappedBy = "purchaseOrder", cascade = CascadeType.ALL)
+    private Payment payment;
     public enum Status {
         PENDING,        // Chờ xác nhận
         PROCESSING,     // Đang xử lý

@@ -14,7 +14,7 @@ import java.util.Optional;
 public interface UserPromotionRepository extends JpaRepository<UserPromotion, String> {
     List<UserPromotion> findByUserUserId(String userId);
     @Query(value = """
-    SELECT up.* FROM user_promotion
+    SELECT up.* FROM user_promotion up
     JOIN promotion p ON up.promotion_id = p.promotion_id
     WHERE up.user_promotion_id = :userPromotionId
       AND p.start_date <= NOW()
@@ -26,4 +26,6 @@ public interface UserPromotionRepository extends JpaRepository<UserPromotion, St
             @Param("userPromotionId") String userPromotionId,
             @Param("price") Long price
     );
+
+
 }
