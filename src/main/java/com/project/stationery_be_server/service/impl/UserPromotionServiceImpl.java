@@ -22,6 +22,6 @@ public class UserPromotionServiceImpl implements UserPromotionService {
     public List<UserPromotion> getVouchersForUser() {
         var context = SecurityContextHolder.getContext();
         String userId = context.getAuthentication().getName();
-        return userPromotionRepository.findByUserUserId(userId);
+        return userPromotionRepository.findUserPromotionForUser(userId);
     }
 }
