@@ -79,4 +79,7 @@ public class User {
     @JsonIgnore
     Set<PurchaseOrder> orders;
 
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    @JsonManagedReference("user-searchHistories")
+    Set<SearchHistory> searchHistories;
 }

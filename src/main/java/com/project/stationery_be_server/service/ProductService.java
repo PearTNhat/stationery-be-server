@@ -1,5 +1,6 @@
 package com.project.stationery_be_server.service;
 
+import com.project.stationery_be_server.dto.request.DeleteProductRequest;
 import com.project.stationery_be_server.dto.request.ProductFilterRequest;
 import com.project.stationery_be_server.dto.response.ColorSizeSlugResponse;
 import com.project.stationery_be_server.dto.response.product.ProductDetailResponse;
@@ -19,4 +20,5 @@ public interface ProductService {
     List<ColorSizeSlugResponse> fetchColorSizeSlug(String slug);
     @Transactional
     void handleUpdateTotalProductRating(String productId, String type, Integer rating);
+    void deleteProduct(DeleteProductRequest request);
 }

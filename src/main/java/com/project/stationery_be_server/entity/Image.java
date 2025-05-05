@@ -33,7 +33,7 @@ public class Image {
     Product product;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "color_id", nullable = false)
+    @JoinColumn(name = "color_id")
     @JsonIgnore
     Color color;  // Màu sắc của sản phẩm
 

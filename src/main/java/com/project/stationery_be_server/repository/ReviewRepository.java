@@ -40,4 +40,5 @@ public interface ReviewRepository extends JpaRepository<com.project.stationery_b
   boolean existsByUser_UserIdAndParentReview_ReviewId(String replyOnUser, String parentId);
 
   List<Review> findByProduct_ProductIdAndParentReviewIsNull(String productId);
+  long countByProduct_ProductId(String productId);
 }
