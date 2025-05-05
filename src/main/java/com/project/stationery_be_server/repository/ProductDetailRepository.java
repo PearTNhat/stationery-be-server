@@ -6,6 +6,7 @@ import com.project.stationery_be_server.entity.Product;
 import com.project.stationery_be_server.entity.ProductDetail;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -79,6 +80,13 @@ public interface ProductDetailRepository extends JpaRepository<ProductDetail, St
                 pd.color_id, c.hex
             """, nativeQuery = true)
     List<ColorSlugResponse> findDistinctColorsWithAnySlug(String productId);
+
+
+    @Modifying
+    @Query("UPDATE ProductDetail pd " +
+           "SET pd.stockQuantity = pd.stockQuantity - :amount , pd.soldQuantity = pd.soldQuantity + :amount   " +
+           "WHERE pd.productDetailId = :productDetailId AND pd.stockQuantity >= :amount")
+    int reduceQuantity(@Param("productDetailId") String productDetailId, @Param("amount") int amount);
 
     @Query("SELECT pd FROM ProductDetail pd WHERE pd.name LIKE %:keyword% OR pd.slug LIKE %:keyword%")
     List<ProductDetail> findByKeyword(String keyword);

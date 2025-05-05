@@ -4,6 +4,10 @@ import com.project.stationery_be_server.entity.PurchaseOrderDetail;
 import com.project.stationery_be_server.entity.PurchaseOrderDetailId;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface PurchaseOrderDetailRepository extends JpaRepository<PurchaseOrderDetail, PurchaseOrderDetailId> {
+import java.util.List;
+
+public interface PurchaseOrderDetailRepository extends JpaRepository<PurchaseOrderDetail, String> {
+    List<PurchaseOrderDetail> findByPurchaseOrder_PurchaseOrderId(String purchaseOrderId);
     long countByProductDetail_ProductDetailId(String productDetailId);
+
 }
