@@ -12,7 +12,17 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserPromotionRepository extends JpaRepository<UserPromotion, String> {
-    List<UserPromotion> findByUserUserId(String userId);
+
+    @Query(value = """
+    SELECT up.* FROM user_promotion up
+    JOIN promotion p ON up.promotion_id = p.promotion_id
+    WHERE
+      p.start_date <= NOW()
+      AND p.end_date >= NOW()
+      AND up.user_id = :userId
+      AND (p.usage_limit IS NULL OR p.usage_limit > 0)
+    """, nativeQuery = true)
+    List<UserPromotion> findUserPromotionForUser(String userId);
     @Query(value = """
     SELECT up.* FROM user_promotion up
     JOIN promotion p ON up.promotion_id = p.promotion_id
