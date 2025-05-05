@@ -1,5 +1,7 @@
 package com.project.stationery_be_server.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.stationery_be_server.Error.NotExistedErrorCode;
 import com.project.stationery_be_server.dto.request.MomoRequest;
 import com.project.stationery_be_server.dto.request.order.PurchaseOrderProductRequest;
@@ -44,6 +46,10 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     UserPromotionRepository userPromotionRepository;
     ProductPromotionRepository productPromotionRepository;
     AddressRepository addressRepository;
+    PurchaseOrderDetailRepository purchaseOrderDetailRepository;
+    ProductRepository productRepository;
+    PaymentRepository paymentRepository;
+    private final PromotionRepository promotionRepository;
     @Value(value = "${momo.partnerCode}")
     @NonFinal
     String partnerCode;
@@ -76,7 +82,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     String urlCheckTransaction;
 
     @Transactional
-    public void handleRequestPurchaseOrder(PurchaseOrderRequest request, String orderId) {
+    public Long handleRequestPurchaseOrder(PurchaseOrderRequest request, String orderId) {
         List<PurchaseOrderDetail> listOderDetail = new ArrayList<>();
         List<PurchaseOrderProductRequest> pdRequest = request.getOrderDetails();
         String userPromotionId = request.getUserPromotionId();
@@ -106,17 +112,19 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
             ProductPromotion promotion = null;
             if (orderDetail.getProductPromotionId() != null) {
                 promotion = productPromotionRepository.getValidPromotionForProductDetail(orderDetail.getProductPromotionId(), pd.getDiscountPrice()).orElseThrow(() -> new AppException(NotExistedErrorCode.PRODUCT_PROMOTION_NOT_EXISTED));
-                if (promotion.getPromotion().getDiscountType() == Promotion.DiscountType.PERCENTAGE) {
+                Promotion currentPromotion = promotion.getPromotion();
+                currentPromotion.setTempUsageLimit(currentPromotion.getTempUsageLimit() - 1);
+                if (currentPromotion.getDiscountType() == Promotion.DiscountType.PERCENTAGE) {
                     // giam %
-                    int valueDisCount = (pd.getDiscountPrice() * promotion.getPromotion().getDiscountValue()) / 100;
-                    if (valueDisCount > promotion.getPromotion().getMaxValue()) { // neu so tien  vuot qua max value
-                        disCountPrice -= promotion.getPromotion().getMaxValue();
+                    int valueDisCount = (pd.getDiscountPrice() * currentPromotion.getDiscountValue()) / 100;
+                    if (currentPromotion.getMaxValue()!= null && valueDisCount > currentPromotion.getMaxValue()) { // neu so tien  vuot qua max value
+                        disCountPrice -= currentPromotion.getMaxValue();
                     } else {
                         disCountPrice -= valueDisCount;
                     }
                 } else {
                     // giam theo gia tri
-                    disCountPrice -= promotion.getPromotion().getDiscountValue();
+                    disCountPrice -= currentPromotion.getDiscountValue();
                 }
             }
 
@@ -143,18 +151,20 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         }
         UserPromotion userPromotion = null;
         if (userPromotionId != null) {
-            userPromotion = userPromotionRepository.getValidPromotionForUser(userPromotionId, totalAmount).orElseThrow(() -> new AppException(NotExistedErrorCode.PRODUCT_PROMOTION_NOT_EXISTED));
-            if (userPromotion.getPromotion().getDiscountType() == Promotion.DiscountType.PERCENTAGE) {
+            userPromotion = userPromotionRepository.getValidPromotionForUser(userPromotionId, totalAmount).orElseThrow(() -> new AppException(NotExistedErrorCode.USER_PROMOTION_NOT_FOUND));
+            Promotion currentPromotion = userPromotion.getPromotion();
+            currentPromotion.setTempUsageLimit(currentPromotion.getTempUsageLimit() - 1);
+            if (currentPromotion.getDiscountType() == Promotion.DiscountType.PERCENTAGE) {
                 // giam %
-                Long valueDisCount = (totalAmount * userPromotion.getPromotion().getDiscountValue()) / 100;
-                if (valueDisCount > userPromotion.getPromotion().getMaxValue()) { // neu so tien  vuot qua max value
-                    totalAmount -= userPromotion.getPromotion().getMaxValue();
+                Long valueDisCount = (totalAmount * currentPromotion.getDiscountValue()) / 100;
+                if (currentPromotion.getMaxValue()!= null && valueDisCount > currentPromotion.getMaxValue()) { // neu so tien  vuot qua max value
+                    totalAmount -= currentPromotion.getMaxValue();
                 } else {
                     totalAmount -= valueDisCount;
                 }
             } else {
                 // giam theo gia tri
-                totalAmount -= userPromotion.getPromotion().getDiscountValue();
+                totalAmount -= currentPromotion.getDiscountValue();
             }
         }
         purchaseOrder.setPurchaseOrderDetails(listOderDetail);
@@ -162,18 +172,19 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         purchaseOrder.setAmount(totalAmount);
 
         purchaseOrderRepository.save(purchaseOrder);
+        return totalAmount;
     }
 
     @Override
     @Transactional
     public MomoResponse createOrderWithMomo(PurchaseOrderRequest request) {
-        long total = 10000;
+
         String orderId = generateOrderId();
         String orderInfo = "Order information " + orderId;
         String requestId = UUID.randomUUID().toString();
         String extraData = "hello ae";
+        Long total = handleRequestPurchaseOrder(request,orderId);
         String rawSignature = "accessKey=" + accessKey + "&amount=" + total + "&extraData=" + extraData + "&ipnUrl=" + ipnUrl + "&orderId=" + orderId + "&orderInfo=" + orderInfo + "&partnerCode=" + partnerCode + "&redirectUrl=" + redirectUrl + "&requestId=" + requestId + "&requestType=" + requestType;
-        handleRequestPurchaseOrder(request,orderId);
         String prettySignature = "";
 
         try {
@@ -197,7 +208,6 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                 .signature(prettySignature)
                 .lang("vi")
                 .build();
-        System.out.println("Request Momo: " + requestMomo);
         return webClient
                 .post()
                 .uri(endpoint)
@@ -206,6 +216,77 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                 .retrieve()
                 .bodyToMono(MomoResponse.class)
                 .block();
+    }
+
+    @Override
+    @Transactional
+    public MomoResponse transactionStatus(String orderId) {
+
+        if (orderId == null || orderId.isEmpty()) {
+            throw new IllegalArgumentException("Missing input");
+        }
+        PurchaseOrder purchaseOrder = purchaseOrderRepository.findByPurchaseOrderId(orderId)
+                .orElseThrow(() -> new AppException(NotExistedErrorCode.ORDER_NOT_FOUND));
+        String rawSignature = String.format(
+                "accessKey=%s&orderId=%s&partnerCode=%s&requestId=%s",
+                accessKeyMomo, orderId, partnerCode, orderId
+        );
+        String signature = null;
+        try {
+            signature = generateHmacSHA256(rawSignature, secretKey);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        MomoRequest momoRequest = MomoRequest.builder()
+                .requestId(orderId)
+                .orderId(orderId)
+                .partnerCode(partnerCode)
+                .lang("vi")
+                .signature(signature)
+                .build();
+
+        MomoResponse data = webClient.post()
+                .uri(urlCheckTransaction)
+                .header("Content-Type", "application/json; charset=UTF-8")
+                .bodyValue(momoRequest)
+                .retrieve()
+                .bodyToMono(MomoResponse.class)
+                .block();
+        if (data == null) {
+            throw new RuntimeException("Not paid yet");
+        }
+        Payment currentPayment = paymentRepository.findByPurchaseOrder(purchaseOrder);
+        if(currentPayment != null){
+            throw new AppException(NotExistedErrorCode.PAYMENT_EXISTS);
+        }
+        if (data.getResultCode() == 0) {
+            Payment payment = Payment.builder()
+                    .status(1)
+                    .payType("qr")
+                    .payName("momo")
+                    .purchaseOrder(purchaseOrder)
+                    .build();
+
+            if(purchaseOrder.getUserPromotion() != null){
+                Promotion currentPromotion = purchaseOrder.getUserPromotion().getPromotion();
+                promotionRepository.reduceUsageCountByPromotionId(currentPromotion.getPromotionId());
+            }
+            List<PurchaseOrderDetail> purchaseOrderDetails = purchaseOrderDetailRepository.findByPurchaseOrder_PurchaseOrderId(orderId);
+            for (PurchaseOrderDetail purchaseOrderDetail : purchaseOrderDetails) {
+                int res = productDetailRepository.reduceQuantity(purchaseOrderDetail.getProductDetail().getProductDetailId(), purchaseOrderDetail.getQuantity());
+                if(res == 0){
+                    throw new AppException(NotExistedErrorCode.PRODUCT_NOT_ENOUGH);
+                }
+                if(purchaseOrderDetail.getProductPromotion()!= null){
+                    promotionRepository.reduceUsageCountByPromotionId(purchaseOrderDetail.getProductPromotion().getPromotion().getPromotionId());
+                }
+            }
+            purchaseOrder.setStatus(PurchaseOrder.Status.COMPLETED);
+            purchaseOrder.setExpiredTime(null);
+            paymentRepository.save(payment);
+            purchaseOrderRepository.save(purchaseOrder);
+        }
+        return data;
     }
 
 
