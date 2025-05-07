@@ -26,4 +26,5 @@ public class CartResponse {
     int discountPrice;
     Date createdAt;
     String imageUrl;
+    String slug;
 }
