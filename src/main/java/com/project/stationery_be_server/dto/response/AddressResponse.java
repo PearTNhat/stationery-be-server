@@ -13,6 +13,7 @@ public class AddressResponse {
     String addressId;
     String addressName;
     String phone;
+    String recipient;
     Boolean isDefault;
 
 }

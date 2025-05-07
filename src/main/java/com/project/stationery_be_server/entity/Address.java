@@ -23,6 +23,9 @@ public class Address {
     @Column(length = 100, name = "address_name")
     private String addressName;
 
+    @Column(length = 50, name = "recipient")
+    String recipient;
+
     @Column(name = "phone", length = 15)
     String phone;
 
