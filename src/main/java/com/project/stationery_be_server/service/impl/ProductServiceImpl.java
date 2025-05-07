@@ -72,7 +72,6 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductResponse getProductDetail(String slug) {
-        System.out.println("_____________________slug__________________________");
         ProductDetail pd = productDetailRepository.findBySlug(slug);
         String productId = pd.getProduct().getProductId();
         if (pd.getColor() != null && pd.getColor().getColorId() != null) {
@@ -83,7 +82,6 @@ public class ProductServiceImpl implements ProductService {
         }
         Product p = productRepository.findById(productId).orElseThrow(() -> new AppException(NotExistedErrorCode.PRODUCT_NOT_EXISTED));
         p.setProductDetail(pd);
-        System.out.println("_____________________pd__________________________");
         return productMapper.toProductResponse(p);
     }
 
@@ -97,11 +95,20 @@ public class ProductServiceImpl implements ProductService {
         Specification<Product> spec = ProductSpecification.filterProducts(filter);
         Page<Product> p = productRepository.findAll(spec, pageable);
         List<ProductResponse> productListResponses = p.getContent().stream()
-                .filter(product -> product.getProductDetail().getColor() != null)
                 .map(product -> {
-                    String colorId = product.getProductDetail().getColor().getColorId();
+                    String colorId = null;
+                    ProductDetail productDetail = product.getProductDetail();
+                    if (productDetail != null && productDetail.getColor() != null) {
+                        colorId = productDetail.getColor().getColorId();
+                    }
                     product.setProductDetail(null);
-                    Image img = imageRepository.findFirstByProduct_ProductIdAndColor_ColorIdOrderByPriorityAsc(product.getProductId(), colorId);
+                    product.setFetchColor(productDetailRepository.findDistinctColorsWithAnySlug(product.getProductId()));
+                    Image img;
+                    if (colorId != null) {
+                        img = imageRepository.findFirstByProduct_ProductIdAndColor_ColorIdOrderByPriorityAsc(product.getProductId(), colorId);
+                    } else {
+                        img = imageRepository.findFirstByProduct_ProductIdAndColorIsNullOrderByPriorityAsc(product.getProductId());
+                    }
                     product.setImg(img != null ? img.getUrl() : null);
                     return productMapper.toProductResponse(product);
                 })

@@ -25,5 +25,11 @@ public class PurchaseOrderController {
                 .build();
 
     }
-
+    @GetMapping("/payment-momo/transaction-status/{orderId}")
+    public ApiResponse<MomoResponse> transactionStatus(@PathVariable String orderId) {
+        return ApiResponse.<MomoResponse>builder()
+                .message("Transaction status retrieved successfully")
+                .result(purchaseOrderService.transactionStatus(orderId))
+                .build();
+    }
 }

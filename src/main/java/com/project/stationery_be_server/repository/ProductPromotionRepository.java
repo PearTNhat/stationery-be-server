@@ -15,10 +15,11 @@ public interface ProductPromotionRepository extends JpaRepository<ProductPromoti
             where pp.product_detail_id = :productDetailId
             and p.start_date <= NOW()
             and p.end_date >= NOW()
+            and p.min_order_value <= :price
             AND (p.usage_limit IS NULL OR p.usage_limit > 0)
             LIMIT 1
             """, nativeQuery = true)
-    List<ProductPromotion> findValidPromotionForProductDetail(String productDetailId);
+    List<ProductPromotion> findValidPromotionForProductDetail(String productDetailId, String price);
 
     @Query(value = """
     SELECT pp.* FROM product_promotion pp

@@ -1,9 +1,11 @@
 package com.project.stationery_be_server.service.impl;
 
+import com.project.stationery_be_server.Error.NotExistedErrorCode;
 import com.project.stationery_be_server.dto.request.AddCartItemRequest;
 import com.project.stationery_be_server.dto.request.UpdateCartItemRequest;
 import com.project.stationery_be_server.dto.response.CartResponse;
 import com.project.stationery_be_server.entity.*;
+import com.project.stationery_be_server.exception.AppException;
 import com.project.stationery_be_server.repository.*;
 import com.project.stationery_be_server.service.CartService;
 import jakarta.persistence.EntityManager;
@@ -161,12 +163,29 @@ public class CartServiceImpl implements CartService {
                     productDetail.getProduct().getProductId(),
                     productDetail.getColor().getColorId()
             );
-
             if (!images.isEmpty()) {
                 imageUrl = images.get(0).getUrl(); // lấy ảnh đầu tiên theo độ ưu tiên
             }
         }
-        List<ProductPromotion> pm = productPromotionRepository.findValidPromotionForProductDetail(productDetail.getProductDetailId());
+        List<ProductPromotion> pm = productPromotionRepository.findValidPromotionForProductDetail(productDetail.getProductDetailId(), String.valueOf(productDetail.getDiscountPrice()));
+        int discountValue = 0;
+        int disCountPrice = productDetail.getDiscountPrice();
+        if(pm != null && !pm.isEmpty()) {
+            Promotion currentPromotion = pm.getFirst().getPromotion();
+            if (currentPromotion.getDiscountType() == Promotion.DiscountType.PERCENTAGE) {
+                // giam %
+                int valueDisCount = (productDetail.getDiscountPrice() * currentPromotion.getDiscountValue()) / 100;
+                if (currentPromotion.getMaxValue()!= null && valueDisCount > currentPromotion.getMaxValue()) { // neu so tien  vuot qua max value
+                    discountValue = currentPromotion.getMaxValue();
+                } else {
+                    discountValue = valueDisCount;
+                }
+            } else {
+                // giam theo gia tri
+                discountValue = currentPromotion.getDiscountValue();
+            }
+            disCountPrice -= discountValue;
+        }
         return  CartResponse.builder()
                 .userId(cart.getUser().getUserId())
                 .productId(productDetail.getProduct().getProductId())
@@ -177,7 +196,8 @@ public class CartServiceImpl implements CartService {
                 .sizeName(productDetail.getSize() != null ? productDetail.getSize().getName() : null)
                 .quantity(cart.getQuantity())
                 .originalPrice(productDetail.getOriginalPrice())
-                .discountPrice(productDetail.getDiscountPrice())
+                .discountPrice(disCountPrice)
+                .discountValue(discountValue)
                 .createdAt(cart.getCreatedAt())
                 .imageUrl(productDetail.getThumbnail())
                 .slug(productDetail.getSlug())

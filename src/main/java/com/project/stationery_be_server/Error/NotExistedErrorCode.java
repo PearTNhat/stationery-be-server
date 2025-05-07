@@ -26,6 +26,16 @@ public enum NotExistedErrorCode implements BaseErrorCode {
 
     // address
     ADDRESS_NOT_FOUND(1030, "Address not found", HttpStatus.BAD_REQUEST),
+
+    // order
+    ORDER_NOT_FOUND(1040, "Order not found", HttpStatus.BAD_REQUEST),
+
+    // user promotion
+    USER_PROMOTION_NOT_FOUND(1050, "User promotion not found", HttpStatus.BAD_REQUEST),
+
+    //payment
+    PAYMENT_NOT_FOUND(1060, "Payment not found", HttpStatus.BAD_REQUEST),
+    PAYMENT_EXISTS(1061, "Payment already exists", HttpStatus.BAD_REQUEST),
     ;
     private final int code;
     private final String message;

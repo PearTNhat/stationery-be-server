@@ -38,6 +38,9 @@ public class Promotion {
     @Column(name = "usage_limit")
     private Integer usageLimit;
 
+    @Column(name="temp_usage_limit")
+    private Integer tempUsageLimit;
+
     @Column(name = "max_value", precision = 19, scale = 2)
     private Integer maxValue;
 
