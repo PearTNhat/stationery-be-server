@@ -49,9 +49,6 @@ public class PurchaseOrder {
     @Column(name = "amount", precision = 19, scale = 4)
     private Long amount;
 
-    @Column(name="recipient_info", length = 255)
-    private String recipient;
-
     @Column(name="note", length = 100)
     private String note;
 
@@ -63,9 +60,11 @@ public class PurchaseOrder {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
-    @Column(name = "expired_time", nullable = false, updatable = false)
+    @Column(name = "expired_time")
     private LocalDateTime expiredTime;
 
+    @OneToOne(mappedBy = "purchaseOrder", cascade = CascadeType.ALL)
+    private Payment payment;
     public enum Status {
         PENDING,        // Chờ xác nhận
         PROCESSING,     // Đang xử lý

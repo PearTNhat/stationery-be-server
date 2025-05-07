@@ -41,6 +41,7 @@ public class AddressServiceImpl implements AddressService {
         Address address = new Address();
         address.setAddressName(addressRequest.getAddressName());
         address.setPhone(addressRequest.getPhone());
+        address.setRecipient(addressRequest.getRecipient());
         address.setDefault(addressRequest.getIsDefault() != null && addressRequest.getIsDefault());
         address.setUser(user);
 
@@ -49,6 +50,7 @@ public class AddressServiceImpl implements AddressService {
         return AddressResponse.builder()
                 .addressId(savedAddress.getAddressId())
                 .addressName(savedAddress.getAddressName())
+                .recipient(savedAddress.getRecipient())
                 .phone(savedAddress.getPhone())
                 .isDefault(savedAddress.isDefault())
                 .build();
@@ -66,6 +68,7 @@ public class AddressServiceImpl implements AddressService {
                         .addressId(address.getAddressId())
                         .addressName(address.getAddressName())
                         .phone(address.getPhone())
+                        .recipient(address.getRecipient())
                         .isDefault(address.isDefault())
                         .build()
                 )

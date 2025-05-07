@@ -6,4 +6,5 @@ import com.project.stationery_be_server.dto.response.PurchaseOrderResponse;
 
 public interface PurchaseOrderService {
     MomoResponse createOrderWithMomo(PurchaseOrderRequest request);
+    MomoResponse transactionStatus(String orderId);
 }

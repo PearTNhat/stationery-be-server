@@ -21,6 +21,8 @@
                 List<Predicate> predicates = new ArrayList<>();
                 // Join Product →  ProductDetail
                 Join<Object, Object> productDetailJoin = null;
+                System.out.println("filter.getMinPrice() = " + filter.getMinPrice());
+                System.out.println("filter.getMaxPrice() = " + filter.getMaxPrice());
                 if ((filter.getMinPrice() != null && !filter.getMinPrice().isBlank()) ||
                     (filter.getMaxPrice() != null && !filter.getMaxPrice().isBlank())) {
                     productDetailJoin = root.join("productDetails", JoinType.INNER);
@@ -30,11 +32,11 @@
                     predicates.add(criteriaBuilder.equal(root.get("category").get("categoryId"), filter.getCategoryId()));
                 }
 
-                if (filter.getMinPrice() != null && !filter.getMinPrice().isBlank()) {
+                if (filter.getMinPrice() != null && productDetailJoin!=null) {
                     predicates.add(criteriaBuilder.greaterThanOrEqualTo(productDetailJoin.get("discountPrice"), filter.getMinPrice()));
                 }
 
-                if (filter.getMaxPrice() != null && !filter.getMaxPrice().isBlank()) {
+                if (filter.getMaxPrice() != null && productDetailJoin!=null ) {
                     predicates.add(criteriaBuilder.lessThanOrEqualTo(productDetailJoin.get("discountPrice"), filter.getMaxPrice()));
                 }
 
