@@ -12,6 +12,7 @@ import lombok.experimental.FieldDefaults;
 public class AddressRequest {
     String addressId;
     String addressName;
+    String recipient;
     String phone;
     Boolean isDefault;
 }

@@ -95,12 +95,20 @@ public class ProductServiceImpl implements ProductService {
         Specification<Product> spec = ProductSpecification.filterProducts(filter);
         Page<Product> p = productRepository.findAll(spec, pageable);
         List<ProductResponse> productListResponses = p.getContent().stream()
-                .filter(product -> product.getProductDetail().getColor() != null)
                 .map(product -> {
-                    String colorId = product.getProductDetail().getColor().getColorId();
+                    String colorId = null;
+                    ProductDetail productDetail = product.getProductDetail();
+                    if (productDetail != null && productDetail.getColor() != null) {
+                        colorId = productDetail.getColor().getColorId();
+                    }
                     product.setProductDetail(null);
                     product.setFetchColor(productDetailRepository.findDistinctColorsWithAnySlug(product.getProductId()));
-                    Image img = imageRepository.findFirstByProduct_ProductIdAndColor_ColorIdOrderByPriorityAsc(product.getProductId(), colorId);
+                    Image img;
+                    if (colorId != null) {
+                        img = imageRepository.findFirstByProduct_ProductIdAndColor_ColorIdOrderByPriorityAsc(product.getProductId(), colorId);
+                    } else {
+                        img = imageRepository.findFirstByProduct_ProductIdAndColorIsNullOrderByPriorityAsc(product.getProductId());
+                    }
                     product.setImg(img != null ? img.getUrl() : null);
                     return productMapper.toProductResponse(product);
                 })

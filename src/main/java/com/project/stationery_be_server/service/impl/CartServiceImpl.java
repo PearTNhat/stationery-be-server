@@ -167,7 +167,7 @@ public class CartServiceImpl implements CartService {
                 imageUrl = images.get(0).getUrl(); // lấy ảnh đầu tiên theo độ ưu tiên
             }
         }
-        List<ProductPromotion> pm = productPromotionRepository.findValidPromotionForProductDetail(productDetail.getProductDetailId());
+        List<ProductPromotion> pm = productPromotionRepository.findValidPromotionForProductDetail(productDetail.getProductDetailId(), String.valueOf(productDetail.getDiscountPrice()));
         int discountValue = 0;
         int disCountPrice = productDetail.getDiscountPrice();
         if(pm != null && !pm.isEmpty()) {
