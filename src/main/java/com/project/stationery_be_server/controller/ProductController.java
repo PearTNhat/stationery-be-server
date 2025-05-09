@@ -67,6 +67,7 @@ public class ProductController {
         if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getName())) {
             userId = authentication.getName();
         }
+        searchHistoryService.logKeyword(search, userId);
         Page<ProductResponse> pageResult = productService.getAllProductWithDefaultPD(pageable, filterRequest);
         return ApiResponse.<Page<ProductResponse>>builder()
                 .result(pageResult)
