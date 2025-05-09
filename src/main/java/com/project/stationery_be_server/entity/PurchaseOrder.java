@@ -49,9 +49,6 @@ public class PurchaseOrder {
     @Column(name = "amount", precision = 19, scale = 4)
     private Long amount;
 
-    @Column(name="recipient_info", length = 255)
-    private String recipient;
-
     @Column(name="note", length = 100)
     private String note;
 
