@@ -21,4 +21,5 @@ public interface ProductService {
     @Transactional
     void handleUpdateTotalProductRating(String productId, String type, Integer rating);
     void deleteProduct(DeleteProductRequest request);
+    List<ProductResponse> getSimilarProducts(String productId);
 }

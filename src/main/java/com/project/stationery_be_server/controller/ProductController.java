@@ -6,6 +6,7 @@ import com.project.stationery_be_server.dto.response.ApiResponse;
 import com.project.stationery_be_server.dto.response.ColorSizeSlugResponse;
 import com.project.stationery_be_server.dto.response.product.ProductDetailResponse;
 import com.project.stationery_be_server.dto.response.product.ProductResponse;
+import com.project.stationery_be_server.service.ProductDetailService;
 import com.project.stationery_be_server.service.ProductService;
 import com.project.stationery_be_server.service.SearchHistoryService;
 import lombok.AccessLevel;
@@ -67,6 +68,7 @@ public class ProductController {
         if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getName())) {
             userId = authentication.getName();
         }
+        searchHistoryService.logKeyword(search, userId);
         Page<ProductResponse> pageResult = productService.getAllProductWithDefaultPD(pageable, filterRequest);
         return ApiResponse.<Page<ProductResponse>>builder()
                 .result(pageResult)
@@ -138,6 +140,12 @@ public class ProductController {
         productService.deleteProduct(request);
         return ApiResponse.<String>builder()
                 .result("Product deleted successfully")
+                .build();
+    }
+    @GetMapping("/similar/{productId}")
+    public ApiResponse<List<ProductResponse>> getSimilarProducts(@PathVariable String productId) {
+        return ApiResponse.<List<ProductResponse>>builder()
+                .result(productService.getSimilarProducts(productId))
                 .build();
     }
 }
