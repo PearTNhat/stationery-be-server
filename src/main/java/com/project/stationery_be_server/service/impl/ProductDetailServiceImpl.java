@@ -2,6 +2,7 @@ package com.project.stationery_be_server.service.impl;
 
 import com.project.stationery_be_server.Error.NotExistedErrorCode;
 import com.project.stationery_be_server.dto.request.DeleteProductDetailRequest;
+import com.project.stationery_be_server.dto.response.product.ProductDetailResponse;
 import com.project.stationery_be_server.entity.ProductDetail;
 import com.project.stationery_be_server.entity.User;
 import com.project.stationery_be_server.exception.AppException;
@@ -12,6 +13,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
