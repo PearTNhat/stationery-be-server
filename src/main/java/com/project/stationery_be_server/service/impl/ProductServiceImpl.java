@@ -22,12 +22,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -68,7 +70,6 @@ public class ProductServiceImpl implements ProductService {
 
         return new PageImpl<>(productListResponses, pageable, productsPage.getTotalElements());
     }
-
 
     @Override
     public ProductResponse getProductDetail(String slug) {
@@ -198,5 +199,33 @@ public class ProductServiceImpl implements ProductService {
         //xoa
         productRepository.deleteById(productId);
     }
+    @Override
+    public List<ProductResponse> getSimilarProducts(String productId) {
+        Product currentProduct = productRepository.findById(productId)
+                .orElseThrow(() -> new AppException(NotExistedErrorCode.PRODUCT_NOT_EXISTED));
 
+        String categoryId = currentProduct.getCategory().getCategoryId();
+
+        // Chuyển Pageable vào nếu cần giới hạn kết quả, ví dụ lấy 5 sản phẩm giống.
+        Pageable pageable = PageRequest.of(0, 8);
+
+        List<Product> similarProducts = productRepository.findTopSimilarProducts(categoryId, productId, pageable);
+
+        return similarProducts.stream()
+                .map(product -> {
+                    // Lấy ảnh ưu tiên
+                    Image img = imageRepository.findFirstByProduct_ProductIdAndColorIsNullOrderByPriorityAsc(product.getProductId());
+
+                    if (img == null) {
+                        List<Image> imageList = imageRepository.findByProduct_ProductIdOrderByPriorityAsc(product.getProductId());
+                        if (!imageList.isEmpty()) {
+                            img = imageList.get(0); // lấy ảnh đầu tiên
+                        }
+                    }
+                    product.setImg(img != null ? img.getUrl() : null);
+
+                    return productMapper.toProductResponse(product);
+                })
+                .collect(Collectors.toList());
+    }
 }

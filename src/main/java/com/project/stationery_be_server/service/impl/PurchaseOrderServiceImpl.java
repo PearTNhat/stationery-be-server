@@ -9,6 +9,7 @@ import com.project.stationery_be_server.dto.request.order.PurchaseOrderRequest;
 import com.project.stationery_be_server.dto.response.momo.MomoResponse;
 import com.project.stationery_be_server.dto.response.PurchaseOrderDetailResponse;
 import com.project.stationery_be_server.dto.response.PurchaseOrderResponse;
+import com.project.stationery_be_server.dto.response.product.ProductDetailResponse;
 import com.project.stationery_be_server.entity.*;
 import com.project.stationery_be_server.exception.AppException;
 import com.project.stationery_be_server.repository.*;
@@ -288,6 +289,119 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         return data;
     }
 
+    // Cập nhật getAllPendingOrders
+    @Override
+    @Transactional(readOnly = true)
+    public List<PurchaseOrderResponse> getAllPendingOrders() {
+        List<PurchaseOrder> orders = purchaseOrderRepository.findByStatusWithDetails(PurchaseOrder.Status.PENDING);
+        if (orders.isEmpty()) {
+            return Collections.emptyList(); // Trả về danh sách rỗng nếu không có kết quả
+        }
+        return orders.stream()
+                .map(order -> PurchaseOrderResponse.builder()
+                        .purchaseOrderId(order.getPurchaseOrderId())
+                        .createdAt(order.getCreatedAt() != null ? java.util.Date.from(order.getCreatedAt().atZone(java.time.ZoneId.systemDefault()).toInstant()) : null)
+                        .pdfUrl(order.getPdfUrl())
+                        .userPromotionId(order.getUserPromotion() != null ? order.getUserPromotion().getUserPromotionId() : null)
+                        .status(order.getStatus())
+                        .amount(BigDecimal.valueOf(order.getAmount()))
+                        .orderDetails(order.getPurchaseOrderDetails().stream()
+                                .map(detail -> PurchaseOrderDetailResponse.builder()
+                                        .productDetailId(detail.getPurchaseOrderDetailId().getProductDetailId())
+                                        .quantity(detail.getQuantity())
+                                        .build())
+                                .collect(Collectors.toList()))
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    // Cập nhật getAllNonPendingOrders
+    @Override
+    @Transactional(readOnly = true)
+    public List<PurchaseOrderResponse> getAllNonPendingOrders() {
+        List<PurchaseOrder> orders = purchaseOrderRepository.findByStatusNotWithDetails(PurchaseOrder.Status.PENDING);
+        if (orders.isEmpty()) {
+            return Collections.emptyList(); // Trả về danh sách rỗng nếu không có kết quả
+        }
+        return orders.stream()
+                .map(order -> PurchaseOrderResponse.builder()
+                        .purchaseOrderId(order.getPurchaseOrderId())
+                        .createdAt(order.getCreatedAt() != null ? java.util.Date.from(order.getCreatedAt().atZone(java.time.ZoneId.systemDefault()).toInstant()) : null)
+                        .pdfUrl(order.getPdfUrl())
+                        .userPromotionId(order.getUserPromotion() != null ? order.getUserPromotion().getUserPromotionId() : null)
+                        .status(order.getStatus())
+                        .amount(BigDecimal.valueOf(order.getAmount()))
+                        .orderDetails(order.getPurchaseOrderDetails().stream()
+                                .map(detail -> PurchaseOrderDetailResponse.builder()
+                                        .productDetailId(detail.getPurchaseOrderDetailId().getProductDetailId())
+                                        .quantity(detail.getQuantity())
+                                        .build())
+                                .collect(Collectors.toList()))
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    // Cập nhật getUserOrdersByStatus
+    @Override
+    @Transactional(readOnly = true)
+    public List<PurchaseOrderResponse> getUserOrdersByStatus(String userId, String status) {
+        PurchaseOrder.Status orderStatus;
+        try {
+            orderStatus = PurchaseOrder.Status.valueOf(status.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new AppException(NotExistedErrorCode.INVALID_STATUS);
+        }
+
+        List<PurchaseOrder> orders = purchaseOrderRepository.findByUser_UserIdAndStatusWithDetails(userId, orderStatus);
+        if (orders.isEmpty()) {
+            return Collections.emptyList(); // Trả về danh sách rỗng nếu không có kết quả
+        }
+        return orders.stream()
+                .map(order -> PurchaseOrderResponse.builder()
+                        .purchaseOrderId(order.getPurchaseOrderId())
+                        .createdAt(order.getCreatedAt() != null ? java.util.Date.from(order.getCreatedAt().atZone(java.time.ZoneId.systemDefault()).toInstant()) : null)
+                        .pdfUrl(order.getPdfUrl())
+                        .userPromotionId(order.getUserPromotion() != null ? order.getUserPromotion().getUserPromotionId() : null)
+                        .status(order.getStatus())
+                        .amount(BigDecimal.valueOf(order.getAmount()))
+                        .orderDetails(order.getPurchaseOrderDetails().stream()
+                                .map(detail -> PurchaseOrderDetailResponse.builder()
+                                        .productDetailId(detail.getPurchaseOrderDetailId().getProductDetailId())
+                                        .quantity(detail.getQuantity())
+                                        .build())
+                                .collect(Collectors.toList()))
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ProductDetailResponse> getProductDetailsByOrderId(String purchaseOrderId) {
+        PurchaseOrder purchaseOrder = purchaseOrderRepository.findByPurchaseOrderId(purchaseOrderId)
+                .orElseThrow(() -> new AppException(NotExistedErrorCode.PRODUCT_NOT_EXISTED));
+
+        List<PurchaseOrderDetail> orderDetails = purchaseOrderDetailRepository.findByPurchaseOrder(purchaseOrder);
+        return orderDetails.stream()
+                .map(orderDetail -> {
+                    var productDetail = orderDetail.getProductDetail();
+                    if (productDetail == null) {
+                        throw new AppException(NotExistedErrorCode.PRODUCT_NOT_EXISTED);
+                    }
+                    return ProductDetailResponse.builder()
+                            .productDetailId(productDetail.getProductDetailId())
+                            .slug(productDetail.getSlug() != null ? productDetail.getSlug() : "")
+                            .name(productDetail.getName() != null ? productDetail.getName() : "Unknown")
+                            .stockQuantity(productDetail.getStockQuantity() != 0 ? productDetail.getStockQuantity() : 0)
+                            .soldQuantity(productDetail.getSoldQuantity() != 0 ? productDetail.getSoldQuantity() : 0)
+                            .originalPrice(productDetail.getOriginalPrice() != 0 ? productDetail.getOriginalPrice() : 0)
+                            .discountPrice(orderDetail.getDiscountPrice() != null ? orderDetail.getDiscountPrice() : 0)
+                            .size(productDetail.getSize())
+                            .color(productDetail.getColor())
+                            .createdAt(productDetail.getCreatedAt())
+                            .images(productDetail.getProduct().getImages() != null ? productDetail.getProduct().getImages() : List.of())
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
 
     public String generateHmacSHA256(String data, String key) throws Exception {
 
@@ -301,5 +415,4 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     public String generateOrderId() {
         return UUID.randomUUID().toString().replace("-", "").toUpperCase();
     }
-
 }
