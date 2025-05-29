@@ -36,6 +36,14 @@ public enum NotExistedErrorCode implements BaseErrorCode {
     //payment
     PAYMENT_NOT_FOUND(1060, "Payment not found", HttpStatus.BAD_REQUEST),
     PAYMENT_EXISTS(1061, "Payment already exists", HttpStatus.BAD_REQUEST),
+
+    //category
+    CATEGORY_NOT_EXISTED(1070, "Category not existed", HttpStatus.BAD_REQUEST),
+
+    //Color
+    SIZE_NOT_EXISTED(1080, "Size not existed", HttpStatus.BAD_REQUEST),
+    // size
+    COLOR_NOT_EXISTED(1090, "Color not existed", HttpStatus.BAD_REQUEST),
     ;
     private final int code;
     private final String message;
