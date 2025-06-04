@@ -49,7 +49,8 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     PurchaseOrderDetailRepository purchaseOrderDetailRepository;
     ProductRepository productRepository;
     PaymentRepository paymentRepository;
-    private final PromotionRepository promotionRepository;
+    PromotionRepository promotionRepository;
+    InOrderRepository inOrderRepository;
     @Value(value = "${momo.partnerCode}")
     @NonFinal
     String partnerCode;
@@ -82,22 +83,18 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     String urlCheckTransaction;
 
     @Transactional
-    public Long handleRequestPurchaseOrder(PurchaseOrderRequest request, String orderId) {
+    public Long handleRequestPurchaseOrder(PurchaseOrderRequest request, String orderId, User user) {
         List<PurchaseOrderDetail> listOderDetail = new ArrayList<>();
         List<PurchaseOrderProductRequest> pdRequest = request.getOrderDetails();
         String userPromotionId = request.getUserPromotionId();
 
-        var context = SecurityContextHolder.getContext();
-        String userId = context.getAuthentication().getName();
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+
 
         PurchaseOrder purchaseOrder = new PurchaseOrder();
         purchaseOrder.setUser(user);
         purchaseOrder.setPurchaseOrderId(orderId);
         purchaseOrder.setStatus(PENDING);
         purchaseOrder.setAddress(addressRepository.findByAddressId(request.getAddressId()).orElseThrow(() -> new AppException(NotExistedErrorCode.ADDRESS_NOT_FOUND)));
-        purchaseOrder.setExpiredTime(LocalDateTime.now().plusMinutes(9));
 
         purchaseOrderRepository.save(purchaseOrder);
         Long totalAmount = 0L;
@@ -170,19 +167,23 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         purchaseOrder.setUserPromotion(userPromotion);
         purchaseOrder.setAmount(totalAmount);
 
+
         purchaseOrderRepository.save(purchaseOrder);
         return totalAmount;
     }
 
     @Override
-    @Transactional
     public MomoResponse createOrderWithMomo(PurchaseOrderRequest request) {
+        var context = SecurityContextHolder.getContext();
+        String userId = context.getAuthentication().getName();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         String orderId = generateOrderId();
         String orderInfo = "Order information " + orderId;
         String requestId = UUID.randomUUID().toString();
         String extraData = "hello ae";
-        Long total = handleRequestPurchaseOrder(request,orderId);
+        Long total = handleRequestPurchaseOrder(request,orderId,user);
         String rawSignature = "accessKey=" + accessKey + "&amount=" + total + "&extraData=" + extraData + "&ipnUrl=" + ipnUrl + "&orderId=" + orderId + "&orderInfo=" + orderInfo + "&partnerCode=" + partnerCode + "&redirectUrl=" + redirectUrl + "&requestId=" + requestId + "&requestType=" + requestType;
         String prettySignature = "";
 
@@ -207,7 +208,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                 .signature(prettySignature)
                 .lang("vi")
                 .build();
-        return webClient
+        MomoResponse response = webClient
                 .post()
                 .uri(endpoint)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -215,6 +216,15 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                 .retrieve()
                 .bodyToMono(MomoResponse.class)
                 .block();
+        InOrder inOrder = InOrder.builder()
+                .orderId(orderId)
+                .user(user)
+                .expiredTime(LocalDateTime.now().plusMinutes(100))
+                .paymentUrl(response.getPayUrl()) // URL thanh toán, có thể là của MoMo hoặc ZaloPay
+                .build();
+        inOrderRepository.save(inOrder);
+
+        return response;
     }
 
     @Override
@@ -281,13 +291,59 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                 }
             }
             purchaseOrder.setStatus(PurchaseOrder.Status.COMPLETED);
-            purchaseOrder.setExpiredTime(null);
+            inOrderRepository.deleteById(orderId);
             paymentRepository.save(payment);
             purchaseOrderRepository.save(purchaseOrder);
         }
         return data;
     }
 
+    public Map<String, Object> getOrdersForUser() {
+        Map<String, Object> result = new HashMap<>();
+
+        // Extract userId from the authenticated user's token
+        var context = SecurityContextHolder.getContext();
+        String userId = context.getAuthentication().getName();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+
+        // Fetch the user
+        Optional<User> userOptional = userRepository.findById(userId);
+        if (!userOptional.isPresent()) {
+            result.put("error", "User not found");
+            return result;
+        }
+
+        // Get all InOrder entities for the user
+        List<InOrder> inOrders = user.getInOrders();
+        List<Map<String, Object>> orderData = new ArrayList<>();
+
+        // For each InOrder, find the matching PurchaseOrder and its details
+        for (InOrder inOrder : inOrders) {
+            String orderId = inOrder.getOrderId();
+            Optional<PurchaseOrder> purchaseOrderOptional = purchaseOrderRepository.findById(orderId);
+
+            if (purchaseOrderOptional.isPresent()) {
+                PurchaseOrder purchaseOrder = purchaseOrderOptional.get();
+                // Fetch PurchaseOrderDetails for the PurchaseOrder
+                List<PurchaseOrderDetail> purchaseOrderDetails = purchaseOrderDetailRepository
+                        .findByPurchaseOrder_PurchaseOrderId(orderId);
+
+                // Create a map for this order
+                Map<String, Object> orderInfo = new HashMap<>();
+                orderInfo.put("inOrder", inOrder);
+                orderInfo.put("purchaseOrder", purchaseOrder);
+                orderInfo.put("purchaseOrderDetails", purchaseOrderDetails);
+
+                orderData.add(orderInfo);
+            }
+        }
+
+        result.put("userId", userId);
+        result.put("orders", orderData);
+        return result;
+    }
 
     public String generateHmacSHA256(String data, String key) throws Exception {
 

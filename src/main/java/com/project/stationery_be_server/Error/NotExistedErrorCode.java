@@ -44,6 +44,10 @@ public enum NotExistedErrorCode implements BaseErrorCode {
     SIZE_NOT_EXISTED(1080, "Size not existed", HttpStatus.BAD_REQUEST),
     // size
     COLOR_NOT_EXISTED(1090, "Color not existed", HttpStatus.BAD_REQUEST),
+
+    //role
+    ROLE_NOT_EXISTED(1100, "Role not existed", HttpStatus.BAD_REQUEST),
+    USER_NOT_ADMIN(1101, "User is not admin", HttpStatus.BAD_REQUEST)
     ;
     private final int code;
     private final String message;

@@ -13,5 +13,4 @@ public class ColorRequest {
     String colorId;
     String name;
     String hex;
-
 }

@@ -60,9 +60,6 @@ public class PurchaseOrder {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
-    @Column(name = "expired_time")
-    private LocalDateTime expiredTime;
-
     @OneToOne(mappedBy = "purchaseOrder", cascade = CascadeType.ALL)
     private Payment payment;
     public enum Status {
