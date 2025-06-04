@@ -1,17 +1,21 @@
 package com.project.stationery_be_server.controller;
 
 
+import com.project.stationery_be_server.dto.request.CancelOrderRequest;
 import com.project.stationery_be_server.dto.request.order.PurchaseOrderRequest;
 import com.project.stationery_be_server.dto.response.ApiResponse;
 import com.project.stationery_be_server.dto.response.momo.MomoResponse;
 import com.project.stationery_be_server.dto.response.PurchaseOrderResponse;
 import com.project.stationery_be_server.dto.response.product.ProductDetailResponse;
+import com.project.stationery_be_server.entity.PurchaseOrder;
 import com.project.stationery_be_server.service.PurchaseOrderService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/purchase-orders")
@@ -37,70 +41,22 @@ public class PurchaseOrderController {
                 .build();
     }
 
-    @GetMapping("/pending")
-    public ApiResponse<List<PurchaseOrderResponse>> getAllPendingOrders() {
-        List<PurchaseOrderResponse> orders = purchaseOrderService.getAllPendingOrders();
-        return ApiResponse.<List<PurchaseOrderResponse>>builder()
-                .message(orders.isEmpty() ? "No with pending orders" : "Pending orders retrieved successfully")
-                .result(orders)
-                .build();
-    }
+    @GetMapping("/user/orders")
+    public ApiResponse<List<PurchaseOrderResponse>> getUserOrdersByStatus(
+            @RequestParam(defaultValue = "ALL") String status) {
 
-    @GetMapping("/completed")
-    public ApiResponse<List<PurchaseOrderResponse>> getAllNonPendingOrders() {
-        List<PurchaseOrderResponse> orders = purchaseOrderService.getAllNonPendingOrders();
-        return ApiResponse.<List<PurchaseOrderResponse>>builder()
-                .message(orders.isEmpty() ? "No orders" : "Completed orders retrieved successfully")
-                .result(orders)
-                .build();
-    }
-
-    @GetMapping("/user/pending")
-    public ApiResponse<List<PurchaseOrderResponse>> getUserPendingOrders() {
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
-        List<PurchaseOrderResponse> orders = purchaseOrderService.getUserOrdersByStatus(userId, "PENDING");
-        return ApiResponse.<List<PurchaseOrderResponse>>builder()
-                .message(orders.isEmpty() ? "No with pending orders" : "User pending orders retrieved successfully")
-                .result(orders)
-                .build();
-    }
+        List<PurchaseOrderResponse> orders = purchaseOrderService.getUserOrdersByStatus(userId, status);
 
-    @GetMapping("/user/processing")
-    public ApiResponse<List<PurchaseOrderResponse>> getUserProcessingOrders() {
-        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
-        List<PurchaseOrderResponse> orders = purchaseOrderService.getUserOrdersByStatus(userId, "PROCESSING");
-        return ApiResponse.<List<PurchaseOrderResponse>>builder()
-                .message(orders.isEmpty() ? "No with processing orders" : "User processing orders retrieved successfully")
-                .result(orders)
-                .build();
-    }
+        String message;
+        if (orders.isEmpty()) {
+            message = "No orders with status " + status.toUpperCase();
+        } else {
+            message = "User orders with status " + status.toUpperCase() + " retrieved successfully";
+        }
 
-    @GetMapping("/user/shipping")
-    public ApiResponse<List<PurchaseOrderResponse>> getUserShippingOrders() {
-        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
-        List<PurchaseOrderResponse> orders = purchaseOrderService.getUserOrdersByStatus(userId, "SHIPPING");
         return ApiResponse.<List<PurchaseOrderResponse>>builder()
-                .message(orders.isEmpty() ? "No with shipping orders" : "User shipping orders retrieved successfully")
-                .result(orders)
-                .build();
-    }
-
-    @GetMapping("/user/completed")
-    public ApiResponse<List<PurchaseOrderResponse>> getUserCompletedOrders() {
-        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
-        List<PurchaseOrderResponse> orders = purchaseOrderService.getUserOrdersByStatus(userId, "COMPLETED");
-        return ApiResponse.<List<PurchaseOrderResponse>>builder()
-                .message(orders.isEmpty() ? "No with completed orders" : "User completed orders retrieved successfully")
-                .result(orders)
-                .build();
-    }
-
-    @GetMapping("/user/canceled")
-    public ApiResponse<List<PurchaseOrderResponse>> getUserCanceledOrders() {
-        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
-        List<PurchaseOrderResponse> orders = purchaseOrderService.getUserOrdersByStatus(userId, "CANCELED");
-        return ApiResponse.<List<PurchaseOrderResponse>>builder()
-                .message(orders.isEmpty() ? "No with canceled orders" : "User canceled orders retrieved successfully")
+                .message(message)
                 .result(orders)
                 .build();
     }
@@ -112,6 +68,44 @@ public class PurchaseOrderController {
                 .code(200)
                 .message("Product details for order retrieved successfully")
                 .result(productDetails)
+                .build();
+    }
+    @GetMapping("/user/status-statistics")
+    public ApiResponse<Map<PurchaseOrder.Status, Long>> getOrderStatusStatistics() {
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        Map<PurchaseOrder.Status, Long> statistics = purchaseOrderService.getOrderStatusStatistics(userId);
+
+        String message = statistics.values().stream().mapToLong(Long::longValue).sum() == 0
+                ? "No orders found for user"
+                : "Order status statistics retrieved successfully";
+
+        return ApiResponse.<Map<PurchaseOrder.Status, Long>>builder()
+                .code(200)
+                .message(message)
+                .result(statistics)
+                .build();
+    }
+
+    @PostMapping("/cancel/{purchaseOrderId}")
+    public ApiResponse<Void> cancelOrder(@PathVariable String purchaseOrderId,
+                                         @RequestBody CancelOrderRequest request) {
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        purchaseOrderService.cancelOrder(userId, purchaseOrderId, request.getCancelReason());
+        return ApiResponse.<Void>builder()
+                .code(200)
+                .message("Order canceled successfully")
+                .build();
+    }
+
+    @PutMapping("/{purchaseOrderId}")
+    public ApiResponse<PurchaseOrderResponse> editPurchaseOrder(@PathVariable String purchaseOrderId,
+                                                                @RequestBody PurchaseOrderRequest request) {
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        PurchaseOrderResponse updatedOrder = purchaseOrderService.editPurchaseOrder(userId, purchaseOrderId, request);
+        return ApiResponse.<PurchaseOrderResponse>builder()
+                .code(200)
+                .message("Order updated successfully")
+                .result(updatedOrder)
                 .build();
     }
 }

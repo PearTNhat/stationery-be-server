@@ -7,6 +7,7 @@ import com.project.stationery_be_server.dto.response.product.ProductDetailRespon
 import com.project.stationery_be_server.entity.PurchaseOrder;
 
 import java.util.List;
+import java.util.Map;
 
 public interface PurchaseOrderService {
     MomoResponse createOrderWithMomo(PurchaseOrderRequest request);
@@ -15,4 +16,7 @@ public interface PurchaseOrderService {
     List<PurchaseOrderResponse> getAllNonPendingOrders();
     List<PurchaseOrderResponse> getUserOrdersByStatus(String userId, String status);
     List<ProductDetailResponse> getProductDetailsByOrderId(String purchaseOrderId);
+    Map<PurchaseOrder.Status, Long> getOrderStatusStatistics(String userId);
+    void cancelOrder(String userId, String purchaseOrderId, String cancelReason);
+    PurchaseOrderResponse editPurchaseOrder(String userId, String purchaseOrderId, PurchaseOrderRequest request);
 }
