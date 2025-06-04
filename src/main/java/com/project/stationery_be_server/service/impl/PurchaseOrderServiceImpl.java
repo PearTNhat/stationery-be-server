@@ -89,7 +89,6 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         String userPromotionId = request.getUserPromotionId();
 
 
-
         PurchaseOrder purchaseOrder = new PurchaseOrder();
         purchaseOrder.setUser(user);
         purchaseOrder.setPurchaseOrderId(orderId);
@@ -113,7 +112,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                 if (currentPromotion.getDiscountType() == Promotion.DiscountType.PERCENTAGE) {
                     // giam %
                     int valueDisCount = (pd.getDiscountPrice() * currentPromotion.getDiscountValue()) / 100;
-                    if (currentPromotion.getMaxValue()!= null && valueDisCount > currentPromotion.getMaxValue()) { // neu so tien  vuot qua max value
+                    if (currentPromotion.getMaxValue() != null && valueDisCount > currentPromotion.getMaxValue()) { // neu so tien  vuot qua max value
                         disCountPrice -= currentPromotion.getMaxValue();
                     } else {
                         disCountPrice -= valueDisCount;
@@ -125,7 +124,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
             }
 
             pd.setAvailableQuantity(pd.getAvailableQuantity() - orderDetail.getQuantity());
-            if(pd.getAvailableQuantity() < 0){
+            if (pd.getAvailableQuantity() < 0) {
                 throw new AppException(NotExistedErrorCode.PRODUCT_NOT_ENOUGH);
             }
             productDetailRepository.save(pd);
@@ -153,7 +152,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
             if (currentPromotion.getDiscountType() == Promotion.DiscountType.PERCENTAGE) {
                 // giam %
                 Long valueDisCount = (totalAmount * currentPromotion.getDiscountValue()) / 100;
-                if (currentPromotion.getMaxValue()!= null && valueDisCount > currentPromotion.getMaxValue()) { // neu so tien  vuot qua max value
+                if (currentPromotion.getMaxValue() != null && valueDisCount > currentPromotion.getMaxValue()) { // neu so tien  vuot qua max value
                     totalAmount -= currentPromotion.getMaxValue();
                 } else {
                     totalAmount -= valueDisCount;
@@ -183,7 +182,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         String orderInfo = "Order information " + orderId;
         String requestId = UUID.randomUUID().toString();
         String extraData = "hello ae";
-        Long total = handleRequestPurchaseOrder(request,orderId,user);
+        Long total = handleRequestPurchaseOrder(request, orderId, user);
         String rawSignature = "accessKey=" + accessKey + "&amount=" + total + "&extraData=" + extraData + "&ipnUrl=" + ipnUrl + "&orderId=" + orderId + "&orderInfo=" + orderInfo + "&partnerCode=" + partnerCode + "&redirectUrl=" + redirectUrl + "&requestId=" + requestId + "&requestType=" + requestType;
         String prettySignature = "";
 
@@ -219,7 +218,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         InOrder inOrder = InOrder.builder()
                 .orderId(orderId)
                 .user(user)
-                .expiredTime(LocalDateTime.now().plusMinutes(100))
+                .expiredTime(LocalDateTime.now().plusMinutes(2))
                 .paymentUrl(response.getPayUrl()) // URL thanh toán, có thể là của MoMo hoặc ZaloPay
                 .build();
         inOrderRepository.save(inOrder);
@@ -229,23 +228,25 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
 
     @Override
     @Transactional
-    public MomoResponse transactionStatus(String orderId) {
-
+    public MomoResponse transactionStatus(String orderId, Integer status) {
         if (orderId == null || orderId.isEmpty()) {
             throw new IllegalArgumentException("Missing input");
         }
+
         PurchaseOrder purchaseOrder = purchaseOrderRepository.findByPurchaseOrderId(orderId)
                 .orElseThrow(() -> new AppException(NotExistedErrorCode.ORDER_NOT_FOUND));
-        String rawSignature = String.format(
-                "accessKey=%s&orderId=%s&partnerCode=%s&requestId=%s",
-                accessKeyMomo, orderId, partnerCode, orderId
-        );
+        inOrderRepository.findById(orderId)
+                .orElseThrow(() -> new AppException(NotExistedErrorCode.IN_ORDER_NOT_FOUND));
+
+        String rawSignature = String.format("accessKey=%s&orderId=%s&partnerCode=%s&requestId=%s",
+                accessKeyMomo, orderId, partnerCode, orderId);
         String signature = null;
         try {
             signature = generateHmacSHA256(rawSignature, secretKey);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+
         MomoRequest momoRequest = MomoRequest.builder()
                 .requestId(orderId)
                 .orderId(orderId)
@@ -261,89 +262,79 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                 .retrieve()
                 .bodyToMono(MomoResponse.class)
                 .block();
-        if (data == null) {
-            throw new RuntimeException("Not paid yet");
-        }
-        Payment currentPayment = paymentRepository.findByPurchaseOrder(purchaseOrder);
-        if(currentPayment != null){
-            throw new AppException(NotExistedErrorCode.PAYMENT_EXISTS);
-        }
-        if (data.getResultCode() == 0) {
-            Payment payment = Payment.builder()
-                    .status(1)
-                    .payType("qr")
-                    .payName("momo")
-                    .purchaseOrder(purchaseOrder)
-                    .build();
 
-            if(purchaseOrder.getUserPromotion() != null){
-                Promotion currentPromotion = purchaseOrder.getUserPromotion().getPromotion();
-                promotionRepository.reduceUsageCountByPromotionId(currentPromotion.getPromotionId());
-            }
-            List<PurchaseOrderDetail> purchaseOrderDetails = purchaseOrderDetailRepository.findByPurchaseOrder_PurchaseOrderId(orderId);
-            for (PurchaseOrderDetail purchaseOrderDetail : purchaseOrderDetails) {
-                int res = productDetailRepository.reduceQuantity(purchaseOrderDetail.getProductDetail().getProductDetailId(), purchaseOrderDetail.getQuantity());
-                if(res == 0){
-                    throw new AppException(NotExistedErrorCode.PRODUCT_NOT_ENOUGH);
-                }
-                if(purchaseOrderDetail.getProductPromotion()!= null){
-                    promotionRepository.reduceUsageCountByPromotionId(purchaseOrderDetail.getProductPromotion().getPromotion().getPromotionId());
-                }
-            }
-            purchaseOrder.setStatus(PurchaseOrder.Status.COMPLETED);
-            inOrderRepository.deleteById(orderId);
-            paymentRepository.save(payment);
-            purchaseOrderRepository.save(purchaseOrder);
+        if (data == null) throw new RuntimeException("Not paid yet");
+
+        boolean isCanceled = ( data.getResultCode() == 1006 || status == 0);
+        if (isCanceled) {
+            rollbackOrder(purchaseOrder, orderId);
+            return data;
         }
+
+        if (data.getResultCode() == 0) {
+            if (paymentRepository.findByPurchaseOrder(purchaseOrder) != null) {
+                throw new AppException(NotExistedErrorCode.PAYMENT_EXISTS);
+            }
+            handleSuccessfulPayment(purchaseOrder, orderId);
+        }
+
         return data;
     }
 
-    public Map<String, Object> getOrdersForUser() {
-        Map<String, Object> result = new HashMap<>();
-
-        // Extract userId from the authenticated user's token
-        var context = SecurityContextHolder.getContext();
-        String userId = context.getAuthentication().getName();
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-
-        // Fetch the user
-        Optional<User> userOptional = userRepository.findById(userId);
-        if (!userOptional.isPresent()) {
-            result.put("error", "User not found");
-            return result;
+    private void rollbackOrder(PurchaseOrder purchaseOrder, String orderId) {
+        if (purchaseOrder.getUserPromotion() != null) {
+            promotionRepository.increaseUsageCountByPromotionId(
+                    purchaseOrder.getUserPromotion().getPromotion().getPromotionId());
         }
+        List<PurchaseOrderDetail> details = purchaseOrderDetailRepository.findByPurchaseOrder_PurchaseOrderId(orderId);
+        for (PurchaseOrderDetail detail : details) {
+            String productDetailId = detail.getProductDetail().getProductDetailId();
+            productDetailRepository.restoreQuantity(productDetailId, detail.getQuantity());
+            productDetailRepository.deleteById(productDetailId);
 
-        // Get all InOrder entities for the user
-        List<InOrder> inOrders = user.getInOrders();
-        List<Map<String, Object>> orderData = new ArrayList<>();
-
-        // For each InOrder, find the matching PurchaseOrder and its details
-        for (InOrder inOrder : inOrders) {
-            String orderId = inOrder.getOrderId();
-            Optional<PurchaseOrder> purchaseOrderOptional = purchaseOrderRepository.findById(orderId);
-
-            if (purchaseOrderOptional.isPresent()) {
-                PurchaseOrder purchaseOrder = purchaseOrderOptional.get();
-                // Fetch PurchaseOrderDetails for the PurchaseOrder
-                List<PurchaseOrderDetail> purchaseOrderDetails = purchaseOrderDetailRepository
-                        .findByPurchaseOrder_PurchaseOrderId(orderId);
-
-                // Create a map for this order
-                Map<String, Object> orderInfo = new HashMap<>();
-                orderInfo.put("inOrder", inOrder);
-                orderInfo.put("purchaseOrder", purchaseOrder);
-                orderInfo.put("purchaseOrderDetails", purchaseOrderDetails);
-
-                orderData.add(orderInfo);
+            if (detail.getProductPromotion() != null) {
+                promotionRepository.increaseUsageCountByPromotionId(
+                        detail.getProductPromotion().getPromotion().getPromotionId());
             }
         }
 
-        result.put("userId", userId);
-        result.put("orders", orderData);
-        return result;
+        purchaseOrderDetailRepository.deleteAll(details);
+        purchaseOrderRepository.deleteById(orderId);
+        inOrderRepository.deleteById(orderId);
     }
+
+    private void handleSuccessfulPayment(PurchaseOrder purchaseOrder, String orderId) {
+        List<PurchaseOrderDetail> details = purchaseOrderDetailRepository.findByPurchaseOrder_PurchaseOrderId(orderId);
+        for (PurchaseOrderDetail detail : details) {
+            int result = productDetailRepository.reduceQuantity(
+                    detail.getProductDetail().getProductDetailId(), detail.getQuantity());
+            if (result == 0) throw new AppException(NotExistedErrorCode.PRODUCT_NOT_ENOUGH);
+
+            if (detail.getProductPromotion() != null) {
+                promotionRepository.reduceUsageCountByPromotionId(
+                        detail.getProductPromotion().getPromotion().getPromotionId());
+            }
+        }
+
+        if (purchaseOrder.getUserPromotion() != null) {
+            promotionRepository.reduceUsageCountByPromotionId(
+                    purchaseOrder.getUserPromotion().getPromotion().getPromotionId());
+        }
+
+        Payment payment = Payment.builder()
+                .status(1)
+                .payType("qr")
+                .payName("momo")
+                .purchaseOrder(purchaseOrder)
+                .build();
+
+        purchaseOrder.setStatus(PurchaseOrder.Status.COMPLETED);
+        inOrderRepository.deleteById(orderId);
+        paymentRepository.save(payment);
+        purchaseOrderRepository.save(purchaseOrder);
+    }
+
+
 
     public String generateHmacSHA256(String data, String key) throws Exception {
 
