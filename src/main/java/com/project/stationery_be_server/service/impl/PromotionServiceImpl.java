@@ -202,6 +202,37 @@ public class PromotionServiceImpl implements PromotionService {
         return promotionRepository.findById(promotionId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy Promotion với id: " + promotionId));
     }
+    @Override
+    @Transactional
+    public Page<Promotion> getPromotionsByUser(String userId, Pageable pageable) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User không tồn tại với id: " + userId));
+
+        Page<UserPromotion> upPage = userPromotionRepository.findByUser(user, pageable);
+        List<Promotion> promotions = upPage.getContent().stream()
+                .map(UserPromotion::getPromotion)
+                .collect(Collectors.toList());
+        return new PageImpl<>(promotions, pageable, upPage.getTotalElements());
+    }
+    @Override
+    @Transactional
+    public Page<Promotion> getPromotionsByProduct(String productId, Pageable pageable) {
+        // 1. Kiểm tra product tồn tại
+        productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product không tồn tại với id: " + productId));
+
+        // 2. Query ra Page<ProductPromotion>
+        Page<ProductPromotion> ppPage =
+                productPromotionRepository.findByProductDetail_Product_ProductId(productId, pageable);
+
+        // 3. Map sang List<Promotion>
+        List<Promotion> promotions = ppPage.getContent().stream()
+                .map(ProductPromotion::getPromotion)
+                .collect(Collectors.toList());
+
+        // 4. Trả về PageImpl<Promotion>
+        return new PageImpl<>(promotions, pageable, ppPage.getTotalElements());
+    }
     private User checkAdminAndGetCurrentUser() {
         var context = SecurityContextHolder.getContext();
         String userIdLogin = context.getAuthentication().getName();

@@ -75,4 +75,23 @@ public class PromotionController {
                 .result(promo)
                 .build();
     }
+    @GetMapping("/user/{userId}")
+    public ApiResponse<Page<Promotion>> getPromotionsByUser(
+            @PathVariable String userId,
+            Pageable pageable) {
+        Page<Promotion> page = promotionService.getPromotionsByUser(userId, pageable);
+        return ApiResponse.<Page<Promotion>>builder()
+                .result(page)
+                .build();
+    }
+    @GetMapping("/product/{productId}/page")
+    public ApiResponse<Page<Promotion>> getPromotionsByProduct(
+            @PathVariable String productId,
+            Pageable pageable) {
+        Page<Promotion> pageResult = promotionService.getPromotionsByProduct(productId, pageable);
+        return ApiResponse.<Page<Promotion>>builder()
+                .result(pageResult)
+                .build();
+    }
+
 }
