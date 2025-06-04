@@ -37,5 +37,4 @@ public interface UserPromotionRepository extends JpaRepository<UserPromotion, St
             @Param("price") Long price
     );
 
-
 }

@@ -1,7 +1,9 @@
 package com.project.stationery_be_server.service.impl;
 
+import com.project.stationery_be_server.entity.Notification;
 import com.project.stationery_be_server.entity.UserPromotion;
 import com.project.stationery_be_server.repository.UserPromotionRepository;
+import com.project.stationery_be_server.service.NotificationService;
 import com.project.stationery_be_server.service.UserPromotionService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -24,4 +26,7 @@ public class UserPromotionServiceImpl implements UserPromotionService {
         String userId = context.getAuthentication().getName();
         return userPromotionRepository.findUserPromotionForUser(userId);
     }
+
+    private final NotificationService notificationService;
+
 }

@@ -1,10 +1,12 @@
 package com.project.stationery_be_server.entity;
 
 import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -36,7 +38,8 @@ public class    Review {
     private Integer rating;
 
     @Column(name = "review_image")
-    private String reviewImage;
+    @Convert(converter = StringListConverter.class)
+    private List<String> reviewImage;
 
     @ManyToOne
     @JoinColumn(name = "parent_id", referencedColumnName = "review_id")
@@ -54,4 +57,28 @@ public class    Review {
 
     @Column(name = "create_at")
     private Date createdAt;
+}
+
+// Converter để chuyển đổi List<String> thành chuỗi JSON và ngược lại
+@Converter
+class StringListConverter implements AttributeConverter<List<String>, String> {
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Override
+    public String convertToDatabaseColumn(List<String> attribute) {
+        try {
+            return attribute == null ? null : objectMapper.writeValueAsString(attribute);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Error converting List<String> to JSON", e);
+        }
+    }
+
+    @Override
+    public List<String> convertToEntityAttribute(String dbData) {
+        try {
+            return dbData == null ? new ArrayList<>() : objectMapper.readValue(dbData, objectMapper.getTypeFactory().constructCollectionType(List.class, String.class));
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Error converting JSON to List<String>", e);
+        }
+    }
 }
