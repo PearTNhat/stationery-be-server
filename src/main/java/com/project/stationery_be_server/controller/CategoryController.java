@@ -8,7 +8,11 @@ import com.project.stationery_be_server.service.CategoryService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,6 +30,22 @@ public class CategoryController {
         return ApiResponse.<List<CategoryResponse>>builder()
                 .message("Categories retrieved successfully")
                 .result(categoryService.getAllCategories())
+                .build();
+    }
+    @PreAuthorize("hasAuthority('admin')")
+    @GetMapping("/admin/get-categories")
+    public ApiResponse<Page<CategoryResponse>> getAllProductsForAdmin(@RequestParam(defaultValue = "0") int page,
+                                                                      @RequestParam(defaultValue = "10") int limit,
+                                                                      @RequestParam(required = false) String search
+    ) {
+        // sử lý ở FE page 1 là BE page 0, page 2 là page 1, ..
+        page = page <= 1 ? 0 : page - 1;
+        Pageable pageable;
+
+        pageable = PageRequest.of(page, limit);
+        Page<CategoryResponse> pageResult = categoryService.getAllCategoriesPagination(pageable, search);
+        return ApiResponse.<Page<CategoryResponse>>builder()
+                .result(pageResult)
                 .build();
     }
 
@@ -54,9 +74,11 @@ public class CategoryController {
     // Delete a category
     @DeleteMapping("/{categoryId}")
     public ApiResponse<Void> deleteCategory(@PathVariable String categoryId) {
+        System.out.println("cate____" + categoryId);
         categoryService.deleteCategory(categoryId);
         return ApiResponse.<Void>builder()
                 .message("Category deleted successfully")
                 .build();
     }
+
 }

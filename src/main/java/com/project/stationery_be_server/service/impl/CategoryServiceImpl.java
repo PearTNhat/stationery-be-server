@@ -4,18 +4,27 @@ import com.project.stationery_be_server.Error.AuthErrorCode;
 import com.project.stationery_be_server.Error.NotExistedErrorCode;
 import com.project.stationery_be_server.dto.request.CategoryRequest;
 import com.project.stationery_be_server.dto.response.CategoryResponse;
+import com.project.stationery_be_server.dto.response.SizeResponse;
 import com.project.stationery_be_server.entity.Category;
+import com.project.stationery_be_server.entity.Size;
 import com.project.stationery_be_server.exception.AppException;
 import com.project.stationery_be_server.mapper.CategoryMapper;
 import com.project.stationery_be_server.repository.CategoryRepository;
 import com.project.stationery_be_server.service.CategoryService;
+import com.project.stationery_be_server.specification.CategorySpecification;
+import com.project.stationery_be_server.specification.SizeSpecification;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -40,6 +49,7 @@ public class CategoryServiceImpl implements CategoryService {
         }
 
         Category category = new Category();
+        category.setCategoryId(request.getCategoryId());
         category.setCategoryName(request.getCategoryName());
         category.setIcon(request.getIcon());
         category.setBgColor(request.getBgColor());
@@ -72,11 +82,23 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new AppException(NotExistedErrorCode.CATEGORY_NOT_FOUND));
 
-        // Check if category has associated products before deletion
         if (!category.getProducts().isEmpty()) {
             throw new AppException(AuthErrorCode.DELETE_CATEGORY_FAIL);
         }
 
         categoryRepository.delete(category);
     }
+
+    @Override
+    public Page<CategoryResponse> getAllCategoriesPagination(Pageable pageable, String search) {
+        Specification<Category> spec = CategorySpecification.filterCategory(search);
+        Page<Category> categoryPage = categoryRepository.findAll(spec, pageable);
+        // Có thể thêm logic tính toán thêm ở đây
+        List<CategoryResponse> userResponses = categoryPage.getContent().stream()
+                .map(categoryMapper::toCategoryResponse)
+                .toList();
+        return new PageImpl<>(userResponses, pageable, categoryPage.getTotalElements());
+
+    }
+
 }
