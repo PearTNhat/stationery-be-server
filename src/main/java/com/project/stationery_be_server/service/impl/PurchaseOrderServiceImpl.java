@@ -12,6 +12,7 @@ import com.project.stationery_be_server.dto.response.PurchaseOrderResponse;
 import com.project.stationery_be_server.entity.*;
 import com.project.stationery_be_server.exception.AppException;
 import com.project.stationery_be_server.repository.*;
+import com.project.stationery_be_server.service.NotificationService;
 import com.project.stationery_be_server.service.PurchaseOrderService;
 import lombok.AccessLevel;
 import org.springframework.http.MediaType;
@@ -50,6 +51,8 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     ProductRepository productRepository;
     PaymentRepository paymentRepository;
     private final PromotionRepository promotionRepository;
+    private final NotificationService notificationService;
+
     @Value(value = "${momo.partnerCode}")
     @NonFinal
     String partnerCode;
@@ -132,7 +135,8 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                 throw new AppException(NotExistedErrorCode.PRODUCT_NOT_ENOUGH);
             }
             productDetailRepository.save(pd);
-            totalAmount += disCountPrice;
+            int quantity = orderDetail.getQuantity();
+            totalAmount += disCountPrice * quantity;
             PurchaseOrderDetailId id = new PurchaseOrderDetailId();
             id.setPurchaseOrderId(orderId);  // Chính là orderId được truyền vào
             id.setProductDetailId(pd.getProductDetailId());  // Lấy từ productDetail
@@ -301,5 +305,6 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     public String generateOrderId() {
         return UUID.randomUUID().toString().replace("-", "").toUpperCase();
     }
+
 
 }

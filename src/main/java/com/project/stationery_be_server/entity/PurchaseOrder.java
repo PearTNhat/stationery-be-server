@@ -49,7 +49,7 @@ public class PurchaseOrder {
     @Column(name = "amount", precision = 19, scale = 4)
     private Long amount;
 
-    @Column(name="note", length = 100)
+    @Column(name="note", length = 255)
     private String note;
 
     @ManyToOne
