@@ -2,12 +2,19 @@ package com.project.stationery_be_server.controller;
 
 import com.project.stationery_be_server.dto.request.*;
 import com.project.stationery_be_server.dto.response.ApiResponse;
+import com.project.stationery_be_server.dto.response.UserInfoResponse;
 import com.project.stationery_be_server.dto.response.UserResponse;
+import com.project.stationery_be_server.dto.response.product.ProductResponse;
 import com.project.stationery_be_server.service.UploadImageFile;
 import com.project.stationery_be_server.service.UserService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -36,12 +43,14 @@ public class UserController {
                 .result(uploadImageFile.uploadImageFile(file))
                 .build();
     }
+
     @GetMapping("/info")
     public ApiResponse<UserResponse> getMyInfo() {
         return ApiResponse.<UserResponse>builder()
                 .result(userService.getUserInfo())
                 .build();
     }
+
     @PostMapping("/register")
     public ApiResponse<String> registerUser(@RequestBody RegisterRequest request) {
         String message = userService.register(request);
@@ -77,17 +86,67 @@ public class UserController {
                 .result(message)
                 .build();
     }
+
     @PutMapping("/update-user")
-    public ApiResponse<UserResponse> updateUser(@RequestPart("document") String documentJson,  @RequestPart(value = "file", required = false) MultipartFile file) {
+    public ApiResponse<UserResponse> updateUser(@RequestPart("document") String documentJson, @RequestPart(value = "file", required = false) MultipartFile file) {
         return ApiResponse.<UserResponse>builder()
-                .result(userService.updateUser(documentJson,file))
+                .result(userService.updateUser(documentJson, file))
                 .build();
     }
+
+
     @DeleteMapping("/delete-user")
-    public ApiResponse<String> deleteUser(@RequestBody DeleteUserRequest request){
+    public ApiResponse<String> deleteUser(@RequestBody DeleteUserRequest request) {
         userService.deleteUser(request);
         return ApiResponse.<String>builder()
                 .result("User deleted successfully")
+                .build();
+    }
+
+    @PreAuthorize("hasAuthority('admin')")
+    @PutMapping("/admin/update-user/{id}")
+    public ApiResponse<UserResponse> updateUserAdmin(
+            @PathVariable("id") String userId,
+            @RequestPart("document") String documentJson,
+            @RequestPart(value = "file", required = false) MultipartFile file) {
+
+        return ApiResponse.<UserResponse>builder()
+                .result(userService.updateUserAdmin(documentJson, userId, file))
+                .build();
+    }
+
+    @PreAuthorize("hasAuthority('admin')")
+    @GetMapping("/admin/get-users")
+    public ApiResponse<Page<UserInfoResponse>> getAllProductsForAdmin(@RequestParam(defaultValue = "0") int page,
+                                                                      @RequestParam(defaultValue = "10") int limit,
+                                                                      @RequestParam(required = false) String search,
+                                                                      @RequestParam(required = false) String roleId
+
+    ) {
+        // sử lý ở FE page 1 là BE page 0, page 2 là page 1, ..
+    page = page <= 1 ? 0 : page - 1;
+        Pageable pageable;
+
+        pageable = PageRequest.of(page, limit);
+
+        UserFilterRequest filterRequest = UserFilterRequest.builder()
+                .search(search)
+                .roleId(roleId)
+                .build();
+        Page<UserInfoResponse> pageResult = userService.getAllUsers(pageable, filterRequest);
+        return ApiResponse.<Page<UserInfoResponse>>builder()
+                .result(pageResult)
+                .build();
+    }
+
+    @PreAuthorize("hasAuthority('admin')")
+    @PutMapping("/admin/block-user/{id}")
+    public ApiResponse<UserResponse> blockUser(
+            @PathVariable("id") String userId
+    ) {
+        userService.blockUser(userId);
+        return ApiResponse.<UserResponse>builder()
+                .message("User blocked successfully")
                 .build();
     }
 }

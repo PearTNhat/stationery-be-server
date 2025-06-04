@@ -1,7 +1,10 @@
 package com.project.stationery_be_server.service;
 
 import com.project.stationery_be_server.dto.request.*;
+import com.project.stationery_be_server.dto.response.UserInfoResponse;
 import com.project.stationery_be_server.dto.response.UserResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -31,4 +34,8 @@ public interface UserService {
     UserResponse createUserFromGoogle(String email, String fullName, String avatar);
     UserResponse updateUser(String documentJson, MultipartFile file);
     void deleteUser(DeleteUserRequest request);
+
+    Page<UserInfoResponse> getAllUsers(Pageable pageable , UserFilterRequest filter);
+    UserResponse updateUserAdmin(String documentJson, String userId,  MultipartFile file);
+    Void blockUser(String userId);
 }

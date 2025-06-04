@@ -76,6 +76,7 @@ public interface ProductDetailRepository extends JpaRepository<ProductDetail, St
                 color c ON pd.color_id = c.color_id
             WHERE
                 pd.product_id = :productId
+                AND pd.hidden = false
             GROUP BY
                 pd.color_id, c.hex
             """, nativeQuery = true)
@@ -91,4 +92,16 @@ public interface ProductDetailRepository extends JpaRepository<ProductDetail, St
     @Query("SELECT pd FROM ProductDetail pd WHERE pd.name LIKE %:keyword% OR pd.slug LIKE %:keyword%")
     List<ProductDetail> findByKeyword(String keyword);
     long countByProduct_ProductId(String productId);
+
+    boolean existsByName(String name);
+    boolean existsBySlug(String slug);
+    boolean existsBySlugAndProductDetailIdNot(String slug, String productDetailId);
+    boolean existsByNameAndProductDetailIdNot(String name, String productDetailId);
+
+    @Modifying
+    @Query("UPDATE ProductDetail pd " +
+           "SET pd.availableQuantity = pd.availableQuantity + :amount " +
+           "WHERE pd.productDetailId = :productDetailId ")
+    int restoreQuantity(@Param("productDetailId") String productDetailId, @Param("amount") int amount);
+
 }

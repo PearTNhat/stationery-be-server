@@ -49,7 +49,7 @@ public class PurchaseOrder {
     @Column(name = "amount", precision = 19, scale = 4)
     private Long amount;
 
-    @Column(name="note", length = 255)
+//    @Column(name="note", length = 100)
     private String note;
 
     @ManyToOne
@@ -59,9 +59,6 @@ public class PurchaseOrder {
     @Column(name = "created_at", nullable = false, updatable = false)
     @CreationTimestamp
     private LocalDateTime createdAt;
-
-    @Column(name = "expired_time")
-    private LocalDateTime expiredTime;
 
     @OneToOne(mappedBy = "purchaseOrder", cascade = CascadeType.ALL)
     private Payment payment;

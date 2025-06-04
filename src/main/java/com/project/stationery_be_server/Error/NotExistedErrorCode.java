@@ -29,6 +29,8 @@ public enum NotExistedErrorCode implements BaseErrorCode {
 
     // order
     ORDER_NOT_FOUND(1040, "Order not found", HttpStatus.BAD_REQUEST),
+    //
+    IN_ORDER_NOT_FOUND(1041, "In order not found", HttpStatus.BAD_REQUEST),
 
     // user promotion
     USER_PROMOTION_NOT_FOUND(1050, "User promotion not found", HttpStatus.BAD_REQUEST),
@@ -36,6 +38,18 @@ public enum NotExistedErrorCode implements BaseErrorCode {
     //payment
     PAYMENT_NOT_FOUND(1060, "Payment not found", HttpStatus.BAD_REQUEST),
     PAYMENT_EXISTS(1061, "Payment already exists", HttpStatus.BAD_REQUEST),
+
+    //category
+    CATEGORY_NOT_EXISTED(1070, "Category not existed", HttpStatus.BAD_REQUEST),
+
+    //Color
+    SIZE_NOT_EXISTED(1080, "Size not existed", HttpStatus.BAD_REQUEST),
+    // size
+    COLOR_NOT_EXISTED(1090, "Color not existed", HttpStatus.BAD_REQUEST),
+
+    //role
+    ROLE_NOT_EXISTED(1100, "Role not existed", HttpStatus.BAD_REQUEST),
+    USER_NOT_ADMIN(1101, "User is not admin", HttpStatus.BAD_REQUEST)
     ;
     private final int code;
     private final String message;

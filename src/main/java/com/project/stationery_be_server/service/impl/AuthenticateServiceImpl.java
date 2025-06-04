@@ -36,7 +36,7 @@ public class AuthenticateServiceImpl implements AuthenticateService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new AppException(NotExistedErrorCode.USER_NOT_EXISTED));
         // Check if user is blocked
-        if (user.isBlocked()) {
+        if (user.getBlock()) {
             throw new AppException(AuthErrorCode.BLOCKED);
         }
         // Verify password
