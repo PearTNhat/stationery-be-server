@@ -11,7 +11,7 @@ import java.util.Date;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserInfoResponse {
-    String userId;
+    String userId ;
     String avatar;
     String firstName;
     String lastName;
@@ -19,4 +19,5 @@ public class UserInfoResponse {
     String phone;
     Role role;
     Date dob;
+    Boolean block;
 }

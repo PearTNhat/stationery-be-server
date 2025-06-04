@@ -19,5 +19,6 @@ public class UserRequest {
     String email;
     String phone;
     Date dob;
-    String avatar;
+    String roleId = null;
+//    String avatar;
 }

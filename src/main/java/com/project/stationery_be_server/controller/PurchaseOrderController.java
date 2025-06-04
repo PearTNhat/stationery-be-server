@@ -9,6 +9,8 @@ import com.project.stationery_be_server.service.PurchaseOrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/purchase-orders")
 @RequiredArgsConstructor
@@ -32,4 +34,11 @@ public class PurchaseOrderController {
                 .result(purchaseOrderService.transactionStatus(orderId))
                 .build();
     }
+//    @GetMapping("/user-orders")
+//    public ApiResponse<Map<String, Object>> getOrdersForUser() {
+//        return ApiResponse.<Map<String, Object>>builder()
+//                .message("Orders retrieved successfully")
+//                .result(purchaseOrderService.getOrdersForUser())
+//                .build();
+//    }
 }

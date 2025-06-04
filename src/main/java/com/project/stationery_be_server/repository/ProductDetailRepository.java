@@ -98,5 +98,10 @@ public interface ProductDetailRepository extends JpaRepository<ProductDetail, St
     boolean existsBySlugAndProductDetailIdNot(String slug, String productDetailId);
     boolean existsByNameAndProductDetailIdNot(String name, String productDetailId);
 
+    @Modifying
+    @Query("UPDATE ProductDetail pd " +
+           "SET pd.availableQuantity = pd.availableQuantity + :amount " +
+           "WHERE pd.productDetailId = :productDetailId ")
+    int restoreQuantity(@Param("productDetailId") String productDetailId, @Param("amount") int amount);
 
 }

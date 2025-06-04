@@ -1,5 +1,6 @@
 package com.project.stationery_be_server.mapper;
 
+import com.project.stationery_be_server.dto.response.UserInfoResponse;
 import com.project.stationery_be_server.dto.response.UserResponse;
 import com.project.stationery_be_server.entity.User;
 import org.mapstruct.Mapper;
@@ -11,4 +12,5 @@ public interface UserMapper {
     @Mapping(target = "role", source = "role")
     @Mapping(target = "searchHistory", source = "searchHistories")
     UserResponse toUserResponse(User user);
+    UserInfoResponse toUserInfoResponse(User user);
 }
