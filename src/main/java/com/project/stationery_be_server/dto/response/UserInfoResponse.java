@@ -1,24 +1,23 @@
-package com.project.stationery_be_server.dto.request;
+package com.project.stationery_be_server.dto.response;
 
-import com.project.stationery_be_server.entity.Address;
 import com.project.stationery_be_server.entity.Role;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.util.Date;
-import java.util.List;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserRequest {
+public class UserInfoResponse {
+    String userId ;
+    String avatar;
     String firstName;
     String lastName;
     String email;
     String phone;
+    Role role;
     Date dob;
-    String roleId = null;
-//    String avatar;
+    Boolean block;
 }

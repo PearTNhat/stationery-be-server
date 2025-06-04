@@ -71,6 +71,8 @@ public class ProductDetail {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
+    @Column(name="hidden", columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private boolean hidden;
     @Transient
     private List<Image> images;
 

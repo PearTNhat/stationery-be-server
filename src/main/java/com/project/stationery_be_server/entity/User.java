@@ -8,6 +8,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -45,8 +46,8 @@ public class User {
     @Column(name = "avatar", length = 255)
     String avatar;
 
-    @Column(name = "is_blocked") // Chuyển isBlock -> isBlocked
-    boolean isBlocked;
+    @Column(name = "block") // Chuyển isBlock -> isBlocked
+    Boolean block;
 
     @Column(name = "otp")
     Integer otp;
@@ -58,6 +59,10 @@ public class User {
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonIgnore
     Set<Review> reviews;
+
+    @OneToMany(mappedBy = "user")
+    List<InOrder> inOrders; // Thêm quan hệ với InOrder
+
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonIgnore

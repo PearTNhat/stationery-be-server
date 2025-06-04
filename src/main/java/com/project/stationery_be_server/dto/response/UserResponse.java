@@ -1,9 +1,6 @@
 package com.project.stationery_be_server.dto.response;
 
-import com.project.stationery_be_server.entity.Address;
-import com.project.stationery_be_server.entity.Cart;
-import com.project.stationery_be_server.entity.Role;
-import com.project.stationery_be_server.entity.SearchHistory;
+import com.project.stationery_be_server.entity.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -26,6 +23,8 @@ public class UserResponse {
      Set<Address> addresses; // Foreign key to Address
      Role role;
      Set<Cart> carts;
+     List<InOrder> inOrders; // Foreign key to InOrder
+     Boolean block;
      Date dob;
      Set<SearchHistory> searchHistory;
 }

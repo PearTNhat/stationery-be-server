@@ -1,5 +1,6 @@
 package com.project.stationery_be_server.dto.response.product;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.project.stationery_be_server.dto.response.CategoryProductResponse;
 import com.project.stationery_be_server.dto.response.ColorSlugResponse;
 import com.project.stationery_be_server.entity.ProductDetail;
@@ -27,6 +28,6 @@ public class ProductResponse {
     List<ColorSlugResponse> fetchColor;
     LocalDateTime createdAt;
     String img;
-
     ProductDetail productDetail;
+    private boolean hidden;
 }

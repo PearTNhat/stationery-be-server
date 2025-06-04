@@ -17,6 +17,12 @@ public interface PromotionRepository extends JpaRepository<Promotion, String> {
            "WHERE p.usageLimit is not null and  p.promotionId = :promotionId")
     int reduceUsageCountByPromotionId(String promotionId);
 
+    @Modifying
+    @Query("UPDATE Promotion p " +
+           "SET p.tempUsageLimit = p.tempUsageLimit + 1 " +
+           "WHERE p.tempUsageLimit is not null and  p.promotionId = :promotionId")
+    int increaseUsageCountByPromotionId(String promotionId);
+
     @Query("SELECT COUNT(pp) FROM ProductPromotion pp WHERE pp.promotion.promotionId = :promotionId")
     int countProductPromotionUsage(@Param("promotionId") String promotionId);
 
