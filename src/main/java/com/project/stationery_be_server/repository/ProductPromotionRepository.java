@@ -1,6 +1,8 @@
 package com.project.stationery_be_server.repository;
 
+import com.project.stationery_be_server.entity.ProductDetail;
 import com.project.stationery_be_server.entity.ProductPromotion;
+import com.project.stationery_be_server.entity.Promotion;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -35,4 +37,6 @@ public interface ProductPromotionRepository extends JpaRepository<ProductPromoti
             @Param("price") Integer price
     );
     long countByProductDetail_ProductDetailId(String productDetailId);
+    boolean existsByPromotion(Promotion promotion);
+    boolean existsByProductDetailAndPromotion(ProductDetail productDetail, Promotion promotion);
 }
