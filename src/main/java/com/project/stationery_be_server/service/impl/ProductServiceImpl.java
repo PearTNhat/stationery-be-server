@@ -123,13 +123,23 @@ public class ProductServiceImpl implements ProductService {
 
         List<ProductDetailResponse> pdsResponse = pd.stream()
                 .map(productDetail -> {
-                    productDetail.setImages(imageRepository.findByProduct_ProductIdAndColor_ColorIdOrderByPriorityAsc(productId, productDetail.getColor().getColorId()));
+                    // Xử lý trường hợp color có thể null
+                    if (productDetail.getColor() != null && productDetail.getColor().getColorId() != null) {
+                        productDetail.setImages(imageRepository.findByProduct_ProductIdAndColor_ColorIdOrderByPriorityAsc(
+                                productId, productDetail.getColor().getColorId()));
+                    } else {
+                        // Nếu không có color, lấy toàn bộ ảnh của sản phẩm (không phân biệt màu)
+                        productDetail.setImages(imageRepository.findByProduct_ProductIdOrderByPriorityAsc(productId));
+                    }
+
+                    // Có thể xử lý thêm nếu muốn kiểm tra size null, ví dụ để hiển thị thông báo hoặc bỏ qua tùy logic
                     return productDetailMapper.toProductDetailResponse(productDetail);
                 })
                 .toList();
 
         return pdsResponse;
     }
+
 
     @Override
     @Transactional
