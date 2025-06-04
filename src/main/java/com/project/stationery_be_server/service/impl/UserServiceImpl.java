@@ -8,6 +8,7 @@ import com.project.stationery_be_server.Error.AuthErrorCode;
 import com.project.stationery_be_server.Error.InvalidErrorCode;
 import com.project.stationery_be_server.Error.NotExistedErrorCode;
 import com.project.stationery_be_server.dto.request.*;
+import com.project.stationery_be_server.dto.response.UserInfoResponse;
 import com.project.stationery_be_server.dto.response.UserResponse;
 import com.project.stationery_be_server.entity.Role;
 import com.project.stationery_be_server.entity.User;
@@ -22,6 +23,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -324,5 +326,10 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("Can not delete this user because of having data.");
         }
         userRepository.delete(userDeleted);
+    }
+
+    @Override
+    public List<UserInfoResponse> getAllUsers(Pageable pageable, ProductFilterRequest filter) {
+        return null;
     }
 }

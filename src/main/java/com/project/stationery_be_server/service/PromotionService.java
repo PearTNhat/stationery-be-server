@@ -1,8 +1,14 @@
 package com.project.stationery_be_server.service;
 
 import com.project.stationery_be_server.dto.request.DeletePromotionRequest;
+import com.project.stationery_be_server.dto.request.PromotionRequest;
+import com.project.stationery_be_server.dto.request.UpdatePromotionRequest;
+import com.project.stationery_be_server.entity.ProductPromotion;
 import com.project.stationery_be_server.entity.Promotion;
 import com.project.stationery_be_server.entity.User;
+import com.project.stationery_be_server.entity.UserPromotion;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -12,4 +18,10 @@ public interface PromotionService {
     List<Promotion> getAvailablePromotions(User user, BigDecimal orderTotal);
     BigDecimal calculateDiscount(Promotion promotion, BigDecimal orderTotal);
     void deletePromotion(DeletePromotionRequest request);
+    void createPromotion(PromotionRequest request);
+    void updatePromotion(UpdatePromotionRequest request);
+    Page<Promotion> getMyVouchers(Pageable pageable);
+    Page<UserPromotion> getAllUserVouchers(Pageable pageable);
+    Page<ProductPromotion> getAllProductPromotions(Pageable pageable);
+    Promotion getPromotionById(String promotionId);
 }
