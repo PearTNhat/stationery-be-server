@@ -8,6 +8,5 @@ import java.util.Map;
 
 public interface PurchaseOrderService {
     MomoResponse createOrderWithMomo(PurchaseOrderRequest request);
-    MomoResponse transactionStatus(String orderId);
-    Map<String, Object> getOrdersForUser();
+    MomoResponse transactionStatus(String orderId,Integer status);
 }

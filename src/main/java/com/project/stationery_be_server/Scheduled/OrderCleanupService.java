@@ -28,7 +28,6 @@ public class OrderCleanupService {
     @Scheduled(fixedRate = 60*1000) // mỗi 60,000ms = 1 phút
     @Transactional
     public void checkExpiredOrders() {
-        System.out.println("Checking for expired orders...");
         List<InOrder> expiredOrders = inOrderRepository.findByExpiredTimeBefore(LocalDateTime.now());
         for (InOrder inOrder : expiredOrders){
             String orderId = inOrder.getOrderId();

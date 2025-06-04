@@ -29,6 +29,8 @@ public enum NotExistedErrorCode implements BaseErrorCode {
 
     // order
     ORDER_NOT_FOUND(1040, "Order not found", HttpStatus.BAD_REQUEST),
+    //
+    IN_ORDER_NOT_FOUND(1041, "In order not found", HttpStatus.BAD_REQUEST),
 
     // user promotion
     USER_PROMOTION_NOT_FOUND(1050, "User promotion not found", HttpStatus.BAD_REQUEST),
