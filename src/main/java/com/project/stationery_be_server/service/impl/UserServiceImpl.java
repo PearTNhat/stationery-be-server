@@ -4,11 +4,15 @@ import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.project.stationery_be_server.Error.AuthErrorCode;
 import com.project.stationery_be_server.Error.InvalidErrorCode;
 import com.project.stationery_be_server.Error.NotExistedErrorCode;
 import com.project.stationery_be_server.dto.request.*;
+import com.project.stationery_be_server.dto.response.UserInfoResponse;
 import com.project.stationery_be_server.dto.response.UserResponse;
+import com.project.stationery_be_server.dto.response.product.ProductResponse;
+import com.project.stationery_be_server.entity.Product;
 import com.project.stationery_be_server.entity.Role;
 import com.project.stationery_be_server.entity.User;
 import com.project.stationery_be_server.exception.AppException;
@@ -17,11 +21,17 @@ import com.project.stationery_be_server.repository.RoleRepository;
 import com.project.stationery_be_server.repository.UserRepository;
 import com.project.stationery_be_server.service.EmailService;
 import com.project.stationery_be_server.service.UserService;
+import com.project.stationery_be_server.specification.ProductSpecification;
+import com.project.stationery_be_server.specification.UserSpecification;
 import com.project.stationery_be_server.utils.OtpUtils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -90,7 +100,7 @@ public class UserServiceImpl implements UserService {
         user.setFirstName(firstName);
         user.setLastName(lastName);
         user.setRole(role);
-        user.setBlocked(false);
+        user.setBlock(false);
         user.setAvatar(avatar != null ? avatar : "");
 
         User savedUser = userRepository.save(user);
@@ -148,7 +158,7 @@ public class UserServiceImpl implements UserService {
         }
         // Check OTP expiration (5 minutes)
         if (otpDetails.createdAt == null ||
-                (new Date().getTime() - otpDetails.createdAt.getTime() > 300_000)) {
+            (new Date().getTime() - otpDetails.createdAt.getTime() > 300_000)) {
             otpStorage.remove(email);
             throw new AppException(AuthErrorCode.OTP_EXPIRED);
         }
@@ -184,7 +194,7 @@ public class UserServiceImpl implements UserService {
             throw new AppException(NotExistedErrorCode.OTP_NOT_FOUND);
         }
         if (otpDetails.createdAt == null ||
-                (new Date().getTime() - otpDetails.createdAt.getTime() > 300_000)) {
+            (new Date().getTime() - otpDetails.createdAt.getTime() > 300_000)) {
             otpStorage.remove(email);
             pendingRegistrations.remove(email);
             throw new AppException(AuthErrorCode.OTP_EXPIRED);
@@ -203,7 +213,7 @@ public class UserServiceImpl implements UserService {
                 .lastName(request.getLastName())
                 .email(email)
                 .password(passwordEncoder.encode(request.getPassword()))
-                .isBlocked(false)
+                .block(false)
                 .otp(otpDetails.otp)  // Store OTP in DB
                 .otpCreatedAt(otpDetails.createdAt)
                 .role(role)
@@ -248,6 +258,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> {
                     return new AppException(NotExistedErrorCode.USER_NOT_EXISTED);
                 });
+
         // Check password old
         if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
             throw new AppException(AuthErrorCode.INCORRECT_OLD_PASSWORD);
@@ -296,33 +307,124 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void deleteUser(DeleteUserRequest request){
+    public void deleteUser(DeleteUserRequest request) {
         //lay user hien tai dang dung
         var context = SecurityContextHolder.getContext();
         String userIdLogin = context.getAuthentication().getName();
         User user = userRepository.findById(userIdLogin)
                 .orElseThrow(() -> new AppException(NotExistedErrorCode.USER_NOT_EXISTED));
         // admin moi dc xoa
-        if (!user.getRole().getRoleName().equals("admin")){
+        if (!user.getRole().getRoleName().equals("admin")) {
             throw new RuntimeException("You do not have permission to delete users");
         }
         // kiem tra user bi xoa
         String userIdDeleted = request.getUserId();
         User userDeleted = userRepository.findById(userIdDeleted)
-                .orElseThrow(()->new AppException(NotExistedErrorCode.USER_NOT_EXISTED));
+                .orElseThrow(() -> new AppException(NotExistedErrorCode.USER_NOT_EXISTED));
         // k xoa ban than
         if (userIdDeleted.equals(userIdLogin)) {
             throw new RuntimeException("You can not delete yourself.");
         }
         // cac table co du lieu lien qua
         if (userRepository.hasReview(userIdDeleted)
-                || userRepository.hasAddress(userIdDeleted)
-                || userRepository.hasCart(userIdDeleted)
-                || userRepository.hasPurchaseOrder(userIdDeleted)
-                || userRepository.hasUserPromotion(userIdDeleted)) {
+            || userRepository.hasAddress(userIdDeleted)
+            || userRepository.hasCart(userIdDeleted)
+            || userRepository.hasPurchaseOrder(userIdDeleted)
+            || userRepository.hasUserPromotion(userIdDeleted)) {
 
             throw new RuntimeException("Can not delete this user because of having data.");
         }
         userRepository.delete(userDeleted);
     }
+
+    @Override
+    public Page<UserInfoResponse> getAllUsers(Pageable pageable, UserFilterRequest filter) {
+        Specification<User> spec = UserSpecification.filterUsersForUser(filter);
+        Page<User> usersPage = userRepository.findAll(spec, pageable);
+        // Có thể thêm logic tính toán thêm ở đây
+        List<UserInfoResponse> userResponses = usersPage.getContent().stream()
+                .map(userMapper::toUserInfoResponse)
+                .toList();
+        return new PageImpl<>(userResponses, pageable, usersPage.getTotalElements());
+    }
+
+    @Override
+    @Transactional
+    public UserResponse updateUserAdmin(String documentJson, String userId, MultipartFile file) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        UserRequest request = null;
+        try {
+            request = objectMapper.readValue(documentJson, UserRequest.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(NotExistedErrorCode.USER_NOT_EXISTED));
+        try {
+            if (file != null && !file.isEmpty()) {
+                Map<?, ?> uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
+                String url = uploadResult.get("secure_url").toString(); // hoặc "url"
+                if(user.getAvatar() != null) {
+                    // Xóa ảnh cũ nếu có
+                    String publicKey = extractPublicIdFromUrl(user.getAvatar());
+                    deleteImageAsync(publicKey);
+                }
+                user.setAvatar(url);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Error uploading file to Cloudinary");
+        }
+
+        Role role = roleRepository.findById(request.getRoleId())
+                .orElseThrow(() -> new AppException(NotExistedErrorCode.ROLE_NOT_EXISTED));
+        user.setRole(role);
+        user.setFirstName(request.getFirstName() != null ? request.getFirstName() : user.getFirstName());
+        user.setLastName(request.getLastName() != null ? request.getLastName() : user.getLastName());
+        user.setEmail(request.getEmail() != null ? request.getEmail() : user.getEmail());
+        user.setPhone(request.getPhone() != null ? request.getPhone() : user.getPhone());
+        user.setDob(request.getDob() != null ? request.getDob() : user.getDob());
+
+        user = userRepository.save(user);
+        return userMapper.toUserResponse(user);
+    }
+
+    @Override
+    public Void blockUser(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(NotExistedErrorCode.USER_NOT_EXISTED));
+        System.out.println("be Blockk: "+user.getBlock());
+
+        user.setBlock(!user.getBlock());
+        System.out.println("af Blockk: "+user.getBlock());
+        userRepository.save(user);
+        return null;
+    }
+
+    public void deleteImageAsync(String publicId) {
+        new Thread(() -> {
+            try {
+                cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+            } catch (Exception e) {
+                System.err.println("Failed to delete image: " + publicId);
+            }
+        }).start();
+    }
+
+    public String extractPublicIdFromUrl(String url) {
+        if (url == null || !url.contains("/upload/")) {
+            throw new IllegalArgumentException("Invalid Cloudinary URL");
+        }
+
+        String[] parts = url.split("/upload/");
+        if (parts.length < 2) {
+            throw new IllegalArgumentException("Cannot extract publicId from URL");
+        }
+
+        String path = parts[1]; // v1748019306/slwle2jgfsfnaxohjcga.jpg
+        String[] segments = path.split("/");
+
+        String filename = segments[segments.length - 1];
+        return filename.replaceAll("\\.\\w+$", ""); // remove extension like .jpg
+    }
+
 }

@@ -28,10 +28,8 @@ public class Product {
     @Column(name = "description", length = 500)
     private String description;
 
-    @Column(name = "slug", length = 100, nullable = false)
+    @Column(name = "slug", length = 100)
     private String slug;
-    @Column(name="min_price")
-    private Integer minPrice;
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
     @JsonIgnoreProperties({"icon", "bgColor", "products"})
@@ -55,17 +53,19 @@ public class Product {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
-    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ProductDetail> productDetails;
 
     @OneToMany(mappedBy = "product",fetch = FetchType.LAZY)
     @JsonIgnore
     List<Image> images;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "default_pd", referencedColumnName = "product_detail_id")
     private ProductDetail productDetail;
 
+    @Column(name="hidden",columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private boolean hidden =false;
     @Transient
     private List<ColorSlugResponse> fetchColor;
     @Transient

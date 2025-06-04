@@ -3,6 +3,7 @@ package com.project.stationery_be_server.dto.response.product;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.project.stationery_be_server.entity.*;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -30,4 +31,7 @@ public class ProductDetailResponse {
     private Color color;
     private LocalDateTime createdAt;
     private List<Image> images;
+
+    private boolean hidden;
+
 }
