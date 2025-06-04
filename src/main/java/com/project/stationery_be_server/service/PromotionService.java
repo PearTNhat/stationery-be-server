@@ -24,4 +24,6 @@ public interface PromotionService {
     Page<UserPromotion> getAllUserVouchers(Pageable pageable);
     Page<ProductPromotion> getAllProductPromotions(Pageable pageable);
     Promotion getPromotionById(String promotionId);
+    Page<Promotion> getPromotionsByUser(String userId, Pageable pageable);
+    Page<Promotion> getPromotionsByProduct(String productId, Pageable pageable);
 }
