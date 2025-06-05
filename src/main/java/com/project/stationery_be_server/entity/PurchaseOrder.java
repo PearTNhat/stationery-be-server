@@ -49,8 +49,11 @@ public class PurchaseOrder {
     @Column(name = "amount", precision = 19, scale = 4)
     private Long amount;
 
-//    @Column(name="note", length = 100)
+    @Column(name="note", nullable = true)
     private String note;
+
+    @Column(name="cancel_reason", nullable = true)
+    private String cancelReason;
 
     @ManyToOne
     @JoinColumn(name = "address_id")
@@ -59,6 +62,9 @@ public class PurchaseOrder {
     @Column(name = "created_at", nullable = false, updatable = false)
     @CreationTimestamp
     private LocalDateTime createdAt;
+
+    @Column(name = "expired_time", nullable = true)
+    private LocalDateTime expiredTime;
 
     @OneToOne(mappedBy = "purchaseOrder", cascade = CascadeType.ALL)
     private Payment payment;
