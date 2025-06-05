@@ -52,7 +52,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     PaymentRepository paymentRepository;
     PromotionRepository promotionRepository;
     InOrderRepository inOrderRepository;
-    private final PromotionRepository promotionRepository;
+    //private final PromotionRepository promotionRepository;
     private final NotificationService notificationService;
 
     @Value(value = "${momo.partnerCode}")
