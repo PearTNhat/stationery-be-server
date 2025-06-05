@@ -12,6 +12,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,22 +48,35 @@ public class PromotionController {
                 .result("Promotion updated successfully")
                 .build();
     }
-    @GetMapping("/my-promotions")
-    public ApiResponse<Page<Promotion>> getMyPromotions(Pageable pageable) {
+    @GetMapping("/my-vouchers")
+    public ApiResponse<Page<Promotion>> getMyVouchers(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int limit) {
+        // Chuyển page 1-based thành 0-based
+        if (page < 1) page = 1;
+        Pageable pageable = PageRequest.of(page - 1, limit);
         Page<Promotion> pageResult = promotionService.getMyVouchers(pageable);
         return ApiResponse.<Page<Promotion>>builder()
                 .result(pageResult)
                 .build();
     }
-    @GetMapping("/all-user-promotions")
-    public ApiResponse<Page<UserPromotion>> getAllUserPromotions(Pageable pageable) {
+    @GetMapping("/all-user-vouchers")
+    public ApiResponse<Page<UserPromotion>> getAllUserVouchers(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int limit) {
+        if (page < 1) page = 1;
+        Pageable pageable = PageRequest.of(page - 1, limit);
         Page<UserPromotion> pageUP = promotionService.getAllUserVouchers(pageable);
         return ApiResponse.<Page<UserPromotion>>builder()
                 .result(pageUP)
                 .build();
     }
     @GetMapping("/all-product-promotions")
-    public ApiResponse<Page<ProductPromotion>> getAllProductPromotions(Pageable pageable) {
+    public ApiResponse<Page<ProductPromotion>> getAllProductPromotions(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int limit) {
+        if (page < 1) page = 1;
+        Pageable pageable = PageRequest.of(page - 1, limit);
         Page<ProductPromotion> pagePP = promotionService.getAllProductPromotions(pageable);
         return ApiResponse.<Page<ProductPromotion>>builder()
                 .result(pagePP)
@@ -78,16 +92,22 @@ public class PromotionController {
     @GetMapping("/user/{userId}")
     public ApiResponse<Page<Promotion>> getPromotionsByUser(
             @PathVariable String userId,
-            Pageable pageable) {
-        Page<Promotion> page = promotionService.getPromotionsByUser(userId, pageable);
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int limit) {
+        if (page < 1) page = 1;
+        Pageable pageable = PageRequest.of(page - 1, limit);
+        Page<Promotion> pageResult = promotionService.getPromotionsByUser(userId, pageable);
         return ApiResponse.<Page<Promotion>>builder()
-                .result(page)
+                .result(pageResult)
                 .build();
     }
     @GetMapping("/product/{productId}/page")
     public ApiResponse<Page<Promotion>> getPromotionsByProduct(
             @PathVariable String productId,
-            Pageable pageable) {
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int limit) {
+        if (page < 1) page = 1;
+        Pageable pageable = PageRequest.of(page - 1, limit);
         Page<Promotion> pageResult = promotionService.getPromotionsByProduct(productId, pageable);
         return ApiResponse.<Page<Promotion>>builder()
                 .result(pageResult)
