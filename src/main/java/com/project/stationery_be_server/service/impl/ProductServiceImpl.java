@@ -46,7 +46,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Page<ProductResponse> getAllProductWithDefaultPD(Pageable pageable, ProductFilterRequest filter) {
-        Specification<Product> spec = ProductSpecification.filterProducts(filter);
+        Specification<Product> spec = ProductSpecification.filterProductsForUser(filter);
         Page<Product> productsPage = productRepository.findAll(spec, pageable);
         List<ProductResponse> productListResponses = productsPage.getContent().stream()
                 .map(product -> {
@@ -93,7 +93,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Page<ProductResponse> getAllProducts(Pageable pageable, ProductFilterRequest filter) {
-        Specification<Product> spec = ProductSpecification.filterProducts(filter);
+        Specification<Product> spec = ProductSpecification.filterProductsForAdmin(filter);
         Page<Product> p = productRepository.findAll(spec, pageable);
         List<ProductResponse> productListResponses = p.getContent().stream()
                 .map(product -> {

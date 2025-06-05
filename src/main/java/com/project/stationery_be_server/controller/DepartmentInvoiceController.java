@@ -5,7 +5,6 @@ import com.project.stationery_be_server.dto.response.MonthlyInvoiceSummaryRespon
 import com.project.stationery_be_server.dto.response.momo.MomoResponse;
 import com.project.stationery_be_server.service.DepartmentInvoiceService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,15 +16,13 @@ import java.util.List;
 public class DepartmentInvoiceController {
     private final DepartmentInvoiceService departmentInvoiceService;
 
-    @GetMapping("/monthly-summary")
-    public ApiResponse<MonthlyInvoiceSummaryResponse> getMonthlyInvoiceSummary(
-            @RequestParam int month,
-            @RequestParam int year) {
+    @GetMapping("/current-month-summary")
+    public ApiResponse<MonthlyInvoiceSummaryResponse> getCurrentMonthInvoiceSummary() {
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
-        MonthlyInvoiceSummaryResponse summary = departmentInvoiceService.getMonthlyInvoiceSummary(userId, month, year);
+        MonthlyInvoiceSummaryResponse summary = departmentInvoiceService.getCurrentMonthInvoiceSummary(userId);
         String message = summary.getOrderCount() == 0
-                ? "No orders found for the specified month"
-                : "Monthly invoice summary retrieved successfully";
+                ? "No orders found for the current period"
+                : "Current period invoice summary retrieved successfully";
 
         return ApiResponse.<MonthlyInvoiceSummaryResponse>builder()
                 .code(200)
@@ -34,28 +31,24 @@ public class DepartmentInvoiceController {
                 .build();
     }
 
-    @PostMapping("/generate-monthly-invoice")
-    public ApiResponse<String> generateMonthlyInvoice(
-            @RequestParam int month,
-            @RequestParam int year) {
+    @PostMapping("/generate-current-invoice")
+    public ApiResponse<String> generateCurrentInvoice() {
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
-        String pdfUrl = departmentInvoiceService.generateMonthlyInvoicePdf(userId, month, year);
+        String pdfUrl = departmentInvoiceService.generateCurrentInvoicePdf(userId);
         return ApiResponse.<String>builder()
                 .code(200)
-                .message("Monthly invoice PDF generated and uploaded successfully")
+                .message("Current period invoice PDF generated and uploaded successfully")
                 .result(pdfUrl)
                 .build();
     }
 
-    @PostMapping("/pay-monthly-invoice")
-    public ApiResponse<MomoResponse> payMonthlyInvoice(
-            @RequestParam int month,
-            @RequestParam int year) {
+    @PostMapping("/pay-current-invoice")
+    public ApiResponse<MomoResponse> payCurrentInvoice() {
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
-        MomoResponse response = departmentInvoiceService.payMonthlyInvoice(userId, month, year);
+        MomoResponse response = departmentInvoiceService.payCurrentInvoice(userId);
         return ApiResponse.<MomoResponse>builder()
                 .code(200)
-                .message("Monthly invoice payment initiated successfully")
+                .message("Current period invoice payment initiated successfully")
                 .result(response)
                 .build();
     }

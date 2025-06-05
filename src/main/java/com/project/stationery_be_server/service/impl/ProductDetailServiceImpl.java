@@ -13,9 +13,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.stream.Collectors;
+
 
 @Service
 @RequiredArgsConstructor
@@ -57,5 +58,15 @@ public class ProductDetailServiceImpl implements ProductDetailService {
         }
 
         productDetailRepository.deleteById(detailId);
+    }
+
+    @Override
+    public ProductDetailResponse updateProductDetail(String pd, List<String> imageIndexes, List<MultipartFile> images) {
+        return null;
+    }
+
+    @Override
+    public Boolean updateHiddenPD(String productDetailId, boolean isHidden) {
+        return null;
     }
 }
