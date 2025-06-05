@@ -18,7 +18,6 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, St
     @Query("SELECT po FROM PurchaseOrder po LEFT JOIN FETCH po.purchaseOrderDetails WHERE po.status != :status")
     List<PurchaseOrder> findByStatusNotWithDetails(@Param("status") PurchaseOrder.Status status);
 
-    // Truy vấn đơn hàng theo userId và trạng thái kèm chi tiết
     @Query("SELECT po FROM PurchaseOrder po LEFT JOIN FETCH po.purchaseOrderDetails WHERE po.user.userId = :userId AND po.status = :status")
     List<PurchaseOrder> findByUser_UserIdAndStatusWithDetails(@Param("userId") String userId, @Param("status") PurchaseOrder.Status status);
 
@@ -26,5 +25,9 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, St
     List<PurchaseOrder> findByUser_UserIdWithDetails(@Param("userId") String userId);
 
     List<PurchaseOrder> findByUser_UserIdAndCreatedAtBetween(String userId, LocalDateTime start, LocalDateTime end);
+
     List<PurchaseOrder> findByUser_UserIdAndNoteContainingAndStatus(String userId, String note, PurchaseOrder.Status status);
+
+    @Query("SELECT po FROM PurchaseOrder po WHERE po.user.userId = :userId AND po.note LIKE %:note% ORDER BY po.createdAt DESC")
+    PurchaseOrder findTopByUser_UserIdAndNoteContainingOrderByCreatedAtDesc(@Param("userId") String userId, @Param("note") String note);
 }

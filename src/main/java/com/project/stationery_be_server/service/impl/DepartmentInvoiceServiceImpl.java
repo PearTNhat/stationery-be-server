@@ -5,6 +5,7 @@ import com.project.stationery_be_server.dto.request.MomoRequest;
 import com.project.stationery_be_server.dto.response.momo.MomoResponse;
 import com.project.stationery_be_server.dto.response.MonthlyInvoiceSummaryResponse;
 import com.project.stationery_be_server.entity.PurchaseOrder;
+import com.project.stationery_be_server.entity.PurchaseOrderDetail;
 import com.project.stationery_be_server.entity.User;
 import com.project.stationery_be_server.exception.AppException;
 import com.project.stationery_be_server.repository.PurchaseOrderDetailRepository;
@@ -32,6 +33,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -71,18 +73,23 @@ public class DepartmentInvoiceServiceImpl implements DepartmentInvoiceService {
 
     @Transactional(readOnly = true)
     @Override
-    public MonthlyInvoiceSummaryResponse getMonthlyInvoiceSummary(String userId, int month, int year) {
+    public MonthlyInvoiceSummaryResponse getCurrentMonthInvoiceSummary(String userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(NotExistedErrorCode.USER_NOT_EXISTED));
         if (!user.getRole().getRoleId().equals("113")) {
             throw new AppException(NotExistedErrorCode.USER_EXISTED);
         }
 
-        LocalDateTime startOfMonth = LocalDateTime.of(year, month, 1, 0, 0);
-        LocalDateTime endOfMonth = startOfMonth.plusMonths(1).minusSeconds(1);
+        // Find the last invoice to determine the start date
+        PurchaseOrder lastInvoice = purchaseOrderRepository.findTopByUser_UserIdAndNoteContainingOrderByCreatedAtDesc(
+                userId, "Monthly invoice"
+        );
+
+        LocalDateTime startDate = lastInvoice != null ? lastInvoice.getCreatedAt() : LocalDateTime.now().minusMonths(1);
+        LocalDateTime endDate = LocalDateTime.now();
 
         List<PurchaseOrder> orders = purchaseOrderRepository.findByUser_UserIdAndCreatedAtBetween(
-                userId, startOfMonth, endOfMonth
+                userId, startDate, endDate
         );
 
         BigDecimal totalAmount = orders.stream()
@@ -92,8 +99,8 @@ public class DepartmentInvoiceServiceImpl implements DepartmentInvoiceService {
 
         return MonthlyInvoiceSummaryResponse.builder()
                 .userId(userId)
-                .month(month)
-                .year(year)
+                .month(LocalDateTime.now().getMonthValue())
+                .year(LocalDateTime.now().getYear())
                 .totalAmount(totalAmount)
                 .orderCount(orders.size())
                 .build();
@@ -101,22 +108,30 @@ public class DepartmentInvoiceServiceImpl implements DepartmentInvoiceService {
 
     @Transactional
     @Override
-    public String generateMonthlyInvoicePdf(String userId, int month, int year) {
+    public String generateCurrentInvoicePdf(String userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(NotExistedErrorCode.USER_NOT_EXISTED));
         if (!user.getRole().getRoleId().equals("113")) {
             throw new AppException(NotExistedErrorCode.USER_EXISTED);
         }
 
-        String pdfUrl = pdfGenerationService.generateAndUploadMonthlyInvoicePdf(userId, month, year);
+        // Find the last invoice to determine the start date
+        PurchaseOrder lastInvoice = purchaseOrderRepository.findTopByUser_UserIdAndNoteContainingOrderByCreatedAtDesc(
+                userId, "Monthly invoice"
+        );
+
+        LocalDateTime startDate = lastInvoice != null ? lastInvoice.getCreatedAt() : LocalDateTime.now().minusMonths(1);
+        LocalDateTime endDate = LocalDateTime.now();
+
+        String pdfUrl = pdfGenerationService.generateAndUploadCurrentInvoicePdf(userId, startDate, endDate);
 
         PurchaseOrder summaryOrder = PurchaseOrder.builder()
                 .purchaseOrderId(UUID.randomUUID().toString().replace("-", "").toUpperCase())
                 .user(user)
                 .status(PurchaseOrder.Status.COMPLETED)
-                .amount(getMonthlyInvoiceSummary(userId, month, year).getTotalAmount().longValue())
+                .amount(getCurrentMonthInvoiceSummary(userId).getTotalAmount().longValue())
                 .createdAt(LocalDateTime.now())
-                .note("Monthly invoice for " + month + "/" + year)
+                .note("Monthly invoice from " + startDate.toLocalDate() + " to " + endDate.toLocalDate())
                 .pdfUrl(pdfUrl)
                 .purchaseOrderDetails(new ArrayList<>())
                 .build();
@@ -127,29 +142,46 @@ public class DepartmentInvoiceServiceImpl implements DepartmentInvoiceService {
 
     @Transactional
     @Override
-    public MomoResponse payMonthlyInvoice(String userId, int month, int year) {
+    public MomoResponse payCurrentInvoice(String userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(NotExistedErrorCode.USER_NOT_EXISTED));
         if (!user.getRole().getRoleId().equals("113")) {
             throw new AppException(NotExistedErrorCode.USER_EXISTED);
         }
 
-        LocalDateTime startOfMonth = LocalDateTime.of(year, month, 1, 0, 0);
-        LocalDateTime endOfMonth = startOfMonth.plusMonths(1).minusSeconds(1);
+        // Find the last invoice to determine the start date
+        PurchaseOrder lastInvoice = purchaseOrderRepository.findTopByUser_UserIdAndNoteContainingOrderByCreatedAtDesc(
+                userId, "Monthly invoice"
+        );
+
+        LocalDateTime startDate = lastInvoice != null ? lastInvoice.getCreatedAt() : LocalDateTime.now().minusMonths(1);
+        LocalDateTime endDate = LocalDateTime.now();
+
         List<PurchaseOrder> orders = purchaseOrderRepository.findByUser_UserIdAndCreatedAtBetween(
-                userId, startOfMonth, endOfMonth
+                userId, startDate, endDate
         );
 
         if (orders.isEmpty()) {
             throw new AppException(NotExistedErrorCode.ORDER_NOT_FOUND);
         }
 
-        Long totalAmount = orders.stream()
-                .filter(order -> order.getStatus() == PurchaseOrder.Status.COMPLETED)
-                .map(PurchaseOrder::getAmount)
-                .reduce(0L, Long::sum);
+        long totalAmount = 0;
+        boolean hasDetails = false;
+        for (PurchaseOrder order : orders) {
+            if (order.getStatus() != PurchaseOrder.Status.COMPLETED) {
+                continue;
+            }
+            List<PurchaseOrderDetail> details = order.getPurchaseOrderDetails();
+            if (details.isEmpty()) {
+                continue;
+            }
+            for (PurchaseOrderDetail detail : details) {
+                totalAmount += detail.getDiscountPrice() * detail.getQuantity();
+                hasDetails = true;
+            }
+        }
 
-        if (totalAmount <= 0) {
+        if (!hasDetails || totalAmount <= 0) {
             throw new AppException(NotExistedErrorCode.ORDER_NOT_FOUND);
         }
 
@@ -160,13 +192,13 @@ public class DepartmentInvoiceServiceImpl implements DepartmentInvoiceService {
                 .status(PurchaseOrder.Status.COMPLETED)
                 .amount(totalAmount)
                 .createdAt(LocalDateTime.now())
-                .note("Monthly payment for " + month + "/" + year)
+                .note("Monthly payment from " + startDate.toLocalDate() + " to " + endDate.toLocalDate())
                 .purchaseOrderDetails(new ArrayList<>())
                 .build();
 
         purchaseOrderRepository.save(monthlyOrder);
 
-        String orderInfo = "Monthly payment for " + month + "/" + year + " - Department: " + userId;
+        String orderInfo = "Monthly payment from " + startDate.toLocalDate() + " to " + endDate.toLocalDate() + " - Department: " + userId;
         String requestId = UUID.randomUUID().toString();
         String extraData = "monthly_payment";
         String rawSignature = "accessKey=" + accessKey + "&amount=" + totalAmount + "&extraData=" + extraData +
@@ -228,9 +260,9 @@ public class DepartmentInvoiceServiceImpl implements DepartmentInvoiceService {
         for (PurchaseOrder order : overdueOrders) {
             if (order.getCreatedAt().isBefore(overdueThreshold)) {
                 String message = String.format(
-                        "Hóa đơn tháng %s/%s (ID: %s) đã quá hạn thanh toán. Vui lòng thanh toán sớm.",
-                        order.getNote().split(" ")[2].split("/")[0],
-                        order.getNote().split(" ")[2].split("/")[1],
+                        "Hóa đơn từ %s đến %s (ID: %s) đã quá hạn thanh toán. Vui lòng thanh toán sớm.",
+                        order.getNote().split(" ")[2],
+                        order.getNote().split(" ")[4],
                         order.getPurchaseOrderId()
                 );
                 notifications.add(message);

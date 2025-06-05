@@ -6,8 +6,8 @@ import com.project.stationery_be_server.dto.response.MonthlyInvoiceSummaryRespon
 import java.util.List;
 
 public interface DepartmentInvoiceService {
-    MonthlyInvoiceSummaryResponse getMonthlyInvoiceSummary(String userId, int month, int year);
-    String generateMonthlyInvoicePdf(String userId, int month, int year);
-    MomoResponse payMonthlyInvoice(String userId, int month, int year);
+    MonthlyInvoiceSummaryResponse getCurrentMonthInvoiceSummary(String userId);
+    String generateCurrentInvoicePdf(String userId);
+    MomoResponse payCurrentInvoice(String userId);
     List<String> checkOverdueInvoices(String userId);
 }

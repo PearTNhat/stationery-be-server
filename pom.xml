@@ -112,12 +112,19 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
-        <!--        PDF-->
+        <!--PDF-->
+        <!-- Dependency cho iText 7 (hỗ trợ các import com.itextpdf.kernel.* và com.itextpdf.layout.*) -->
         <dependency>
             <groupId>com.itextpdf</groupId>
             <artifactId>itext7-core</artifactId>
-            <version>7.2.5</version>
+            <version>8.0.5</version>
             <type>pom</type>
+        </dependency>
+        <!-- Dependency cho Flying Saucer (hỗ trợ org.xhtmlrenderer.pdf.ITextRenderer) -->
+        <dependency>
+            <groupId>org.xhtmlrenderer</groupId>
+            <artifactId>flying-saucer-pdf</artifactId>
+            <version>9.7.1</version>
         </dependency>
     </dependencies>
 
