@@ -7,6 +7,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+import java.util.List;
+
 public interface ProductDetailService {
     void deleteProductDetail(DeleteProductDetailRequest request);
     ProductDetailResponse updateProductDetail(String pd, List<String> imageIndexes, List<MultipartFile> images);
