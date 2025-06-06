@@ -30,4 +30,12 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, St
 
     @Query("SELECT po FROM PurchaseOrder po WHERE po.user.userId = :userId AND po.note LIKE %:note% ORDER BY po.createdAt DESC")
     PurchaseOrder findTopByUser_UserIdAndNoteContainingOrderByCreatedAtDesc(@Param("userId") String userId, @Param("note") String note);
+
+    List<PurchaseOrder> findByUser_UserIdAndCreatedAtLessThanEqualAndStatusIn(
+            String userId,
+            LocalDateTime endDate,
+            List<PurchaseOrder.Status> statuses
+    );
+
+    List<PurchaseOrder> findByUser_UserId(String userId);
 }

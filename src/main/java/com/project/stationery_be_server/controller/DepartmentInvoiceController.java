@@ -1,6 +1,7 @@
 package com.project.stationery_be_server.controller;
 
 import com.project.stationery_be_server.dto.response.ApiResponse;
+import com.project.stationery_be_server.dto.response.InvoiceResponse;
 import com.project.stationery_be_server.dto.response.MonthlyInvoiceSummaryResponse;
 import com.project.stationery_be_server.dto.response.momo.MomoResponse;
 import com.project.stationery_be_server.service.DepartmentInvoiceService;
@@ -28,6 +29,19 @@ public class DepartmentInvoiceController {
                 .code(200)
                 .message(message)
                 .result(summary)
+                .build();
+    }
+    @GetMapping("/get-all-invoices")
+    public ApiResponse<List<InvoiceResponse>> getAll() {
+        // 1. Lấy userId từ context (đã authentication trước đó)
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        // 2. Lấy danh sách InvoiceResponse từ service
+        List<InvoiceResponse> list = departmentInvoiceService.getAllInvoices(userId);
+
+        // 3. Build ApiResponse trả về
+        return ApiResponse.<List<InvoiceResponse>>builder()
+                .result(list)
                 .build();
     }
 

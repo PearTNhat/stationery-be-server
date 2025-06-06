@@ -1,5 +1,6 @@
 package com.project.stationery_be_server.service;
 
+import com.project.stationery_be_server.dto.response.InvoiceResponse;
 import com.project.stationery_be_server.dto.response.momo.MomoResponse;
 import com.project.stationery_be_server.dto.response.MonthlyInvoiceSummaryResponse;
 
@@ -10,4 +11,5 @@ public interface DepartmentInvoiceService {
     String generateCurrentInvoicePdf(String userId);
     MomoResponse payCurrentInvoice(String userId);
     List<String> checkOverdueInvoices(String userId);
+    List<InvoiceResponse> getAllInvoices(String userId);
 }
