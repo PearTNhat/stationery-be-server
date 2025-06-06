@@ -58,4 +58,6 @@ momo:
   redirectUrl: ${REDIRECT_URL}
   ipnUrl: ${IPN_URL}
   requestType: ${REQUEST_TYPE}
+  apiKey: ${CLOUDINARY_API_KEY}
+
   urlCheckTransaction: ${URL_CHECK_TRANSACTION}
