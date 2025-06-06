@@ -2,17 +2,23 @@ package com.project.stationery_be_server.service.impl;
 
 import com.project.stationery_be_server.Error.NotExistedErrorCode;
 import com.project.stationery_be_server.dto.request.DeletePromotionRequest;
-import com.project.stationery_be_server.entity.Promotion;
-import com.project.stationery_be_server.entity.User;
+import com.project.stationery_be_server.dto.response.ColorResponse;
+import com.project.stationery_be_server.entity.*;
 import com.project.stationery_be_server.exception.AppException;
-import com.project.stationery_be_server.repository.InvalidatedTokenRepository;
-import com.project.stationery_be_server.repository.PromotionRepository;
-import com.project.stationery_be_server.repository.UserRepository;
+import com.project.stationery_be_server.repository.*;
 import com.project.stationery_be_server.service.PromotionService;
+import com.project.stationery_be_server.specification.ColorSpecification;
+import com.project.stationery_be_server.specification.ProductPromotionSpecification;
+import com.project.stationery_be_server.specification.ProductSpecification;
+import com.project.stationery_be_server.specification.UserPromotionSpecification;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +31,8 @@ import java.util.List;
 public class PromotionServiceImpl implements PromotionService {
     final PromotionRepository promotionRepository;
     final UserRepository userRepository;
+    private final ProductPromotionRepository productPromotionRepository;
+    private final UserPromotionRepository userPromotionRepository;
 
     @Override
     public BigDecimal applyPromotion(String promoCode, BigDecimal orderTotal, User user) {
@@ -68,4 +76,15 @@ public class PromotionServiceImpl implements PromotionService {
         promotionRepository.delete(promotion);
 
     }
+
+    @Override
+    public Page<ProductPromotion> getAllProductPromotionPagination(Pageable pageable, String search) {
+        Specification<ProductPromotion> spec = ProductPromotionSpecification.filterProductPromotion(search);
+        Page<ProductPromotion> productPrmotionPage = productPromotionRepository.findAll(spec, pageable);
+        // Có thể thêm logic tính toán thêm ở đây
+        List<ProductPromotion> userResponses = productPrmotionPage.getContent().stream().toList();
+        return new PageImpl<>(userResponses, pageable, productPrmotionPage.getTotalElements());
+    }
+
+
 }

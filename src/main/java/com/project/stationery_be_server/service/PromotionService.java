@@ -1,8 +1,13 @@
 package com.project.stationery_be_server.service;
 
 import com.project.stationery_be_server.dto.request.DeletePromotionRequest;
+import com.project.stationery_be_server.dto.response.ColorResponse;
+import com.project.stationery_be_server.entity.ProductPromotion;
 import com.project.stationery_be_server.entity.Promotion;
 import com.project.stationery_be_server.entity.User;
+import com.project.stationery_be_server.entity.UserPromotion;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -12,4 +17,6 @@ public interface PromotionService {
     List<Promotion> getAvailablePromotions(User user, BigDecimal orderTotal);
     BigDecimal calculateDiscount(Promotion promotion, BigDecimal orderTotal);
     void deletePromotion(DeletePromotionRequest request);
+    Page<ProductPromotion> getAllProductPromotionPagination(Pageable pageable, String search);
+
 }
