@@ -1,6 +1,5 @@
 package com.project.stationery_be_server.repository;
 
-import com.project.stationery_be_server.entity.ProductPromotion;
 import com.project.stationery_be_server.entity.Promotion;
 import com.project.stationery_be_server.entity.User;
 import com.project.stationery_be_server.entity.UserPromotion;
@@ -11,6 +10,9 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 
 public interface UserPromotionRepository extends JpaRepository<UserPromotion, String>  , JpaSpecificationExecutor<UserPromotion> {
 
@@ -37,6 +39,11 @@ public interface UserPromotionRepository extends JpaRepository<UserPromotion, St
             @Param("userPromotionId") String userPromotionId,
             @Param("price") Long price
     );
+    boolean existsByPromotion(Promotion promotion);
+    List<UserPromotion> findByUser(User user);
+    Page<UserPromotion> findByUser(User user, Pageable pageable);
 
+    // Trong UserPromotionRepository:
+    boolean existsByUserAndPromotion(User user, Promotion promotion);
 
 }
