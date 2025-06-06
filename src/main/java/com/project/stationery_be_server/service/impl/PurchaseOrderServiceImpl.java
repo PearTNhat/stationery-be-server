@@ -28,9 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -89,15 +87,11 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     String urlCheckTransaction;
 
     @Transactional
-    public Long handleRequestPurchaseOrder(PurchaseOrderRequest request, String orderId, User user) {
+    public Long handleRequestPurchaseOrder(PurchaseOrderRequest request, String orderId) {
         List<PurchaseOrderDetail> listOderDetail = new ArrayList<>();
         List<PurchaseOrderProductRequest> pdRequest = request.getOrderDetails();
         String userPromotionId = request.getUserPromotionId();
 
-/*        var context = SecurityContextHolder.getContext();
-        String userId = context.getAuthentication().getName();
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));*/
 
         PurchaseOrder purchaseOrder = new PurchaseOrder();
         purchaseOrder.setUser(user);
@@ -179,11 +173,13 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         purchaseOrder.setUserPromotion(userPromotion);
         purchaseOrder.setAmount(totalAmount);
 
+
         purchaseOrderRepository.save(purchaseOrder);
         return totalAmount;
     }
 
     @Override
+    @Transactional
     public MomoResponse createOrderWithMomo(PurchaseOrderRequest request) {
         var context = SecurityContextHolder.getContext();
         String userId = context.getAuthentication().getName();
@@ -345,8 +341,6 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         paymentRepository.save(payment);
         purchaseOrderRepository.save(purchaseOrder);
     }
-
-
 
     public String generateHmacSHA256(String data, String key) throws Exception {
 
