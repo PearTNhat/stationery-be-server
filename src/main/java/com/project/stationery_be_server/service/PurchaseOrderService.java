@@ -10,8 +10,6 @@ import java.util.List;
 import java.util.Map;
 
 public interface PurchaseOrderService {
-    MomoResponse createOrderWithMomo(PurchaseOrderRequest request);
-    MomoResponse transactionStatus(String orderId);
     List<PurchaseOrderResponse> getAllPendingOrders();
     List<PurchaseOrderResponse> getAllNonPendingOrders();
     List<PurchaseOrderResponse> getUserOrdersByStatus(String userId, String status);
@@ -19,4 +17,7 @@ public interface PurchaseOrderService {
     Map<PurchaseOrder.Status, Long> getOrderStatusStatistics(String userId);
     void cancelOrder(String userId, String purchaseOrderId, String cancelReason);
     PurchaseOrderResponse editPurchaseOrder(String userId, String purchaseOrderId, PurchaseOrderRequest request);
+
+    MomoResponse createOrderWithMomo(PurchaseOrderRequest request);
+    MomoResponse transactionStatus(String orderId,Integer status);
 }

@@ -1,6 +1,5 @@
 package com.project.stationery_be_server.controller;
 
-
 import com.project.stationery_be_server.dto.request.CancelOrderRequest;
 import com.project.stationery_be_server.dto.request.order.PurchaseOrderRequest;
 import com.project.stationery_be_server.dto.response.ApiResponse;
@@ -34,10 +33,10 @@ public class PurchaseOrderController {
 
     }
     @GetMapping("/payment-momo/transaction-status/{orderId}")
-    public ApiResponse<MomoResponse> transactionStatus(@PathVariable String orderId) {
+    public ApiResponse<MomoResponse> transactionStatus(@PathVariable String orderId, @RequestParam(value = "status",required = false, defaultValue = "1") Integer status) {
         return ApiResponse.<MomoResponse>builder()
                 .message("Transaction status retrieved successfully")
-                .result(purchaseOrderService.transactionStatus(orderId))
+                .result(purchaseOrderService.transactionStatus(orderId,status))
                 .build();
     }
 

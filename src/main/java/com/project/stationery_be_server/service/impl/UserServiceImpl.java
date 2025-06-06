@@ -28,6 +28,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -258,7 +259,6 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> {
                     return new AppException(NotExistedErrorCode.USER_NOT_EXISTED);
                 });
-
         // Check password old
         if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
             throw new AppException(AuthErrorCode.INCORRECT_OLD_PASSWORD);
@@ -307,30 +307,30 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void deleteUser(DeleteUserRequest request) {
+    public void deleteUser(DeleteUserRequest request){
         //lay user hien tai dang dung
         var context = SecurityContextHolder.getContext();
         String userIdLogin = context.getAuthentication().getName();
         User user = userRepository.findById(userIdLogin)
                 .orElseThrow(() -> new AppException(NotExistedErrorCode.USER_NOT_EXISTED));
         // admin moi dc xoa
-        if (!user.getRole().getRoleName().equals("admin")) {
+        if (!user.getRole().getRoleName().equals("admin")){
             throw new RuntimeException("You do not have permission to delete users");
         }
         // kiem tra user bi xoa
         String userIdDeleted = request.getUserId();
         User userDeleted = userRepository.findById(userIdDeleted)
-                .orElseThrow(() -> new AppException(NotExistedErrorCode.USER_NOT_EXISTED));
+                .orElseThrow(()->new AppException(NotExistedErrorCode.USER_NOT_EXISTED));
         // k xoa ban than
         if (userIdDeleted.equals(userIdLogin)) {
             throw new RuntimeException("You can not delete yourself.");
         }
         // cac table co du lieu lien qua
         if (userRepository.hasReview(userIdDeleted)
-            || userRepository.hasAddress(userIdDeleted)
-            || userRepository.hasCart(userIdDeleted)
-            || userRepository.hasPurchaseOrder(userIdDeleted)
-            || userRepository.hasUserPromotion(userIdDeleted)) {
+                || userRepository.hasAddress(userIdDeleted)
+                || userRepository.hasCart(userIdDeleted)
+                || userRepository.hasPurchaseOrder(userIdDeleted)
+                || userRepository.hasUserPromotion(userIdDeleted)) {
 
             throw new RuntimeException("Can not delete this user because of having data.");
         }
