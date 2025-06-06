@@ -5,13 +5,14 @@ import com.project.stationery_be_server.entity.Promotion;
 import com.project.stationery_be_server.entity.User;
 import com.project.stationery_be_server.entity.UserPromotion;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface UserPromotionRepository extends JpaRepository<UserPromotion, String> {
+public interface UserPromotionRepository extends JpaRepository<UserPromotion, String>  , JpaSpecificationExecutor<UserPromotion> {
 
     @Query(value = """
     SELECT up.* FROM user_promotion up

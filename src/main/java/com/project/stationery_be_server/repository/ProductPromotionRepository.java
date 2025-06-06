@@ -1,14 +1,16 @@
 package com.project.stationery_be_server.repository;
 
 import com.project.stationery_be_server.entity.ProductPromotion;
+import com.project.stationery_be_server.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface ProductPromotionRepository extends JpaRepository<ProductPromotion, String> {
+public interface ProductPromotionRepository extends JpaRepository<ProductPromotion, String> , JpaSpecificationExecutor<ProductPromotion> {
     @Query(value = """
             SELECT pp.* from product_promotion pp
             JOIN promotion p ON pp.promotion_id = p.promotion_id
