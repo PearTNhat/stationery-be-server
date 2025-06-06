@@ -11,7 +11,6 @@ import com.project.stationery_be_server.dto.response.product.ProductDetailRespon
 import com.project.stationery_be_server.entity.*;
 import com.project.stationery_be_server.exception.AppException;
 import com.project.stationery_be_server.repository.*;
-import com.project.stationery_be_server.service.NotificationService;
 import com.project.stationery_be_server.service.PurchaseOrderService;
 import lombok.AccessLevel;
 import org.springframework.http.MediaType;
@@ -50,11 +49,8 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     ProductRepository productRepository;
     PdfGenerationServiceImpl pdfGenerationServiceImpl;
     PaymentRepository paymentRepository;
-    PromotionRepository promotionRepository;
+    private final PromotionRepository promotionRepository;
     InOrderRepository inOrderRepository;
-    //private final PromotionRepository promotionRepository;
-    private final NotificationService notificationService;
-
     @Value(value = "${momo.partnerCode}")
     @NonFinal
     String partnerCode;
@@ -87,7 +83,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     String urlCheckTransaction;
 
     @Transactional
-    public Long handleRequestPurchaseOrder(PurchaseOrderRequest request, String orderId) {
+    public Long handleRequestPurchaseOrder(PurchaseOrderRequest request, String orderId, User user) {
         List<PurchaseOrderDetail> listOderDetail = new ArrayList<>();
         List<PurchaseOrderProductRequest> pdRequest = request.getOrderDetails();
         String userPromotionId = request.getUserPromotionId();
@@ -98,8 +94,6 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         purchaseOrder.setPurchaseOrderId(orderId);
         purchaseOrder.setStatus(PENDING);
         purchaseOrder.setAddress(addressRepository.findByAddressId(request.getAddressId()).orElseThrow(() -> new AppException(NotExistedErrorCode.ADDRESS_NOT_FOUND)));
-        purchaseOrder.setExpiredTime(request.getExpiredTime());
-        purchaseOrder.setNote(request.getNote());
 
         purchaseOrderRepository.save(purchaseOrder);
         Long totalAmount = 0L;
@@ -134,8 +128,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                 throw new AppException(NotExistedErrorCode.PRODUCT_NOT_ENOUGH);
             }
             productDetailRepository.save(pd);
-            int quantity = orderDetail.getQuantity();
-            totalAmount += disCountPrice * quantity;
+            totalAmount += disCountPrice;
             PurchaseOrderDetailId id = new PurchaseOrderDetailId();
             id.setPurchaseOrderId(orderId);  // Chính là orderId được truyền vào
             id.setProductDetailId(pd.getProductDetailId());  // Lấy từ productDetail
@@ -179,7 +172,6 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     }
 
     @Override
-    @Transactional
     public MomoResponse createOrderWithMomo(PurchaseOrderRequest request) {
         var context = SecurityContextHolder.getContext();
         String userId = context.getAuthentication().getName();
@@ -486,7 +478,6 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                                 : List.of();
                     }
 
-
                     return ProductDetailResponse.builder()
                             .productDetailId(productDetail.getProductDetailId())
                             .slug(productDetail.getSlug() != null ? productDetail.getSlug() : "")
@@ -502,7 +493,6 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                             .build();
                 })
                 .collect(Collectors.toList());
-
     }
 
     @Override
