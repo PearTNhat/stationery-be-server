@@ -34,7 +34,7 @@ import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.project.stationery_be_server.entity.PurchaseOrder.Status.PENDING;
+import static com.project.stationery_be_server.entity.PurchaseOrder.Status.*;
 
 @Service
 @RequiredArgsConstructor
@@ -94,10 +94,10 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         List<PurchaseOrderProductRequest> pdRequest = request.getOrderDetails();
         String userPromotionId = request.getUserPromotionId();
 
-        var context = SecurityContextHolder.getContext();
+/*        var context = SecurityContextHolder.getContext();
         String userId = context.getAuthentication().getName();
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("User not found"));*/
 
         PurchaseOrder purchaseOrder = new PurchaseOrder();
         purchaseOrder.setUser(user);
