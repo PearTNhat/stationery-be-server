@@ -1,8 +1,8 @@
 package com.project.stationery_be_server.service.impl;
 
-import com.project.stationery_be_server.entity.Promotion;
 import com.project.stationery_be_server.entity.UserPromotion;
 import com.project.stationery_be_server.repository.UserPromotionRepository;
+import com.project.stationery_be_server.service.NotificationService;
 import com.project.stationery_be_server.service.UserPromotionService;
 import com.project.stationery_be_server.specification.UserPromotionSpecification;
 import lombok.AccessLevel;
