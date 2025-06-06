@@ -27,9 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -439,7 +437,6 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                                 : List.of();
                     }
 
-
                     return ProductDetailResponse.builder()
                             .productDetailId(productDetail.getProductDetailId())
                             .slug(productDetail.getSlug() != null ? productDetail.getSlug() : "")
@@ -455,7 +452,6 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                             .build();
                 })
                 .collect(Collectors.toList());
-
     }
 
     @Override
