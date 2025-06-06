@@ -2,6 +2,7 @@ package com.project.stationery_be_server.service.impl;
 
 import com.project.stationery_be_server.Error.NotExistedErrorCode;
 import com.project.stationery_be_server.dto.request.MomoRequest;
+import com.project.stationery_be_server.dto.response.InvoiceResponse;
 import com.project.stationery_be_server.dto.response.momo.MomoResponse;
 import com.project.stationery_be_server.dto.response.MonthlyInvoiceSummaryResponse;
 import com.project.stationery_be_server.entity.PurchaseOrder;
@@ -35,6 +36,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -74,36 +76,76 @@ public class DepartmentInvoiceServiceImpl implements DepartmentInvoiceService {
     @Transactional(readOnly = true)
     @Override
     public MonthlyInvoiceSummaryResponse getCurrentMonthInvoiceSummary(String userId) {
+        // 1. Lấy user từ DB, ném exception nếu không tồn tại
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(NotExistedErrorCode.USER_NOT_EXISTED));
-        if (!user.getRole().getRoleId().equals("113")) {
+
+        // 2. Kiểm tra role (chỉ cho department roleId = "113")
+        if (!"113".equals(user.getRole().getRoleId())) {
             throw new AppException(NotExistedErrorCode.USER_EXISTED);
         }
 
-        // Find the last invoice to determine the start date
-        PurchaseOrder lastInvoice = purchaseOrderRepository.findTopByUser_UserIdAndNoteContainingOrderByCreatedAtDesc(
-                userId, "Monthly invoice"
+        // 3. Xác định thời điểm hiện tại (endDate)
+        LocalDateTime now = LocalDateTime.now();
+
+        // 4. Chuẩn bị danh sách trạng thái "chưa thanh toán"
+        List<PurchaseOrder.Status> unpaidStatuses = List.of(
+                PurchaseOrder.Status.PROCESSING
         );
 
-        LocalDateTime startDate = lastInvoice != null ? lastInvoice.getCreatedAt() : LocalDateTime.now().minusMonths(1);
-        LocalDateTime endDate = LocalDateTime.now();
+        // 5. Query tất cả hoá đơn của user với createdAt <= now và status in unpaidStatuses
+        List<PurchaseOrder> unpaidOrders = purchaseOrderRepository
+                .findByUser_UserIdAndCreatedAtLessThanEqualAndStatusIn(
+                        userId, now, unpaidStatuses
+                );
 
-        List<PurchaseOrder> orders = purchaseOrderRepository.findByUser_UserIdAndCreatedAtBetween(
-                userId, startDate, endDate
-        );
-
-        BigDecimal totalAmount = orders.stream()
-                .filter(order -> order.getStatus() == PurchaseOrder.Status.COMPLETED)
+        // 6. Tính tổng số tiền chưa thanh toán (cộng dồn cả các tháng trước)
+        BigDecimal totalUnpaidAmount = unpaidOrders.stream()
                 .map(order -> BigDecimal.valueOf(order.getAmount()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        // 7. Kết quả orderCount là số hoá đơn chưa thanh toán (tích lũy)
+        int unpaidCount = unpaidOrders.size();
+
+        // 8. Đóng gói response
         return MonthlyInvoiceSummaryResponse.builder()
                 .userId(userId)
-                .month(LocalDateTime.now().getMonthValue())
-                .year(LocalDateTime.now().getYear())
-                .totalAmount(totalAmount)
-                .orderCount(orders.size())
+                .month(now.getMonthValue())   // vẫn giữ month là tháng hiện tại
+                .year(now.getYear())          // năm hiện tại
+                .totalAmount(totalUnpaidAmount)
+                .orderCount(unpaidCount)
                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<InvoiceResponse> getAllInvoices(String userId) {
+        // 1. Kiểm tra user tồn tại
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(NotExistedErrorCode.USER_NOT_EXISTED));
+
+        // 2. Kiểm tra role (chỉ cho department roleId = "113")
+        if (!"113".equals(user.getRole().getRoleId())) {
+            throw new AppException(NotExistedErrorCode.USER_EXISTED);
+        }
+
+        // 3. Lấy tất cả purchase orders của user đó (bất kể status nào)
+        //    Nếu bạn muốn lấy tất cả người dùng, có thể dùng purchaseOrderRepository.findAll()
+        List<PurchaseOrder> allOrders = purchaseOrderRepository.findByUser_UserId(userId);
+
+        // 4. Map từ PurchaseOrder -> InvoiceResponse
+        List<InvoiceResponse> result = allOrders.stream()
+                .map(order -> InvoiceResponse.builder()
+                        .purchaseOrderId(order.getPurchaseOrderId())
+                        // Giả sử trong entity amount được lưu là Long hoặc double;
+                        // Ở đây mình ép sang BigDecimal nếu cần (tuỳ cài đặt thực tế)
+                        .amount(BigDecimal.valueOf(order.getAmount()))
+                        .createdAt(order.getCreatedAt())
+                        .pdfUrl(order.getPdfUrl())
+                        .build())
+                .collect(Collectors.toList());
+
+        return result;
     }
 
     @Transactional
