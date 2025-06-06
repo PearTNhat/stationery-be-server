@@ -43,7 +43,7 @@ public class ColorController {
     }
     @PreAuthorize("hasAuthority('admin')")
     @GetMapping("/admin/get-colors")
-    public ApiResponse<Page<ColorResponse>> getAllProductsForAdmin(@RequestParam(defaultValue = "0") int page,
+    public ApiResponse<Page<ColorResponse>> getAllColorsForAdmin(@RequestParam(defaultValue = "0") int page,
                                                                       @RequestParam(defaultValue = "10") int limit,
                                                                       @RequestParam(required = false) String search
 
