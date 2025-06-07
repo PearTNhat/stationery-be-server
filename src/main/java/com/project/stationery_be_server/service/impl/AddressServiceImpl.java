@@ -93,6 +93,7 @@ public class AddressServiceImpl implements AddressService {
 
         address.setAddressName(addressRequest.getAddressName());
         address.setPhone(addressRequest.getPhone());
+        address.setRecipient(addressRequest.getRecipient());
         address.setDefault(addressRequest.getIsDefault() != null && addressRequest.getIsDefault());
         address.setUser(user);
 
@@ -102,6 +103,7 @@ public class AddressServiceImpl implements AddressService {
                 .addressId(updatedAddress.getAddressId())
                 .addressName(updatedAddress.getAddressName())
                 .phone(updatedAddress.getPhone())
+                .recipient(updatedAddress.getRecipient())
                 .isDefault(updatedAddress.isDefault())
                 .build();
     }
@@ -152,6 +154,7 @@ public class AddressServiceImpl implements AddressService {
                 .addressId(saved.getAddressId())
                 .addressName(saved.getAddressName())
                 .phone(saved.getPhone())
+                .recipient(saved.getRecipient())
                 .isDefault(saved.isDefault())
                 .build();
     }

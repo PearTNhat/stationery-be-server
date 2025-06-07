@@ -199,7 +199,8 @@ public class CartServiceImpl implements CartService {
                 .discountPrice(disCountPrice)
                 .discountValue(discountValue)
                 .createdAt(cart.getCreatedAt())
-                .imageUrl(imageUrl)
+                .imageUrl(productDetail.getThumbnail())
+                .slug(productDetail.getSlug())
                 .build();
     }
 
