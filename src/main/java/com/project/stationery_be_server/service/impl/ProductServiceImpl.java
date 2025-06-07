@@ -129,7 +129,7 @@ public class ProductServiceImpl implements ProductService {
     public List<ColorSizeSlugResponse> fetchColorSizeSlug(String slug) {
         return productDetailRepository.fetchColorSizeBySLug(slug);
     }
-// user
+    // user
     @Override
     public Page<ProductResponse> getAllProducts(Pageable pageable, ProductFilterRequest filter) {
         Specification<Product> spec = ProductSpecification.filterProductsForUser(filter);
@@ -155,7 +155,7 @@ public class ProductServiceImpl implements ProductService {
                 .toList();
         return new PageImpl<>(productListResponses, pageable, p.getTotalElements());
     }
-// admin
+    // admin
     @Override
     public List<ProductDetailResponse> getProductDetailByProduct(String productId) {
         List<ProductDetail> pd = productDetailRepository.findByProduct_ProductId(productId);

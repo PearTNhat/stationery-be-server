@@ -177,11 +177,11 @@ public class ProductDetailServiceImpl implements ProductDetailService {
         List<ProductDetail> details = productDetailRepository.findAll();
         return details.stream()
                 .map(d ->
-                                ProductDetailPromotion.builder()
-                                        .productDetailId(d.getProductDetailId())
-                                        .name(d.getName())
-                                        .build()
-                        )
+                        ProductDetailPromotion.builder()
+                                .productDetailId(d.getProductDetailId())
+                                .name(d.getName())
+                                .build()
+                )
                 .toList();
 
     }

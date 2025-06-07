@@ -51,6 +51,13 @@ public class UserController {
                 .build();
     }
 
+    @GetMapping("/info/{userId}")
+    public ApiResponse<UserResponse> getUerById(@PathVariable String userId) {
+        return ApiResponse.<UserResponse>builder()
+                .result(userService.getUserById(userId))
+                .build();
+    }
+
     @PostMapping("/register")
     public ApiResponse<String> registerUser(@RequestBody RegisterRequest request) {
         String message = userService.register(request);
