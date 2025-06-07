@@ -4,6 +4,7 @@ import com.project.stationery_be_server.dto.request.DeletePromotionRequest;
 import com.project.stationery_be_server.dto.request.PromotionRequest;
 import com.project.stationery_be_server.dto.request.UpdatePromotionRequest;
 import com.project.stationery_be_server.dto.response.ApiResponse;
+import com.project.stationery_be_server.dto.response.promotion.PromotionResponse;
 import com.project.stationery_be_server.entity.ProductPromotion;
 import com.project.stationery_be_server.entity.Promotion;
 import com.project.stationery_be_server.entity.UserPromotion;
@@ -78,14 +79,18 @@ public class PromotionController {
                 .result(pageUP)
                 .build();
     }
-    @GetMapping("/all-product-promotions")
-    public ApiResponse<Page<ProductPromotion>> getAllProductPromotions(
+    @PreAuthorize("hasAuthority('admin')")
+    @GetMapping("/all-promotions")
+    public ApiResponse<Page<PromotionResponse>> getAllProductPromotions(
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int limit) {
-        if (page < 1) page = 1;
-        Pageable pageable = PageRequest.of(page - 1, limit);
-        Page<ProductPromotion> pagePP = promotionService.getAllProductPromotions(pageable);
-        return ApiResponse.<Page<ProductPromotion>>builder()
+            @RequestParam(defaultValue = "10") int limit,
+            @RequestParam(required = false) String search
+
+    ) {
+        page = page <= 1 ? 0 : page - 1;
+        Pageable pageable = PageRequest.of(page, limit);
+        Page<PromotionResponse> pagePP = promotionService.getAllPromotion(pageable, search);
+        return ApiResponse.<Page<PromotionResponse>>builder()
                 .result(pagePP)
                 .build();
     }
