@@ -73,6 +73,7 @@ public class ProductController {
         if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getName())) {
             userId = authentication.getName();
         }
+        searchHistoryService.logKeyword(search, userId);
         Page<ProductResponse> pageResult = productService.getAllProductWithDefaultPD(pageable, filterRequest);
         return ApiResponse.<Page<ProductResponse>>builder()
                 .result(pageResult)
@@ -206,7 +207,6 @@ public class ProductController {
     @PutMapping("/update-hidden-product/{productId}")
     public ApiResponse<Boolean> updateHiddenProduct(@PathVariable String productId, @RequestBody Map<String, Boolean> body) {
         boolean isHidden = body.get("hidden");
-        System.out.println("_---");
         return ApiResponse.<Boolean>builder()
                 .result(productService.updateHiddenProduct(productId, isHidden))
                 .build();

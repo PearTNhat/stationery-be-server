@@ -38,4 +38,6 @@ public interface UserService {
     Page<UserInfoResponse> getAllUsers(Pageable pageable , UserFilterRequest filter);
     UserResponse updateUserAdmin(String documentJson, String userId,  MultipartFile file);
     Void blockUser(String userId);
+
+    UserResponse getUserById(String userId);
 }

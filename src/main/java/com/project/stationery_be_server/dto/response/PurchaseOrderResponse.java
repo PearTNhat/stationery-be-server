@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 
@@ -23,5 +24,9 @@ public class PurchaseOrderResponse {
     private String userPromotionId;
     private PurchaseOrder.Status status;
     private BigDecimal amount;
+    private String note;
+    private String cancelReason;
+    private LocalDateTime expiredTime;
     private List<PurchaseOrderDetailResponse> orderDetails;
+    private String userId;
 }
