@@ -24,7 +24,6 @@ import java.util.Map;
 public class PurchaseOrderController {
     private final PurchaseOrderService purchaseOrderService;
 
-
     @PostMapping("/payment-momo")
     public ApiResponse<MomoResponse> createOrderWithMomo(@RequestBody PurchaseOrderRequest request) {
         System.out.println("Request: " + request);
@@ -71,6 +70,17 @@ public class PurchaseOrderController {
                 .result(productDetails)
                 .build();
     }
+
+    @GetMapping("/{purchaseOrderId}/purchase-details")
+    public ApiResponse<PurchaseOrderResponse> getPurchaseOrderDetails(@PathVariable String purchaseOrderId) {
+        PurchaseOrderResponse response = purchaseOrderService.getPurchaseOrderDetails(purchaseOrderId);
+        return ApiResponse.<PurchaseOrderResponse>builder()
+                .code(200)
+                .message("Purchase details for order retrieved successfully")
+                .result(response)
+                .build();
+    }
+
     @GetMapping("/user/status-statistics")
     public ApiResponse<Map<PurchaseOrder.Status, Long>> getOrderStatusStatistics() {
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();

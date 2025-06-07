@@ -34,6 +34,7 @@ public enum NotExistedErrorCode implements BaseErrorCode {
     ORDER_NOT_EDITABLE(1042, "Order can't edit", HttpStatus.BAD_REQUEST),
     //
     IN_ORDER_NOT_FOUND(1043, "In order not found", HttpStatus.BAD_REQUEST),
+    PURCHASE_ORDER_NOT_EXISTED(1044, "Purchase order not existed", HttpStatus.BAD_REQUEST),
 
     // user promotion
     USER_PROMOTION_NOT_FOUND(1050, "User promotion not found", HttpStatus.BAD_REQUEST),

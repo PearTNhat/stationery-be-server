@@ -1,3 +1,4 @@
+/*
 package com.project.stationery_be_server.Scheduled;
 
 import com.project.stationery_be_server.entity.InOrder;
@@ -52,3 +53,4 @@ public class OrderCleanupService {
         }
     }
 }
+*/

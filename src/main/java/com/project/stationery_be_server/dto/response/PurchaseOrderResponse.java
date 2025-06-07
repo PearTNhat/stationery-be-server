@@ -1,5 +1,6 @@
 package com.project.stationery_be_server.dto.response;
 
+import com.project.stationery_be_server.dto.response.product.ProductDetailResponse;
 import com.project.stationery_be_server.entity.PurchaseOrder;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,5 +28,9 @@ public class PurchaseOrderResponse {
     private String note;
     private String cancelReason;
     private LocalDateTime expiredTime;
+
+    private AddressResponse address;
+    private List<ProductDetailResponse> productDetails;
     private List<PurchaseOrderDetailResponse> orderDetails;
+
 }
