@@ -81,6 +81,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public UserResponse getUserById(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(NotExistedErrorCode.USER_NOT_EXISTED));
+        return userMapper.toUserResponse(user);
+    }
+
+    @Override
     @Transactional
     public UserResponse createUserFromGoogle(String email, String fullName, String avatar) {
         Role role = roleRepository.findById("112")

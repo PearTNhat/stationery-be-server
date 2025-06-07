@@ -13,6 +13,8 @@ import com.project.stationery_be_server.exception.AppException;
 import com.project.stationery_be_server.repository.*;
 import com.project.stationery_be_server.service.PurchaseOrderService;
 import lombok.AccessLevel;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
 import lombok.RequiredArgsConstructor;
@@ -347,59 +349,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         return UUID.randomUUID().toString().replace("-", "").toUpperCase();
     }
 
-    // Cập nhật getAllPendingOrders
-    @Override
-    @Transactional(readOnly = true)
-    public List<PurchaseOrderResponse> getAllPendingOrders() {
-        List<PurchaseOrder> orders = purchaseOrderRepository.findByStatusWithDetails(PurchaseOrder.Status.PENDING);
-        if (orders.isEmpty()) {
-            return Collections.emptyList(); // Trả về danh sách rỗng nếu không có kết quả
-        }
-        return orders.stream()
-                .map(order -> PurchaseOrderResponse.builder()
-                        .purchaseOrderId(order.getPurchaseOrderId())
-                        .createdAt(order.getCreatedAt() != null ? java.util.Date.from(order.getCreatedAt().atZone(java.time.ZoneId.systemDefault()).toInstant()) : null)
-                        .pdfUrl(order.getPdfUrl())
-                        .userPromotionId(order.getUserPromotion() != null ? order.getUserPromotion().getUserPromotionId() : null)
-                        .status(order.getStatus())
-                        .amount(BigDecimal.valueOf(order.getAmount()))
-                        .orderDetails(order.getPurchaseOrderDetails().stream()
-                                .map(detail -> PurchaseOrderDetailResponse.builder()
-                                        .productDetailId(detail.getPurchaseOrderDetailId().getProductDetailId())
-                                        .quantity(detail.getQuantity())
-                                        .build())
-                                .collect(Collectors.toList()))
-                        .build())
-                .collect(Collectors.toList());
-    }
-
-    // Cập nhật getAllNonPendingOrders
-    @Override
-    @Transactional(readOnly = true)
-    public List<PurchaseOrderResponse> getAllNonPendingOrders() {
-        List<PurchaseOrder> orders = purchaseOrderRepository.findByStatusNotWithDetails(PurchaseOrder.Status.PENDING);
-        if (orders.isEmpty()) {
-            return Collections.emptyList(); // Trả về danh sách rỗng nếu không có kết quả
-        }
-        return orders.stream()
-                .map(order -> PurchaseOrderResponse.builder()
-                        .purchaseOrderId(order.getPurchaseOrderId())
-                        .createdAt(order.getCreatedAt() != null ? java.util.Date.from(order.getCreatedAt().atZone(java.time.ZoneId.systemDefault()).toInstant()) : null)
-                        .pdfUrl(order.getPdfUrl())
-                        .userPromotionId(order.getUserPromotion() != null ? order.getUserPromotion().getUserPromotionId() : null)
-                        .status(order.getStatus())
-                        .amount(BigDecimal.valueOf(order.getAmount()))
-                        .orderDetails(order.getPurchaseOrderDetails().stream()
-                                .map(detail -> PurchaseOrderDetailResponse.builder()
-                                        .productDetailId(detail.getPurchaseOrderDetailId().getProductDetailId())
-                                        .quantity(detail.getQuantity())
-                                        .build())
-                                .collect(Collectors.toList()))
-                        .build())
-                .collect(Collectors.toList());
-    }
-
-    // Cập nhật getUserOrdersByStatus
+    // ***USER: Lấy all đơn hàng
     @Override
     @Transactional(readOnly = true)
     public List<PurchaseOrderResponse> getUserOrdersByStatus(String userId, String status) {
@@ -677,5 +627,147 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
             }
         }
         return totalAmount;
+    }
+
+    //Order ADMIN
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PurchaseOrderResponse> getAllPendingOrders(String roleName, Pageable pageable) {
+        Page<PurchaseOrder> orders = purchaseOrderRepository.findPendingOrdersByFilters(
+                roleName, PurchaseOrder.Status.PENDING, pageable);
+        if (orders.isEmpty()) {
+            return Page.empty(pageable);
+        }
+        return orders.map(order -> PurchaseOrderResponse.builder()
+                .purchaseOrderId(order.getPurchaseOrderId())
+                .createdAt(order.getCreatedAt() != null
+                        ? java.util.Date.from(order.getCreatedAt().atZone(java.time.ZoneId.systemDefault()).toInstant())
+                        : null)
+                .pdfUrl(order.getPdfUrl())
+                .userPromotionId(order.getUserPromotion() != null ? order.getUserPromotion().getUserPromotionId() : null)
+                .status(order.getStatus())
+                .amount(BigDecimal.valueOf(order.getAmount()))
+                .note(order.getNote())
+                .cancelReason(order.getCancelReason())
+                .orderDetails(order.getPurchaseOrderDetails().stream()
+                        .map(detail -> PurchaseOrderDetailResponse.builder()
+                                .productDetailId(detail.getPurchaseOrderDetailId().getProductDetailId())
+                                .quantity(detail.getQuantity())
+                                .build())
+                        .collect(Collectors.toList()))
+                .userId(order.getUser().getUserId())
+                .build());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PurchaseOrderResponse> getAllNonPendingOrders(String roleName, List<PurchaseOrder.Status> status, Pageable pageable) {
+        List<PurchaseOrder.Status> statuses = (status == null || status.isEmpty())
+                ? List.of(PurchaseOrder.Status.PROCESSING, PurchaseOrder.Status.SHIPPING,
+                PurchaseOrder.Status.COMPLETED, PurchaseOrder.Status.CANCELED)
+                : status;
+        Page<PurchaseOrder> orders = purchaseOrderRepository.findNonPendingOrdersByFilters(roleName, statuses, pageable);
+        if (orders.isEmpty()) {
+            return Page.empty(pageable);
+        }
+        return orders.map(order -> PurchaseOrderResponse.builder()
+                .purchaseOrderId(order.getPurchaseOrderId())
+                .createdAt(order.getCreatedAt() != null
+                        ? java.util.Date.from(order.getCreatedAt().atZone(java.time.ZoneId.systemDefault()).toInstant())
+                        : null)
+                .expiredTime(order.getExpiredTime())
+                .pdfUrl(order.getPdfUrl())
+                .userPromotionId(order.getUserPromotion() != null ? order.getUserPromotion().getUserPromotionId() : null)
+                .status(order.getStatus())
+                .note(order.getNote())
+                .cancelReason(order.getCancelReason())
+                .amount(BigDecimal.valueOf(order.getAmount()))
+                .orderDetails(order.getPurchaseOrderDetails().stream()
+                        .map(detail -> PurchaseOrderDetailResponse.builder()
+                                .productDetailId(detail.getPurchaseOrderDetailId().getProductDetailId())
+                                .quantity(detail.getQuantity())
+                                .build())
+                        .collect(Collectors.toList()))
+                .userId(order.getUser().getUserId())
+                .build());
+    }
+
+    @Override
+    @Transactional
+    public void confirmOrder(String purchaseOrderId) {
+        PurchaseOrder purchaseOrder = purchaseOrderRepository.findByPurchaseOrderId(purchaseOrderId)
+                .orElseThrow(() -> new AppException(NotExistedErrorCode.ORDER_NOT_FOUND));
+
+        if (purchaseOrder.getStatus() != PurchaseOrder.Status.PENDING) {
+            throw new AppException(NotExistedErrorCode.ORDER_NOT_PENDING);
+        }
+
+        purchaseOrder.setStatus(PurchaseOrder.Status.PROCESSING);
+        purchaseOrderRepository.save(purchaseOrder);
+    }
+
+    @Override
+    @Transactional
+    public void updateOrderStatus(String userId, String purchaseOrderId, String statusStr, String cancelReason) {
+        // Verify user exists
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(NotExistedErrorCode.USER_NOT_EXISTED));
+        System.out.println("[DEBUG]: purchaseOrderId" + purchaseOrderId);
+        // Find the order
+        PurchaseOrder purchaseOrder = purchaseOrderRepository.findByPurchaseOrderId(purchaseOrderId)
+                .orElseThrow(() -> new AppException(NotExistedErrorCode.ORDER_NOT_FOUND));
+
+        // Convert status string to enum
+        PurchaseOrder.Status status;
+        try {
+            status = PurchaseOrder.Status.valueOf(statusStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new AppException(NotExistedErrorCode.ORDER_NOT_FOUND);
+        }
+
+        // Check if the order is in a valid state for updating
+        if (purchaseOrder.getStatus() == PurchaseOrder.Status.PENDING &&
+                status != PurchaseOrder.Status.PROCESSING &&
+                status != PurchaseOrder.Status.CANCELED) {
+            throw new AppException(NotExistedErrorCode.ORDER_STILL_PENDING);
+        }
+
+        // If updating to CANCELED, check if the order is cancellable and restore quantities/promotions
+        if (status == PurchaseOrder.Status.CANCELED) {
+            if (purchaseOrder.getStatus() != PurchaseOrder.Status.PENDING &&
+                    purchaseOrder.getStatus() != PurchaseOrder.Status.PROCESSING) {
+                throw new AppException(NotExistedErrorCode.ORDER_NOT_CANCELLABLE);
+            }
+
+            // Restore product quantities
+            List<PurchaseOrderDetail> orderDetails = purchaseOrderDetailRepository.findByPurchaseOrder_PurchaseOrderId(purchaseOrderId);
+            for (PurchaseOrderDetail detail : orderDetails) {
+                ProductDetail productDetail = detail.getProductDetail();
+                productDetail.setAvailableQuantity(productDetail.getAvailableQuantity() + detail.getQuantity());
+                productDetailRepository.save(productDetail);
+
+                // Restore product promotion usage limit if applicable
+                if (detail.getProductPromotion() != null) {
+                    Promotion promotion = detail.getProductPromotion().getPromotion();
+                    promotion.setTempUsageLimit(promotion.getTempUsageLimit() + 1);
+                    promotionRepository.save(promotion);
+                }
+            }
+
+            // Restore user promotion usage limit if applicable
+            if (purchaseOrder.getUserPromotion() != null) {
+                Promotion userPromotion = purchaseOrder.getUserPromotion().getPromotion();
+                userPromotion.setTempUsageLimit(userPromotion.getTempUsageLimit() + 1);
+                promotionRepository.save(userPromotion);
+            }
+
+            // Set cancel reason and clear expired time
+            purchaseOrder.setCancelReason(cancelReason != null ? cancelReason : "Hủy bởi quản trị viên");
+            purchaseOrder.setExpiredTime(null);
+        }
+
+        // Update order status
+        purchaseOrder.setStatus(status);
+        purchaseOrderRepository.save(purchaseOrder);
     }
 }

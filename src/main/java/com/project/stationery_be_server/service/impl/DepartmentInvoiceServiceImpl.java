@@ -2,18 +2,12 @@ package com.project.stationery_be_server.service.impl;
 
 import com.project.stationery_be_server.Error.NotExistedErrorCode;
 import com.project.stationery_be_server.dto.request.MomoRequest;
+import com.project.stationery_be_server.dto.response.InvoiceResponse;
 import com.project.stationery_be_server.dto.response.momo.MomoResponse;
 import com.project.stationery_be_server.dto.response.MonthlyInvoiceSummaryResponse;
-import com.project.stationery_be_server.entity.PurchaseOrder;
-import com.project.stationery_be_server.entity.PurchaseOrderDetail;
-import com.project.stationery_be_server.entity.User;
+import com.project.stationery_be_server.entity.*;
 import com.project.stationery_be_server.exception.AppException;
-import com.project.stationery_be_server.repository.PurchaseOrderDetailRepository;
-import com.project.stationery_be_server.repository.PurchaseOrderRepository;
-import com.project.stationery_be_server.repository.UserRepository;
-import com.project.stationery_be_server.repository.PromotionRepository;
-import com.project.stationery_be_server.repository.ProductDetailRepository;
-import com.project.stationery_be_server.repository.PaymentRepository;
+import com.project.stationery_be_server.repository.*;
 import com.project.stationery_be_server.service.PdfGenerationService;
 import com.project.stationery_be_server.service.DepartmentInvoiceService;
 import lombok.AccessLevel;
@@ -33,8 +27,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -48,62 +42,71 @@ public class DepartmentInvoiceServiceImpl implements DepartmentInvoiceService {
     ProductDetailRepository productDetailRepository;
     PurchaseOrderDetailRepository purchaseOrderDetailRepository;
     PromotionRepository promotionRepository;
+    InOrderRepository inOrderRepository;
 
-    @Value(value = "${momo.partnerCode}")
-    @NonFinal
-    String partnerCode;
-    @Value(value = "${momo.accessKey}")
-    @NonFinal
-    String accessKey;
-    @Value(value = "${momo.secretKey}")
-    @NonFinal
-    String secretKey;
-    @Value(value = "${momo.redirectUrl}")
-    @NonFinal
-    String redirectUrl;
-    @Value(value = "${momo.ipnUrl}")
-    @NonFinal
-    String ipnUrl;
-    @Value(value = "${momo.requestType}")
-    @NonFinal
-    String requestType;
-    @Value(value = "${momo.endpoint}")
-    @NonFinal
-    String endpoint;
+    @Value("${momo.partnerCode}")
+    @NonFinal String partnerCode;
+    @Value("${momo.accessKey}")
+    @NonFinal String accessKey;
+    @Value("${momo.secretKey}")
+    @NonFinal String secretKey;
+    @Value("${momo.redirectUrl}")
+    @NonFinal String redirectUrl;
+    @Value("${momo.ipnUrl}")
+    @NonFinal String ipnUrl;
+    @Value("${momo.requestType}")
+    @NonFinal String requestType;
+    @Value("${momo.endpoint}")
+    @NonFinal String endpoint;
+    @Value("${momo.urlCheckTransaction}")
+    @NonFinal String urlCheckTransaction;
 
     @Transactional(readOnly = true)
     @Override
     public MonthlyInvoiceSummaryResponse getCurrentMonthInvoiceSummary(String userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(NotExistedErrorCode.USER_NOT_EXISTED));
-        if (!user.getRole().getRoleId().equals("113")) {
+        if (!"113".equals(user.getRole().getRoleId())) {
             throw new AppException(NotExistedErrorCode.USER_EXISTED);
         }
 
-        // Find the last invoice to determine the start date
-        PurchaseOrder lastInvoice = purchaseOrderRepository.findTopByUser_UserIdAndNoteContainingOrderByCreatedAtDesc(
-                userId, "Monthly invoice"
-        );
+        LocalDateTime now = LocalDateTime.now();
+        List<PurchaseOrder.Status> unpaidStatuses = List.of(PurchaseOrder.Status.PROCESSING);
+        List<PurchaseOrder> unpaidOrders = purchaseOrderRepository
+                .findByUser_UserIdAndCreatedAtLessThanEqualAndStatusIn(userId, now, unpaidStatuses);
 
-        LocalDateTime startDate = lastInvoice != null ? lastInvoice.getCreatedAt() : LocalDateTime.now().minusMonths(1);
-        LocalDateTime endDate = LocalDateTime.now();
-
-        List<PurchaseOrder> orders = purchaseOrderRepository.findByUser_UserIdAndCreatedAtBetween(
-                userId, startDate, endDate
-        );
-
-        BigDecimal totalAmount = orders.stream()
-                .filter(order -> order.getStatus() == PurchaseOrder.Status.COMPLETED)
+        BigDecimal totalUnpaidAmount = unpaidOrders.stream()
                 .map(order -> BigDecimal.valueOf(order.getAmount()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+        int unpaidCount = unpaidOrders.size();
 
         return MonthlyInvoiceSummaryResponse.builder()
                 .userId(userId)
-                .month(LocalDateTime.now().getMonthValue())
-                .year(LocalDateTime.now().getYear())
-                .totalAmount(totalAmount)
-                .orderCount(orders.size())
+                .month(now.getMonthValue())
+                .year(now.getYear())
+                .totalAmount(totalUnpaidAmount)
+                .orderCount(unpaidCount)
                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<InvoiceResponse> getAllInvoices(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(NotExistedErrorCode.USER_NOT_EXISTED));
+        if (!"113".equals(user.getRole().getRoleId())) {
+            throw new AppException(NotExistedErrorCode.USER_EXISTED);
+        }
+
+        List<PurchaseOrder> completedOrders = purchaseOrderRepository.findByUser_UserIdAndStatus(userId, PurchaseOrder.Status.COMPLETED);
+        return completedOrders.stream()
+                .map(order -> InvoiceResponse.builder()
+                        .purchaseOrderId(order.getPurchaseOrderId())
+                        .amount(BigDecimal.valueOf(order.getAmount()))
+                        .createdAt(order.getCreatedAt())
+                        .pdfUrl(order.getPdfUrl())
+                        .build())
+                .collect(Collectors.toList());
     }
 
     @Transactional
@@ -115,16 +118,12 @@ public class DepartmentInvoiceServiceImpl implements DepartmentInvoiceService {
             throw new AppException(NotExistedErrorCode.USER_EXISTED);
         }
 
-        // Find the last invoice to determine the start date
         PurchaseOrder lastInvoice = purchaseOrderRepository.findTopByUser_UserIdAndNoteContainingOrderByCreatedAtDesc(
-                userId, "Monthly invoice"
-        );
-
+                userId, "Monthly invoice");
         LocalDateTime startDate = lastInvoice != null ? lastInvoice.getCreatedAt() : LocalDateTime.now().minusMonths(1);
         LocalDateTime endDate = LocalDateTime.now();
 
         String pdfUrl = pdfGenerationService.generateAndUploadCurrentInvoicePdf(userId, startDate, endDate);
-
         PurchaseOrder summaryOrder = PurchaseOrder.builder()
                 .purchaseOrderId(UUID.randomUUID().toString().replace("-", "").toUpperCase())
                 .user(user)
@@ -149,47 +148,38 @@ public class DepartmentInvoiceServiceImpl implements DepartmentInvoiceService {
             throw new AppException(NotExistedErrorCode.USER_EXISTED);
         }
 
-        // Find the last invoice to determine the start date
         PurchaseOrder lastInvoice = purchaseOrderRepository.findTopByUser_UserIdAndNoteContainingOrderByCreatedAtDesc(
-                userId, "Monthly invoice"
-        );
-
+                userId, "Monthly invoice");
         LocalDateTime startDate = lastInvoice != null ? lastInvoice.getCreatedAt() : LocalDateTime.now().minusMonths(1);
         LocalDateTime endDate = LocalDateTime.now();
 
         List<PurchaseOrder> orders = purchaseOrderRepository.findByUser_UserIdAndCreatedAtBetween(
-                userId, startDate, endDate
-        );
-
+                userId, startDate, endDate);
         if (orders.isEmpty()) {
             throw new AppException(NotExistedErrorCode.ORDER_NOT_FOUND);
         }
 
         long totalAmount = 0;
-        boolean hasDetails = false;
+        List<PurchaseOrder> unpaidOrders = new ArrayList<>();
         for (PurchaseOrder order : orders) {
-            if (order.getStatus() != PurchaseOrder.Status.COMPLETED) {
-                continue;
-            }
-            List<PurchaseOrderDetail> details = order.getPurchaseOrderDetails();
-            if (details.isEmpty()) {
-                continue;
-            }
-            for (PurchaseOrderDetail detail : details) {
-                totalAmount += detail.getDiscountPrice() * detail.getQuantity();
-                hasDetails = true;
+            if (order.getStatus() == PurchaseOrder.Status.PROCESSING) {
+                List<PurchaseOrderDetail> details = order.getPurchaseOrderDetails();
+                if (!details.isEmpty()) {
+                    totalAmount += order.getAmount();
+                    unpaidOrders.add(order);
+                }
             }
         }
 
-        if (!hasDetails || totalAmount <= 0) {
-            throw new AppException(NotExistedErrorCode.ORDER_NOT_FOUND);
+        if (unpaidOrders.isEmpty() || totalAmount <= 0) {
+            throw new AppException(NotExistedErrorCode.ORDER_NOT_PAY);
         }
 
         String orderId = UUID.randomUUID().toString().replace("-", "").toUpperCase();
         PurchaseOrder monthlyOrder = PurchaseOrder.builder()
                 .purchaseOrderId(orderId)
                 .user(user)
-                .status(PurchaseOrder.Status.COMPLETED)
+                .status(PurchaseOrder.Status.PENDING) // Set to PENDING until payment is confirmed
                 .amount(totalAmount)
                 .createdAt(LocalDateTime.now())
                 .note("Monthly payment from " + startDate.toLocalDate() + " to " + endDate.toLocalDate())
@@ -208,7 +198,7 @@ public class DepartmentInvoiceServiceImpl implements DepartmentInvoiceService {
 
         String signature;
         try {
-            signature = generateHmacSHA256(rawSignature, secretKey);
+            signature = generateHmacSignature(rawSignature, secretKey);
         } catch (Exception e) {
             throw new RuntimeException("Failed to generate signature: " + e.getMessage());
         }
@@ -236,10 +226,126 @@ public class DepartmentInvoiceServiceImpl implements DepartmentInvoiceService {
                 .bodyToMono(MomoResponse.class)
                 .block();
 
+        InOrder inOrder = InOrder.builder()
+                .orderId(orderId)
+                .user(user)
+                .expiredTime(LocalDateTime.now().plusMinutes(2))
+                .paymentUrl(response.getPayUrl())
+                .build();
+        inOrderRepository.save(inOrder);
+
         monthlyOrder.setNote(monthlyOrder.getNote() + " | MoMo Request ID: " + requestId);
         purchaseOrderRepository.save(monthlyOrder);
 
         return response;
+    }
+
+    @Transactional
+    public MomoResponse transactionStatus(String orderId, Integer status) {
+        if (orderId == null || orderId.isEmpty()) {
+            throw new IllegalArgumentException("Missing input");
+        }
+
+        PurchaseOrder monthlyOrder = purchaseOrderRepository.findByPurchaseOrderId(orderId)
+                .orElseThrow(() -> new AppException(NotExistedErrorCode.ORDER_NOT_FOUND));
+        InOrder inOrder = inOrderRepository.findById(orderId)
+                .orElseThrow(() -> new AppException(NotExistedErrorCode.IN_ORDER_NOT_FOUND));
+
+        String rawSignature = String.format("accessKey=%s&orderId=%s&partnerCode=%s&requestId=%s",
+                accessKey, orderId, partnerCode, orderId);
+        String signature;
+        try {
+            signature = generateHmacSignature(rawSignature, secretKey);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to generate signature: " + e.getMessage());
+        }
+
+        MomoRequest momoRequest = MomoRequest.builder()
+                .requestId(orderId)
+                .orderId(orderId)
+                .partnerCode(partnerCode)
+                .lang("vi")
+                .signature(signature)
+                .build();
+
+        MomoResponse data = webClient.post()
+                .uri(urlCheckTransaction)
+                .header("Content-Type", "application/json; charset=UTF-8")
+                .bodyValue(momoRequest)
+                .retrieve()
+                .bodyToMono(MomoResponse.class)
+                .block();
+
+        if (data == null) {
+            throw new RuntimeException("Not paid yet");
+        }
+
+        boolean isCanceled = (data.getResultCode() == 1006 || status == 0);
+        if (isCanceled) {
+            rollbackOrder(monthlyOrder, orderId);
+            return data;
+        }
+
+        if (data.getResultCode() == 0) {
+            if (paymentRepository.findByPurchaseOrder(monthlyOrder) != null) {
+                throw new AppException(NotExistedErrorCode.PAYMENT_EXISTS);
+            }
+            handleSuccessfulPayment(monthlyOrder, orderId);
+        }
+
+        return data;
+    }
+
+    private void rollbackOrder(PurchaseOrder monthlyOrder, String orderId) {
+        // Roll back monthly order (no inventory/promotions to restore since it's a summary order)
+        purchaseOrderRepository.deleteById(orderId);
+        inOrderRepository.deleteById(orderId);
+    }
+
+    private void handleSuccessfulPayment(PurchaseOrder monthlyOrder, String orderId) {
+        // Find all unpaid orders covered by this monthly payment
+        LocalDateTime startDate = LocalDateTime.parse(monthlyOrder.getNote().split(" ")[3]);
+        LocalDateTime endDate = LocalDateTime.parse(monthlyOrder.getNote().split(" ")[5]);
+        List<PurchaseOrder> unpaidOrders = purchaseOrderRepository.findByUser_UserIdAndCreatedAtBetween(
+                        monthlyOrder.getUser().getUserId(), startDate, endDate).stream()
+                .filter(order -> order.getStatus() == PurchaseOrder.Status.PROCESSING)
+                .collect(Collectors.toList());
+
+        // Update each unpaid order
+        for (PurchaseOrder order : unpaidOrders) {
+            List<PurchaseOrderDetail> details = purchaseOrderDetailRepository.findByPurchaseOrder_PurchaseOrderId(
+                    order.getPurchaseOrderId());
+            for (PurchaseOrderDetail detail : details) {
+                int result = productDetailRepository.reduceQuantity(
+                        detail.getProductDetail().getProductDetailId(), detail.getQuantity());
+                if (result == 0) {
+                    throw new AppException(NotExistedErrorCode.PRODUCT_NOT_ENOUGH);
+                }
+                if (detail.getProductPromotion() != null) {
+                    promotionRepository.reduceUsageCountByPromotionId(
+                            detail.getProductPromotion().getPromotion().getPromotionId());
+                }
+            }
+            if (order.getUserPromotion() != null) {
+                promotionRepository.reduceUsageCountByPromotionId(
+                        order.getUserPromotion().getPromotion().getPromotionId());
+            }
+            order.setStatus(PurchaseOrder.Status.COMPLETED);
+            purchaseOrderRepository.save(order);
+        }
+
+        // Create payment record for the monthly order
+        Payment payment = Payment.builder()
+                .status(1)
+                .payType("qr")
+                .payName("momo")
+                .purchaseOrder(monthlyOrder)
+                .build();
+
+        monthlyOrder.setStatus(PurchaseOrder.Status.COMPLETED);
+        inOrderRepository.deleteById(orderId);
+        paymentRepository.save(payment);
+        purchaseOrderRepository.save(monthlyOrder);
     }
 
     @Transactional(readOnly = true)
@@ -253,8 +359,7 @@ public class DepartmentInvoiceServiceImpl implements DepartmentInvoiceService {
 
         LocalDateTime overdueThreshold = LocalDateTime.now().minusDays(30);
         List<PurchaseOrder> overdueOrders = purchaseOrderRepository.findByUser_UserIdAndNoteContainingAndStatus(
-                userId, "Monthly invoice", PurchaseOrder.Status.COMPLETED
-        );
+                userId, "Monthly invoice", PurchaseOrder.Status.COMPLETED);
 
         List<String> notifications = new ArrayList<>();
         for (PurchaseOrder order : overdueOrders) {
@@ -266,15 +371,13 @@ public class DepartmentInvoiceServiceImpl implements DepartmentInvoiceService {
                         order.getPurchaseOrderId()
                 );
                 notifications.add(message);
-                // TODO: Gửi thông báo qua email hoặc hệ thống thông báo
-                // Ví dụ: emailService.sendNotification(user.getEmail(), message);
             }
         }
 
         return notifications;
     }
 
-    private String generateHmacSHA256(String data, String key) throws Exception {
+    private String generateHmacSignature(String data, String key) throws Exception {
         Mac sha256_HMAC = Mac.getInstance("HmacSHA256");
         SecretKeySpec secret_key = new SecretKeySpec(key.getBytes("UTF-8"), "HmacSHA256");
         sha256_HMAC.init(secret_key);

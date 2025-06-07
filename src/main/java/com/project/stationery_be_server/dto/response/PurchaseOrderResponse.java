@@ -28,4 +28,5 @@ public class PurchaseOrderResponse {
     private String cancelReason;
     private LocalDateTime expiredTime;
     private List<PurchaseOrderDetailResponse> orderDetails;
+    private String userId;
 }
