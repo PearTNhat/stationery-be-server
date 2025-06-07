@@ -211,4 +211,11 @@ public class ProductController {
                 .result(productService.updateHiddenProduct(productId, isHidden))
                 .build();
     }
+    @GetMapping("/get-all-products-for-chatbot")
+    public ApiResponse<List<ProductResponse>> getAllProductsForChatbot() {
+        return ApiResponse.<List<ProductResponse>>builder()
+                .result(productService.getAllProductsForChatbot())
+                .build();
+    }
+
 }
