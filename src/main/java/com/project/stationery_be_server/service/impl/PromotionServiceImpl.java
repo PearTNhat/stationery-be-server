@@ -3,17 +3,18 @@ package com.project.stationery_be_server.service.impl;
 import com.project.stationery_be_server.Error.NotExistedErrorCode;
 import com.project.stationery_be_server.dto.request.DeletePromotionRequest;
 import com.project.stationery_be_server.dto.response.ColorResponse;
+import com.project.stationery_be_server.dto.response.promotion.ProductDetailPromotion;
+import com.project.stationery_be_server.dto.response.promotion.PromotionResponse;
+import com.project.stationery_be_server.dto.response.promotion.UserInPromotion;
 import com.project.stationery_be_server.entity.*;
 import com.project.stationery_be_server.dto.request.PromotionRequest;
 import com.project.stationery_be_server.dto.request.UpdatePromotionRequest;
 import com.project.stationery_be_server.entity.*;
 import com.project.stationery_be_server.exception.AppException;
+import com.project.stationery_be_server.mapper.PromotionMapper;
 import com.project.stationery_be_server.repository.*;
 import com.project.stationery_be_server.service.PromotionService;
-import com.project.stationery_be_server.specification.ColorSpecification;
-import com.project.stationery_be_server.specification.ProductPromotionSpecification;
-import com.project.stationery_be_server.specification.ProductSpecification;
-import com.project.stationery_be_server.specification.UserPromotionSpecification;
+import com.project.stationery_be_server.specification.*;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +45,7 @@ public class PromotionServiceImpl implements PromotionService {
     UserPromotionRepository userPromotionRepository;
     ProductRepository productRepository;
     ProductDetailRepository productDetailRepository;
+    private final PromotionMapper promotionMapper;
 
     @Override
     public BigDecimal applyPromotion(String promoCode, BigDecimal orderTotal, User user) {
@@ -88,57 +90,12 @@ public class PromotionServiceImpl implements PromotionService {
 
     }
 
-    @Override
-    @Transactional
-    public void createPromotion(PromotionRequest request) {
-        // 1. Kiểm tra quyền admin
-        User current = checkAdminAndGetCurrentUser();
-        if (!"admin".equalsIgnoreCase(current.getRole().getRoleName())) {
-            throw new RuntimeException("Bạn không có quyền tạo Promotion");
-        }
 
-        // 2. Kiểm tra promoCode có trùng không
-        Optional<Promotion> existed = promotionRepository.findByPromoCode(request.getPromoCode());
-        if (existed.isPresent()) {
-            throw new RuntimeException("PromoCode đã tồn tại, vui lòng chọn mã khác");
-        }
-
-        // 3. Map Request -> Promotion entity & lưu
-        Promotion promoToSave = mapRequestToPromotion(request);
-        Promotion savedPromo = promotionRepository.save(promoToSave);
-
-        // 4. Phân nhánh theo voucherType
-        if (request.getVoucherType() == PromotionRequest.VoucherType.ALL_USERS) {
-            createPromotionForAllUsers(savedPromo);
-        } else if (request.getVoucherType() == PromotionRequest.VoucherType.ALL_PRODUCTS) {
-            createPromotionForAllProducts(savedPromo);
-        } else if (request.getVoucherType() == PromotionRequest.VoucherType.USERS) {
-            // 5. branch mới: gán voucher chỉ cho danh sách userId
-            List<String> userIds = request.getUserIds();
-            if (userIds == null || userIds.isEmpty()) {
-                throw new RuntimeException("Phải truyền danh sách userIds khi voucherType == USERS");
-            }
-            createPromotionForSpecificUsers(savedPromo, userIds);
-        } else if (request.getVoucherType() == PromotionRequest.VoucherType.PRODUCTS) {
-            // Xử lý gán cho một số product
-            List<String> productIds = request.getProductIds();
-            if (productIds == null || productIds.isEmpty()) {
-                throw new RuntimeException("Phải truyền danh sách productIds khi voucherType == PRODUCTS");
-            }
-            createPromotionForSpecificProducts(savedPromo, productIds);
-        } else {
-            throw new RuntimeException("VoucherType không hợp lệ cho phương thức này");
-        }
-    }
 
 
     @Override
     @Transactional
     public void updatePromotion(UpdatePromotionRequest request) {
-        User current = checkAdminAndGetCurrentUser();
-        if (!"admin".equalsIgnoreCase(current.getRole().getRoleName())) {
-            throw new RuntimeException("Bạn không có quyền cập nhật Promotion");
-        }
 
         String promotionId = request.getPromotionId();
         Promotion existingPromo = promotionRepository.findById(promotionId)
@@ -195,8 +152,14 @@ public class PromotionServiceImpl implements PromotionService {
 
     @Override
     @Transactional
-    public Page<ProductPromotion> getAllProductPromotions(Pageable pageable) {
-        return productPromotionRepository.findAll(pageable);
+    public Page<PromotionResponse> getAllPromotion(Pageable pageable, String search) {
+        Specification<Promotion> spec = PromotionSpecification.filterPromotion(search);
+        Page<Promotion> promotionPage = promotionRepository.findAll(spec, pageable);
+        // Có thể thêm logic tính toán thêm ở đây
+        List<PromotionResponse> dtos = promotionPage.getContent().stream()
+                .map(promotionMapper::toDto)
+                .toList();
+        return new PageImpl<>(dtos, pageable, promotionPage.getTotalElements());
     }
 
     @Override
@@ -242,6 +205,7 @@ public class PromotionServiceImpl implements PromotionService {
     private User checkAdminAndGetCurrentUser() {
         var context = SecurityContextHolder.getContext();
         String userIdLogin = context.getAuthentication().getName();
+        System.out.println(userIdLogin);
         return userRepository.findById(userIdLogin)
                 .orElseThrow(() -> new AppException(NotExistedErrorCode.USER_NOT_EXISTED));
     }
@@ -275,36 +239,7 @@ public class PromotionServiceImpl implements PromotionService {
         }
     }
 
-    /**
-     * Tạo Promotion cho tất cả Product (dựa vào default ProductDetail).
-     */
-    @Transactional
-    public void createPromotionForAllProducts(Promotion savedPromo) {
-        // 1. Lấy tất cả Product
-        List<Product> allProducts = productRepository.findAll();
 
-        // 2. Với mỗi Product, lấy default detail và tạo ProductPromotion
-        for (Product product : allProducts) {
-            ProductDetail defaultDetail = product.getProductDetail();
-            if (defaultDetail == null) {
-                // Nếu product chưa có default detail, có thể skip hoặc log warning
-                continue;
-            }
-
-            // Kiểm tra xem đã gán chưa (nếu cần)
-            boolean alreadyAssigned = productPromotionRepository
-                    .existsByProductDetailAndPromotion(defaultDetail, savedPromo);
-            if (alreadyAssigned) {
-                continue;
-            }
-
-            // Tạo mới ProductPromotion
-            ProductPromotion pp = new ProductPromotion();
-            pp.setPromotion(savedPromo);
-            pp.setProductDetail(defaultDetail);
-            productPromotionRepository.save(pp);
-        }
-    }
 
     @Transactional
     public void createPromotionForSpecificUsers(Promotion savedPromo, List<String> userIds) {
@@ -328,35 +263,6 @@ public class PromotionServiceImpl implements PromotionService {
         }
     }
 
-    @Transactional
-    public void createPromotionForSpecificProducts(Promotion savedPromo, List<String> productIds) {
-        for (String productId : productIds) {
-            // 1. Lấy Product theo ID
-            Product product = productRepository.findById(productId)
-                    .orElseThrow(() -> new RuntimeException("Product không tồn tại với id: " + productId));
-
-            // 2. Lấy ProductDetail mặc định
-            ProductDetail defaultDetail = product.getProductDetail();
-            if (defaultDetail == null) {
-                // Nếu Product chưa có default detail (có thể log warning, bỏ qua)
-                continue;
-            }
-
-            // 3. Check xem đã gán rồi không
-            boolean alreadyAssigned = productPromotionRepository
-                    .existsByProductDetailAndPromotion(defaultDetail, savedPromo);
-            if (alreadyAssigned) {
-                continue;
-            }
-
-            // 4. Tạo mới ProductPromotion
-            ProductPromotion pp = new ProductPromotion();
-            pp.setPromotion(savedPromo);
-            pp.setProductDetail(defaultDetail);
-            productPromotionRepository.save(pp);
-        }
-    }
-
 
     @Override
     public Page<ProductPromotion> getAllProductPromotionPagination(Pageable pageable, String search) {
@@ -366,6 +272,87 @@ public class PromotionServiceImpl implements PromotionService {
         List<ProductPromotion> userResponses = productPrmotionPage.getContent().stream().toList();
         return new PageImpl<>(userResponses, pageable, productPrmotionPage.getTotalElements());
     }
+
+    @Override
+    @Transactional
+    public void createPromotion(PromotionRequest request) {
+        // 1. Kiểm tra quyền admin
+
+        // 2. Kiểm tra promoCode có trùng không
+        Optional<Promotion> existed = promotionRepository.findByPromoCode(request.getPromoCode());
+        if (existed.isPresent()) {
+            throw new RuntimeException("PromoCode đã tồn tại, vui lòng chọn mã khác");
+        }
+
+        // 3. Map Request -> Promotion entity & lưu
+        Promotion promoToSave = mapRequestToPromotion(request);
+        Promotion savedPromo = promotionRepository.save(promoToSave);
+
+        // 4. Phân nhánh theo voucherType
+        if (request.getVoucherType() == PromotionRequest.VoucherType.ALL_USERS) {
+            createPromotionForAllUsers(savedPromo);
+        } else if (request.getVoucherType() == PromotionRequest.VoucherType.ALL_PRODUCTS) {
+            createPromotionForAllProductDetails(savedPromo);
+        } else if (request.getVoucherType() == PromotionRequest.VoucherType.USERS) {
+            // 5. branch mới: gán voucher chỉ cho danh sách userId
+            List<String> userIds = request.getUserIds();
+            if (userIds == null || userIds.isEmpty()) {
+                throw new RuntimeException("Phải truyền danh sách userIds khi voucherType == USERS");
+            }
+            createPromotionForSpecificUsers(savedPromo, userIds);
+        } else if (request.getVoucherType() == PromotionRequest.VoucherType.PRODUCTS) {
+            // Xử lý gán cho một số product
+            List<String> productIds = request.getProductIds();
+            if (productIds == null || productIds.isEmpty()) {
+                throw new RuntimeException("Phải truyền danh sách productIds khi voucherType == PRODUCTS");
+            }
+            createPromotionForSpecificProductDetails(savedPromo, productIds);
+        } else {
+            throw new RuntimeException("VoucherType không hợp lệ cho phương thức này");
+        }
+    }
+
+    @Transactional
+    public void createPromotionForSpecificProductDetails(Promotion savedPromo, List<String> productIds) { // du là productIds nhung thuc chat la productDetailIds
+        for (String pdID : productIds){
+            ProductDetail productDetail = productDetailRepository.findById(pdID)
+                    .orElseThrow(() -> new RuntimeException("ProductDetail không tồn tại với id: " + pdID));
+
+            boolean alreadyAssigned = productPromotionRepository.existsByProductDetailAndPromotion(productDetail, savedPromo);
+            if (alreadyAssigned) {
+                continue;
+            }
+
+            // 3. Tạo và lưu ProductPromotion
+            ProductPromotion pp = new ProductPromotion();
+            pp.setPromotion(savedPromo);
+            pp.setProductDetail(productDetail);
+
+            productPromotionRepository.save(pp);
+        }
+
+    }
+
+    @Transactional
+    public void createPromotionForAllProductDetails(Promotion savedPromo) {
+        List<ProductDetail> allDetails = productDetailRepository.findAll();
+
+        for (ProductDetail detail : allDetails) {
+            boolean alreadyAssigned = productPromotionRepository
+                    .existsByProductDetailAndPromotion(detail, savedPromo);
+
+            if (alreadyAssigned) {
+                continue;
+            }
+
+            ProductPromotion pp = new ProductPromotion();
+            pp.setPromotion(savedPromo);
+            pp.setProductDetail(detail);
+
+            productPromotionRepository.save(pp);
+        }
+    }
+
 
 
 }

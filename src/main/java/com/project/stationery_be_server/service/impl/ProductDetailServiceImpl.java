@@ -8,6 +8,7 @@ import com.project.stationery_be_server.Error.NotExistedErrorCode;
 import com.project.stationery_be_server.dto.request.DeleteProductDetailRequest;
 import com.project.stationery_be_server.dto.request.UpdateProductDetailRequest;
 import com.project.stationery_be_server.dto.response.product.ProductDetailResponse;
+import com.project.stationery_be_server.dto.response.promotion.ProductDetailPromotion;
 import com.project.stationery_be_server.entity.*;
 import com.project.stationery_be_server.exception.AppException;
 import com.project.stationery_be_server.repository.*;
@@ -169,6 +170,20 @@ public class ProductDetailServiceImpl implements ProductDetailService {
         productDetail.setHidden(hidden);
         productDetailRepository.save(productDetail);
         return hidden;
+    }
+
+    @Override
+    public List<ProductDetailPromotion> getAllProductDetailSimple() {
+        List<ProductDetail> details = productDetailRepository.findAll();
+        return details.stream()
+                .map(d ->
+                                ProductDetailPromotion.builder()
+                                        .productDetailId(d.getProductDetailId())
+                                        .name(d.getName())
+                                        .build()
+                        )
+                .toList();
+
     }
 
     public void deleteImageAsync(String publicId) {

@@ -1,14 +1,16 @@
 package com.project.stationery_be_server.repository;
 
+import com.project.stationery_be_server.entity.Product;
 import com.project.stationery_be_server.entity.Promotion;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.jpa.repository.Modifying;
 
 import java.util.Optional;
 
-public interface PromotionRepository extends JpaRepository<Promotion, String> {
+public interface PromotionRepository extends JpaRepository<Promotion, String>, JpaSpecificationExecutor<Promotion> {
     Optional<Promotion> findByPromoCode(String promoCode);
 
     @Modifying

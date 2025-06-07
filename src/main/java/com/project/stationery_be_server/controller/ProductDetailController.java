@@ -3,10 +3,12 @@ package com.project.stationery_be_server.controller;
 import com.project.stationery_be_server.dto.request.DeleteProductDetailRequest;
 import com.project.stationery_be_server.dto.response.ApiResponse;
 import com.project.stationery_be_server.dto.response.product.ProductDetailResponse;
+import com.project.stationery_be_server.dto.response.promotion.ProductDetailPromotion;
 import com.project.stationery_be_server.service.ProductDetailService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -53,5 +55,15 @@ public class ProductDetailController {
                 .message("Product detail visibility updated successfully")
                 .result(productDetailService.updateHiddenPD(pdId, isHidden))
                 .build();
+    }
+
+    @GetMapping("/simple")
+    public ApiResponse<List<ProductDetailPromotion>> getAllSimpleDetails() {
+        return ApiResponse
+                .<List<ProductDetailPromotion>>builder()
+                .message("Product detail visibility updated successfully")
+                .result(productDetailService.getAllProductDetailSimple())
+                .build();
+
     }
 }
