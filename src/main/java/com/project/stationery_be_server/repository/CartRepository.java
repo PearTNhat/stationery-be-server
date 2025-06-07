@@ -4,6 +4,7 @@ import com.project.stationery_be_server.entity.Cart;
 import com.project.stationery_be_server.entity.CartId;
 import com.project.stationery_be_server.entity.ProductDetail;
 import com.project.stationery_be_server.entity.User;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -27,6 +28,7 @@ public interface CartRepository extends JpaRepository<Cart, CartId> {
     List<Cart> findByUser_UserId(String userId);
     void deleteByUser_UserId(String userId);
 
+    @Transactional
     void deleteByUser_UserIdAndProductDetail_ProductDetailId(String userId, String productDetail);
 
     List<Cart> user(User user);

@@ -14,6 +14,8 @@ public interface PurchaseOrderService {
     List<PurchaseOrderResponse> getAllNonPendingOrders();
     List<PurchaseOrderResponse> getUserOrdersByStatus(String userId, String status);
     List<ProductDetailResponse> getProductDetailsByOrderId(String purchaseOrderId);
+
+    PurchaseOrderResponse getPurchaseOrderDetails(String purchaseOrderId);
     Map<PurchaseOrder.Status, Long> getOrderStatusStatistics(String userId);
     void cancelOrder(String userId, String purchaseOrderId, String cancelReason);
     PurchaseOrderResponse editPurchaseOrder(String userId, String purchaseOrderId, PurchaseOrderRequest request);
