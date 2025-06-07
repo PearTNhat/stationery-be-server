@@ -32,6 +32,9 @@ public enum NotExistedErrorCode implements BaseErrorCode {
     INVALID_STATUS(1040, "Order status not found", HttpStatus.BAD_REQUEST),
     ORDER_NOT_CANCELLABLE(1041, "Order can't cancel", HttpStatus.BAD_REQUEST),
     ORDER_NOT_EDITABLE(1042, "Order can't edit", HttpStatus.BAD_REQUEST),
+    ORDER_STILL_PENDING(1043, "Order still pending", HttpStatus.BAD_REQUEST),
+    ORDER_NOT_PENDING(1043, "Order  not pending", HttpStatus.BAD_REQUEST),
+    ORDER_NOT_PAY(1040, "Order not found", HttpStatus.BAD_REQUEST),
     //
     IN_ORDER_NOT_FOUND(1041, "In order not found", HttpStatus.BAD_REQUEST),
 

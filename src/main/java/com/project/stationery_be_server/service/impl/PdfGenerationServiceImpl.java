@@ -1,6 +1,7 @@
 package com.project.stationery_be_server.service.impl;
 
 import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.itextpdf.io.font.constants.StandardFonts;
 import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.kernel.font.PdfFont;
@@ -31,11 +32,13 @@ import org.xhtmlrenderer.pdf.ITextRenderer;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -196,8 +199,9 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
                 throw new AppException(NotExistedErrorCode.ORDER_NOT_FOUND);
             }
 
+            // Đọc template HTML
             String template = new String(new ClassPathResource("templates/monthly_invoice_template.html")
-                    .getInputStream().readAllBytes(), "UTF-8");
+                    .getInputStream().readAllBytes(), StandardCharsets.UTF_8);
 
             long totalAmount = 0;
             int totalItems = 0;
@@ -206,31 +210,30 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
 
             boolean hasDetails = false;
             for (PurchaseOrder order : orders) {
-                if (order.getStatus() != PurchaseOrder.Status.COMPLETED) {
+                if (order.getStatus() != PurchaseOrder.Status.PROCESSING) {
                     continue;
                 }
+
                 List<PurchaseOrderDetail> details = order.getPurchaseOrderDetails();
                 if (details.isEmpty()) {
                     continue;
                 }
+
+                totalAmount += order.getAmount();
                 for (PurchaseOrderDetail detail : details) {
-                    long itemTotal = detail.getDiscountPrice() * detail.getQuantity();
-                    totalAmount += itemTotal;
                     totalItems += detail.getQuantity();
 
                     orderRows.append(String.format(
                             "<tr>" +
-                                    "<td><div class=\"order-id\">%s</div></td>" +
-                                    "<td><div class=\"product-name\">%s</div></td>" +
-                                    "<td><span class=\"quantity-badge\">%d</span></td>" +
-                                    "<td class=\"price\">%s VND</td>" +
-                                    "<td class=\"total-price\">%s VND</td>" +
+                                    "<td class=\"order-id\">%s</td>" +
+                                    "<td class=\"product-name\">%s</td>" +
+                                    "<td class=\"text-center\">%d</td>" +
+                                    "<td class=\"text-right\">%s VND</td>" +
                                     "</tr>",
                             order.getPurchaseOrderId(),
                             detail.getProductDetail().getName(),
                             detail.getQuantity(),
-                            formatter.format(detail.getDiscountPrice()),
-                            formatter.format(itemTotal)
+                            formatter.format(detail.getDiscountPrice())
                     ));
                     hasDetails = true;
                 }
@@ -240,33 +243,39 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
                 throw new AppException(NotExistedErrorCode.ORDER_NOT_FOUND);
             }
 
+            // Chuẩn bị dữ liệu cho template
+            String currentDate = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+            String period = startDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + " - " +
+                    endDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+
+            // Thay thế các placeholder trong template
             String htmlContent = template
+                    .replace("${invoiceTitle}", "TAX INVOICE")
+                    .replace("${invoiceNumber}", "INV-" + System.currentTimeMillis())
                     .replace("${userName}", user.getFirstName() + " " + user.getLastName())
-                    .replace("${month}", startDate.toLocalDate() + " to " + endDate.toLocalDate())
-                    .replace("${year}", "")
-                    .replace("${currentDate}", LocalDate.now().toString())
+                    .replace("${department}", user.getLastName() != null ? user.getLastName() : "N/A")
+                    .replace("${currentDate}", currentDate)
+                    .replace("${month}", period)
                     .replace("${orderCount}", String.valueOf(orders.size()))
                     .replace("${totalItems}", String.valueOf(totalItems))
                     .replace("${subtotal}", formatter.format(totalAmount))
                     .replace("${totalAmount}", formatter.format(totalAmount))
                     .replace("${totalAmountInWords}", numberToEnglishWords(totalAmount))
-                    .replace("${orderRows}", orderRows.toString());
+                    .replace("${orderRows}", orderRows.toString())
+                    .replace("${taxInfo}", "Tax ID: 123456789 | VAT: 0%");
 
+            // Tạo PDF
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ITextRenderer renderer = new ITextRenderer();
 
+            // Cấu hình font
             String fontPath = "fonts/OpenSans-Regular.ttf";
             ClassPathResource fontResource = new ClassPathResource(fontPath);
-            if (!fontResource.exists()) {
-                logger.severe("Font file not found: " + fontPath);
-                logger.info("Using default Helvetica font");
-            } else {
+            if (fontResource.exists()) {
                 try {
-                    renderer.getFontResolver().addFont(String.valueOf(fontResource.getURL()), "OpenSans", true);
-                    logger.info("Font OpenSans registered successfully from: " + fontResource.getURL());
+                    renderer.getFontResolver().addFont(fontResource.getURL().toString(), true);
                 } catch (Exception e) {
-                    logger.log(Level.SEVERE, "Failed to register font: " + fontPath, e);
-                    logger.info("Using default Helvetica font");
+                    logger.log(Level.WARNING, "Failed to register custom font, using default", e);
                 }
             }
 
@@ -277,18 +286,22 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
             String localPath = "current_invoice_" + userId + "_" + startDate.toLocalDate() + "_to_" + endDate.toLocalDate() + ".pdf";
             Files.write(Paths.get(localPath), baos.toByteArray());
 
-            String publicId = "current_invoices/" + userId + "_" + startDate.toLocalDate() + "_to_" + endDate.toLocalDate() + ".pdf";
+            // Upload lên Cloudinary
+            String publicId = "invoices/" + userId + "_" + startDate.toLocalDate() + "_to_" + endDate.toLocalDate() + ".pdf";
             Map uploadResult = cloudinary.uploader().upload(baos.toByteArray(),
-                    Map.of("resource_type", "raw", "public_id", publicId, "overwrite", true));
-            String url = (String) uploadResult.get("secure_url");
+                    ObjectUtils.asMap(
+                            "resource_type", "raw",
+                            "public_id", publicId,
+                            "overwrite", true
+                    ));
 
-            return url;
+            return (String) uploadResult.get("secure_url");
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Failed to read HTML template", e);
             throw new RuntimeException("Failed to read HTML template: " + e.getMessage());
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Failed to generate or upload current invoice PDF", e);
-            throw new RuntimeException("Failed to generate or upload current invoice PDF: " + e.getMessage());
+            logger.log(Level.SEVERE, "Failed to generate or upload invoice PDF", e);
+            throw new RuntimeException("Failed to generate or upload invoice PDF: " + e.getMessage());
         }
     }
 }
