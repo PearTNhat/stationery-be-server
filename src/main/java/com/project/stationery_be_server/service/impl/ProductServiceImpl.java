@@ -238,4 +238,31 @@ public class ProductServiceImpl implements ProductService {
                 })
                 .collect(Collectors.toList());
     }
+    @Override
+    public List<ProductResponse> getAllProductsForChatbot() {
+        List<Product> products = productRepository.findAll();
+
+        return products.stream()
+                .map(product -> {
+                    String colorId = null;
+                    ProductDetail productDetail = product.getProductDetail();
+                    if (productDetail != null && productDetail.getColor() != null) {
+                        colorId = productDetail.getColor().getColorId();
+                    }
+
+                    product.setFetchColor(productDetailRepository.findDistinctColorsWithAnySlug(product.getProductId()));
+
+                    Image img;
+                    if (colorId != null) {
+                        img = imageRepository.findFirstByProduct_ProductIdAndColor_ColorIdOrderByPriorityAsc(product.getProductId(), colorId);
+                    } else {
+                        img = imageRepository.findFirstByProduct_ProductIdAndColorIsNullOrderByPriorityAsc(product.getProductId());
+                    }
+
+                    product.setImg(img != null ? img.getUrl() : null);
+
+                    return productMapper.toProductResponse(product);
+                })
+                .toList();
+    }
 }

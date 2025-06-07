@@ -103,5 +103,6 @@ public interface ProductDetailRepository extends JpaRepository<ProductDetail, St
            "SET pd.availableQuantity = pd.availableQuantity + :amount " +
            "WHERE pd.productDetailId = :productDetailId ")
     int restoreQuantity(@Param("productDetailId") String productDetailId, @Param("amount") int amount);
+    List<ProductDetail> findByProduct(Product product);
 
 }
