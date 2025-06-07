@@ -22,4 +22,5 @@ public interface ProductService {
     void handleUpdateTotalProductRating(String productId, String type, Integer rating);
     void deleteProduct(DeleteProductRequest request);
     List<ProductResponse> getSimilarProducts(String productId);
+    List<ProductResponse> getAllProductsForChatbot();
 }
