@@ -33,4 +33,5 @@ public interface ProductService {
     ProductResponse updateProduct(UpdateProductRequest request);
 
     Boolean updateHiddenProduct(String productId, boolean isHidden);
+    List<ProductResponse> getAllProductsForChatbot();
 }

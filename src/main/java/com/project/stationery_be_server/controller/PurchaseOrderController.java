@@ -1,10 +1,9 @@
 package com.project.stationery_be_server.controller;
 
-import com.project.stationery_be_server.Error.NotExistedErrorCode;
+
 import com.project.stationery_be_server.dto.request.CancelOrderRequest;
 import com.project.stationery_be_server.dto.request.order.PurchaseOrderRequest;
 import com.project.stationery_be_server.dto.response.ApiResponse;
-import com.project.stationery_be_server.dto.response.UserResponse;
 import com.project.stationery_be_server.dto.response.momo.MomoResponse;
 import com.project.stationery_be_server.dto.response.PurchaseOrderResponse;
 import com.project.stationery_be_server.dto.response.product.ProductDetailResponse;
@@ -37,8 +36,8 @@ public class PurchaseOrderController {
                 .message("Tạo đơn hàng thành công")
                 .result(purchaseOrderService.createOrderWithMomo(request))
                 .build();
-    }
 
+    }
     @GetMapping("/payment-momo/transaction-status/{orderId}")
     public ApiResponse<MomoResponse> transactionStatus(@PathVariable String orderId,
                                                        @RequestParam(value = "status", required = false, defaultValue = "1") Integer status) {
@@ -67,8 +66,18 @@ public class PurchaseOrderController {
         List<ProductDetailResponse> productDetails = purchaseOrderService.getProductDetailsByOrderId(purchaseOrderId);
         return ApiResponse.<List<ProductDetailResponse>>builder()
                 .code(200)
-                .message("Lấy chi tiết sản phẩm của đơn hàng thành công")
+                .message("Product details for order retrieved successfully")
                 .result(productDetails)
+                .build();
+    }
+
+    @GetMapping("/{purchaseOrderId}/purchase-details")
+    public ApiResponse<PurchaseOrderResponse> getPurchaseOrderDetails(@PathVariable String purchaseOrderId) {
+        PurchaseOrderResponse response = purchaseOrderService.getPurchaseOrderDetails(purchaseOrderId);
+        return ApiResponse.<PurchaseOrderResponse>builder()
+                .code(200)
+                .message("Purchase details for order retrieved successfully")
+                .result(response)
                 .build();
     }
 
@@ -76,6 +85,7 @@ public class PurchaseOrderController {
     public ApiResponse<Map<PurchaseOrder.Status, Long>> getOrderStatusStatistics() {
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
         Map<PurchaseOrder.Status, Long> statistics = purchaseOrderService.getOrderStatusStatistics(userId);
+
         String message = statistics.values().stream().mapToLong(Long::longValue).sum() == 0
                 ? "Không tìm thấy đơn hàng cho người dùng"
                 : "Lấy thống kê trạng thái đơn hàng thành công";

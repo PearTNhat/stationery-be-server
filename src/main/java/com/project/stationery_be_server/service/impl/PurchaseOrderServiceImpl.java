@@ -4,6 +4,7 @@ import com.project.stationery_be_server.Error.NotExistedErrorCode;
 import com.project.stationery_be_server.dto.request.MomoRequest;
 import com.project.stationery_be_server.dto.request.order.PurchaseOrderProductRequest;
 import com.project.stationery_be_server.dto.request.order.PurchaseOrderRequest;
+import com.project.stationery_be_server.dto.response.AddressResponse;
 import com.project.stationery_be_server.dto.response.momo.MomoResponse;
 import com.project.stationery_be_server.dto.response.PurchaseOrderDetailResponse;
 import com.project.stationery_be_server.dto.response.PurchaseOrderResponse;
@@ -130,7 +131,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                 throw new AppException(NotExistedErrorCode.PRODUCT_NOT_ENOUGH);
             }
             productDetailRepository.save(pd);
-            totalAmount += (long) disCountPrice * orderDetail.getQuantity();
+            totalAmount += disCountPrice;
             PurchaseOrderDetailId id = new PurchaseOrderDetailId();
             id.setPurchaseOrderId(orderId);  // Chính là orderId được truyền vào
             id.setProductDetailId(pd.getProductDetailId());  // Lấy từ productDetail
@@ -443,6 +444,105 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                             .build();
                 })
                 .collect(Collectors.toList());
+    }
+
+    // Hàm mới để lấy tất cả thông tin chi tiết đơn hàng
+    public PurchaseOrderResponse getPurchaseOrderDetails(String purchaseOrderId) {
+        PurchaseOrder purchaseOrder = purchaseOrderRepository.findByPurchaseOrderId(purchaseOrderId)
+                .orElseThrow(() -> new AppException(NotExistedErrorCode.PURCHASE_ORDER_NOT_EXISTED)); // Đổi errorCode cho phù hợp
+
+        // Lấy thông tin Address
+        Address address = purchaseOrder.getAddress(); // Giả sử PurchaseOrder có trường 'address' là một đối tượng Address
+        AddressResponse addressResponse = null;
+        if (address != null) {
+            addressResponse = AddressResponse.builder()
+                    .addressId(address.getAddressId())
+                    .addressName(address.getAddressName())
+                    .recipient(address.getRecipient())
+                    .phone(address.getPhone())
+                    .build();
+        }
+
+        // Lấy thông tin Payment
+/*        Payment payment = purchaseOrder.getPayment(); // Giả sử PurchaseOrder có trường 'payment' là một đối tượng Payment
+        PaymentResponse paymentResponse = null;
+        if (payment != null) {
+            paymentResponse = PaymentResponse.builder()
+                    .paymentId(payment.getPaymentId())
+                    .createdAt(payment.getCreatedAt())
+                    .payName(payment.getPayName())
+                    .payType(payment.getPayType())
+                    .status(payment.getStatus())
+                    .build();
+        }*/
+
+        // Lấy thông tin Product Details (phần mã đã có của bạn)
+        List<PurchaseOrderDetail> orderDetails = purchaseOrderDetailRepository.findByPurchaseOrder(purchaseOrder);
+        List<ProductDetailResponse> productDetails = orderDetails.stream()
+                .map(orderDetail -> {
+                    var productDetail = orderDetail.getProductDetail();
+                    if (productDetail == null) {
+                        throw new AppException(NotExistedErrorCode.PRODUCT_NOT_EXISTED);
+                    }
+
+                    List<Image> images;
+                    String colorId = productDetail.getColor() != null ? productDetail.getColor().getColorId(): null;
+
+                    List<Image> allImages = productDetail.getProduct().getImages();
+
+                    if (colorId == null) {
+                        images = allImages != null ? allImages : List.of();
+                    } else {
+                        images = allImages != null
+                                ? allImages.stream()
+                                .filter(img -> img.getColor() != null && colorId.equals(img.getColor().getColorId()))
+                                .collect(Collectors.toList())
+                                : List.of();
+                    }
+
+                    return ProductDetailResponse.builder()
+                            .productDetailId(productDetail.getProductDetailId())
+                            .slug(productDetail.getSlug() != null ? productDetail.getSlug() : "")
+                            .name(productDetail.getName() != null ? productDetail.getName() : "Unknown")
+                            .stockQuantity(productDetail.getStockQuantity() != 0 ? productDetail.getStockQuantity() : 0)
+                            .soldQuantity(productDetail.
+
+                                    getSoldQuantity() != 0 ? productDetail.getSoldQuantity() : 0)
+                            .originalPrice(productDetail.getOriginalPrice() != 0 ? productDetail.getOriginalPrice() : 0)
+                            .discountPrice(orderDetail.getDiscountPrice() != null ? orderDetail.getDiscountPrice() : 0)
+                            .size(productDetail.getSize())
+                            .color(productDetail.getColor())
+                            .createdAt(productDetail.getCreatedAt())
+                            .images(images)
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        List<PurchaseOrderDetailResponse> orderDetailResponses = orderDetails.stream()
+                .map(detail -> PurchaseOrderDetailResponse.builder()
+                        .productDetailId(detail.getProductDetail().getProductDetailId())
+                        .quantity(detail.getQuantity())
+                        .build())
+                .collect(Collectors.toList());
+
+
+        // Xây dựng đối tượng phản hồi cuối cùng
+        return PurchaseOrderResponse.builder()
+                .purchaseOrderId(purchaseOrder.getPurchaseOrderId())
+                .status(purchaseOrder.getStatus())
+                .note(purchaseOrder.getNote())
+                .amount(BigDecimal.valueOf(purchaseOrder.getAmount()))
+                .pdfUrl(purchaseOrder.getPdfUrl())
+                .createdAt(purchaseOrder.getCreatedAt() != null
+                        ? java.util.Date.from(purchaseOrder.getCreatedAt().atZone(java.time.ZoneId.systemDefault()).toInstant())
+                        : null)
+                .expiredTime(purchaseOrder.getExpiredTime())
+                .cancelReason(purchaseOrder.getCancelReason())
+                .address(addressResponse)
+                //.payment(paymentResponse)
+                .productDetails(productDetails)
+                .orderDetails(orderDetailResponses)
+                .build();
     }
 
     @Override

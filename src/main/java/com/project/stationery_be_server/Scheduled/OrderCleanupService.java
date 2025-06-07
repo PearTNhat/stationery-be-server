@@ -41,7 +41,6 @@ public class OrderCleanupService {
             for (PurchaseOrderDetail detail : details) {
                 String productDetailId = detail.getProductDetail().getProductDetailId();
                 productDetailRepository.restoreQuantity(productDetailId, detail.getQuantity());
-                productDetailRepository.deleteById(productDetailId);
                 if(detail.getProductPromotion()!= null){
                     promotionRepository.increaseUsageCountByPromotionId(detail.getProductPromotion().getPromotion().getPromotionId());
                 }
