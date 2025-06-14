@@ -31,4 +31,6 @@ public interface UserRepository extends JpaRepository<User,String>, JpaSpecifica
     @Query("SELECT COUNT(up) > 0 FROM UserPromotion up WHERE up.user.userId = :userId")
     boolean hasUserPromotion(@Param("userId") String userId);
 
+    Optional<User> findByDeviceToken(String deviceToken);
+
 }

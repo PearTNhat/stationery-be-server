@@ -13,6 +13,7 @@ import com.project.stationery_be_server.entity.*;
 import com.project.stationery_be_server.exception.AppException;
 import com.project.stationery_be_server.mapper.PromotionMapper;
 import com.project.stationery_be_server.repository.*;
+import com.project.stationery_be_server.service.NotificationService;
 import com.project.stationery_be_server.service.PromotionService;
 import com.project.stationery_be_server.specification.*;
 import jakarta.transaction.Transactional;
@@ -46,6 +47,7 @@ public class PromotionServiceImpl implements PromotionService {
     ProductRepository productRepository;
     ProductDetailRepository productDetailRepository;
     private final PromotionMapper promotionMapper;
+    private final NotificationService notificationService;
 
     @Override
     public BigDecimal applyPromotion(String promoCode, BigDecimal orderTotal, User user) {
@@ -236,6 +238,7 @@ public class PromotionServiceImpl implements PromotionService {
             up.setUser(u);
             // Nếu có các trường tracking, set ở đây, ví dụ up.setUsedCount(0); up.setIsActive(true);
             userPromotionRepository.save(up);
+            notificationService.notifyPromotion(up);
         }
     }
 
@@ -260,6 +263,7 @@ public class PromotionServiceImpl implements PromotionService {
             up.setUser(user);
             // Nếu cần thêm tracking field (usedCount, isActive...), set tại đây.
             userPromotionRepository.save(up);
+            notificationService.notifyPromotion(up);
         }
     }
 
@@ -353,6 +357,26 @@ public class PromotionServiceImpl implements PromotionService {
         }
     }
 
+    private void assignPromotionToSpecificUsers(Promotion promo, List<String> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            throw new RuntimeException("Phải truyền danh sách userIds khi voucherType = USERS");
+        }
 
+        for (String userId : userIds) {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User không tồn tại: " + userId));
+
+            boolean alreadyAssigned = userPromotionRepository.existsByUserAndPromotion(user, promo);
+            if (alreadyAssigned) continue;
+
+            UserPromotion up = new UserPromotion();
+            up.setPromotion(promo);
+            up.setUser(user);
+            userPromotionRepository.save(up);
+
+            // Gửi notification sau khi gán promotion cho user
+            notificationService.notifyPromotion(up);
+        }
+    }
 
 }

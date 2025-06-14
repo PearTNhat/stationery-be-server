@@ -5,6 +5,8 @@ import com.project.stationery_be_server.dto.response.ApiResponse;
 import com.project.stationery_be_server.dto.response.UserInfoResponse;
 import com.project.stationery_be_server.dto.response.UserResponse;
 import com.project.stationery_be_server.dto.response.product.ProductResponse;
+import com.project.stationery_be_server.entity.User;
+import com.project.stationery_be_server.repository.UserRepository;
 import com.project.stationery_be_server.service.UploadImageFile;
 import com.project.stationery_be_server.service.UserService;
 import lombok.AccessLevel;
@@ -14,13 +16,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/users")
@@ -29,6 +34,7 @@ import java.util.Map;
 public class UserController {
     UserService userService;
     UploadImageFile uploadImageFile;
+    UserRepository userRepository;
 
     @GetMapping
     public ApiResponse<List<UserResponse>> getAllUsers() {
@@ -155,5 +161,62 @@ public class UserController {
         return ApiResponse.<UserResponse>builder()
                 .message("User blocked successfully")
                 .build();
+    }
+
+    @PutMapping("/{userId}/device-token")
+    public ResponseEntity<ApiResponse<String>> updateDeviceToken(@PathVariable String userId, @RequestBody DeviceTokenRequest request) {
+        // Kiểm tra xác thực
+        String authenticatedUserId = getCurrentUserId();
+        if (!authenticatedUserId.equals(userId)) {
+            return ResponseEntity.status(403)
+                    .body(ApiResponse.<String>builder()
+                            .code(403)
+                            .message("You are not authorized to update this user's device token")
+                            .build());
+        }
+
+        Optional<User> userOptional = userRepository.findById(userId);
+        if (!userOptional.isPresent()) {
+            return ResponseEntity.status(404)
+                    .body(ApiResponse.<String>builder()
+                            .code(404)
+                            .message("User not found")
+                            .build());
+        }
+
+        // Kiểm tra token hợp lệ
+        String deviceToken = request.getDeviceToken();
+        if (deviceToken == null || deviceToken.trim().isEmpty()) {
+            return ResponseEntity.status(400)
+                    .body(ApiResponse.<String>builder()
+                            .code(400)
+                            .message("Device token cannot be null or empty")
+                            .build());
+        }
+
+        // Kiểm tra định dạng token cơ bản (FCM token thường dài hơn 100 ký tự)
+        if (deviceToken.length() < 100) {
+            return ResponseEntity.status(400)
+                    .body(ApiResponse.<String>builder()
+                            .code(400)
+                            .message("Invalid device token format")
+                            .build());
+        }
+
+        User user = userOptional.get();
+        user.setDeviceToken(request.getDeviceToken());
+        userRepository.save(user);
+
+        return ResponseEntity.ok(ApiResponse.<String>builder()
+                .result("Device token updated successfully")
+                .build());
+    }
+
+    private String getCurrentUserId() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new IllegalArgumentException("User not authenticated");
+        }
+        return authentication.getName();
     }
 }

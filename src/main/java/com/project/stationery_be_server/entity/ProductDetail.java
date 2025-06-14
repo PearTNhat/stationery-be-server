@@ -46,7 +46,7 @@ public class ProductDetail {
     private int originalPrice;
 
     @Column(name = "discount_price")
-    private int discountPrice;
+    private Integer discountPrice;
     @ManyToOne
     @JoinColumn(name = "size_id")
     private Size size;

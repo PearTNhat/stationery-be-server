@@ -3,8 +3,10 @@ package com.project.stationery_be_server.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 
 @Entity
 @Getter
@@ -25,12 +27,17 @@ public class Notification {
 
     String title;
     String message;
+    String targetId;
 
     @Enumerated(EnumType.STRING)
     NotificationType type;
 
+    @Builder.Default
     Boolean isRead = false;
-    LocalDateTime createdAt = LocalDateTime.now();
+
+    @CreationTimestamp
+    @Column(updatable = false)
+    Date createdAt;
 
     @ManyToOne
     @JoinColumn(name = "purchase_order_id")

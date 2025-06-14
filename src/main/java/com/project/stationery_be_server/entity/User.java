@@ -52,6 +52,9 @@ public class User {
     @Column(name = "otp")
     Integer otp;
 
+    @Column(name = "device_token", length = 255)
+    String deviceToken;
+
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "otp_created_at")
     Date otpCreatedAt;
