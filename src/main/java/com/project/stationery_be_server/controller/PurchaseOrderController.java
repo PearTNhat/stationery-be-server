@@ -38,6 +38,15 @@ public class PurchaseOrderController {
                 .build();
 
     }
+
+    @PostMapping("/payment")
+    public ApiResponse<Void> createOrderWithMomo1(@RequestBody PurchaseOrderRequest request) {
+        purchaseOrderService.createOrderNotPayment(request);
+        return ApiResponse.<Void>builder()
+                .message("Tạo đơn hàng thành công")
+                .build();
+
+    }
     @GetMapping("/payment-momo/transaction-status/{orderId}")
     public ApiResponse<MomoResponse> transactionStatus(@PathVariable String orderId,
                                                        @RequestParam(value = "status", required = false, defaultValue = "1") Integer status) {

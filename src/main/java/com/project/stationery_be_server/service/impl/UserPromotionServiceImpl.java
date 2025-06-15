@@ -1,5 +1,6 @@
 package com.project.stationery_be_server.service.impl;
 
+import com.project.stationery_be_server.dto.response.ApiResponse;
 import com.project.stationery_be_server.entity.UserPromotion;
 import com.project.stationery_be_server.repository.UserPromotionRepository;
 import com.project.stationery_be_server.service.NotificationService;
@@ -28,6 +29,7 @@ public class UserPromotionServiceImpl implements UserPromotionService {
     public List<UserPromotion> getVouchersForUser() {
         var context = SecurityContextHolder.getContext();
         String userId = context.getAuthentication().getName();
+        System.out.println("userIDđ__________________________" + userId);
         return userPromotionRepository.findUserPromotionForUser(userId);
     }
     @Override

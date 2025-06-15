@@ -131,7 +131,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                 throw new AppException(NotExistedErrorCode.PRODUCT_NOT_ENOUGH);
             }
             productDetailRepository.save(pd);
-            totalAmount += disCountPrice;
+            totalAmount += (long) disCountPrice * orderDetail.getQuantity();
             PurchaseOrderDetailId id = new PurchaseOrderDetailId();
             id.setPurchaseOrderId(orderId);  // Chính là orderId được truyền vào
             id.setProductDetailId(pd.getProductDetailId());  // Lấy từ productDetail
@@ -227,6 +227,15 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         inOrderRepository.save(inOrder);
 
         return response;
+    }
+    @Override
+    public void createOrderNotPayment(PurchaseOrderRequest request) {
+        var context = SecurityContextHolder.getContext();
+        String userId = context.getAuthentication().getName();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        String orderId = generateOrderId();
+        handleRequestPurchaseOrder(request, orderId, user);
     }
 
     @Override

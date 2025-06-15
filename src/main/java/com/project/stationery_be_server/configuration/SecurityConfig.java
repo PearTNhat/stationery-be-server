@@ -46,6 +46,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/**").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/**").permitAll()
                         .requestMatchers(HttpMethod.DELETE, "/**").permitAll()
+//                        .requestMatchers("/user-promotions").authenticated()
                         .anyRequest()
                         .authenticated());
 

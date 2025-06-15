@@ -26,4 +26,5 @@ public interface PurchaseOrderService {
     Page<PurchaseOrderResponse> getAllNonPendingOrders(String roleName, List<PurchaseOrder.Status> status, Pageable pageable);
     void confirmOrder(String purchaseOrderId);
     void updateOrderStatus(String userId, String purchaseOrderId, String status, String cancelReason);
+    public void createOrderNotPayment(PurchaseOrderRequest request);
 }
