@@ -238,6 +238,7 @@ public class PromotionServiceImpl implements PromotionService {
             up.setUser(u);
             // Nếu có các trường tracking, set ở đây, ví dụ up.setUsedCount(0); up.setIsActive(true);
             userPromotionRepository.save(up);
+            notificationService.notifyPromotion(up);
         }
     }
 
