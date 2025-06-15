@@ -131,7 +131,7 @@ public class UserController {
 
     ) {
         // sử lý ở FE page 1 là BE page 0, page 2 là page 1, ..
-    page = page <= 1 ? 0 : page - 1;
+        page = page <= 1 ? 0 : page - 1;
         Pageable pageable;
 
         pageable = PageRequest.of(page, limit);
@@ -156,4 +156,6 @@ public class UserController {
                 .message("User blocked successfully")
                 .build();
     }
+
+
 }

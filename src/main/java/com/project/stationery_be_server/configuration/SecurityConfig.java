@@ -39,14 +39,12 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, CustomJwtDecoder customJwtDecoder, OAuth2SuccessHandler oAuth2SuccessHandler) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, CustomJwtDecoder customJwtDecoder) throws Exception {
         http.authorizeHttpRequests(request ->
                 request
                         .requestMatchers(HttpMethod.POST, "/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/**").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/**").permitAll()
-                        .requestMatchers(HttpMethod.DELETE, "/**").permitAll()
-//                        .requestMatchers("/user-promotions").authenticated()
                         .anyRequest()
                         .authenticated());
 

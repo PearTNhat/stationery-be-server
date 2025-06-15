@@ -12,6 +12,7 @@ import com.project.stationery_be_server.dto.response.product.ProductDetailRespon
 import com.project.stationery_be_server.entity.*;
 import com.project.stationery_be_server.exception.AppException;
 import com.project.stationery_be_server.repository.*;
+import com.project.stationery_be_server.service.NotificationService;
 import com.project.stationery_be_server.service.PurchaseOrderService;
 import lombok.AccessLevel;
 import org.springframework.data.domain.Page;
@@ -54,6 +55,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     PaymentRepository paymentRepository;
     private final PromotionRepository promotionRepository;
     InOrderRepository inOrderRepository;
+    private final NotificationService notificationService;
     @Value(value = "${momo.partnerCode}")
     @NonFinal
     String partnerCode;
@@ -878,5 +880,6 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         // Update order status
         purchaseOrder.setStatus(status);
         purchaseOrderRepository.save(purchaseOrder);
+        notificationService.notifyOrderUpdate(purchaseOrder);
     }
 }

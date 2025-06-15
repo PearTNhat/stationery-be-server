@@ -18,7 +18,7 @@ import java.util.Set;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-public class    Review {
+public class  Review {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "review_id")
